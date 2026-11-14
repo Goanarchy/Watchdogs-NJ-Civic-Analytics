@@ -72,7 +72,7 @@ export type DonorClassifierInput = {
   occupation?: string | null;
 };
 
-export function classifyDonorSector(donor: DonorClassifierInput): DonorSectorKey {
+export function classifyDonorSector(donor: DonorClassifierInput = {}): DonorSectorKey {
   const name = donor.name ?? "";
   const emp = donor.employer ?? "";
   const occ = donor.occupation ?? "";
@@ -87,7 +87,6 @@ export function classifyDonorSector(donor: DonorClassifierInput): DonorSectorKey
     "njea",
     "pba",
     "fop",
-    "local ",
     "afl-cio",
     "afl cio",
     "teamsters",
@@ -100,7 +99,10 @@ export function classifyDonorSector(donor: DonorClassifierInput): DonorSectorKey
     "carpenters",
     "cope",
   ];
-  if (laborKeywords.some((k) => text.includes(k))) {
+  if (
+    laborKeywords.some((k) => text.includes(k)) ||
+    /\blocal[\s\-#\d]/i.test(text)
+  ) {
     return "labor_unions";
   }
 
@@ -339,6 +341,8 @@ export function computeLegislatorInfluence(
       }
     }
   }
+
+  committeeAlignments.sort((a, b) => b.sectorAmount - a.sectorAmount);
 
   return {
     legislatorId: legislator.id,

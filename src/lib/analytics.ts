@@ -4,18 +4,31 @@ import {
   districts as allDistrictInfos,
   legislators,
   loadBills,
+  loadBillStages,
   loadDonorsData,
+  loadVotesData,
 } from "../data";
 import type {
   Bill,
+  BillStagesMap,
+  ChamberBenchmark,
   DistrictDemographics,
   DonorProfile,
   DonorsData,
+  EffectivenessAnalytics,
   InfluenceAnalytics,
   Legislator,
+  LegislatorEffectivenessSummary,
   LegislatorInfluenceSummary,
+  LegislatorVoteStats,
   SectorTotal,
+  VotesData,
 } from "../types";
+import {
+  buildCommitteeBottlenecks,
+  buildPipelineFunnel,
+  computeChamberNormalizedEffectiveness,
+} from "./effectiveness";
 import {
   SECTOR_DEFINITIONS,
   computeLegislatorInfluence,
@@ -95,6 +108,8 @@ export interface LegislatorMatrixRow {
   topTopic: TopicDefinition;
   medianIncome: number;
   influenceSummary: LegislatorInfluenceSummary;
+  effectivenessSummary: LegislatorEffectivenessSummary;
+  voteStats: LegislatorVoteStats;
 }
 
 export interface CrossPartyPair {
@@ -211,6 +226,8 @@ export interface Analytics {
   finance: FinanceAnalytics;
   districtComposites: DistrictComposite[];
   influence: InfluenceAnalytics;
+  effectiveness: EffectivenessAnalytics<LegislatorMatrixRow>;
+  votesData: VotesData;
 }
 
 function chamberOfBill(code: string): "Assembly" | "Senate" {
@@ -273,6 +290,8 @@ function normalizeDonorKey(name: string, isIndividual: boolean): string {
 export function buildAnalytics(
   billData: Record<string, Bill>,
   donorsData?: DonorsData,
+  billStagesData: BillStagesMap = {},
+  votesData?: VotesData,
 ): Analytics {
   const sponsorsByBill = new Map<string, BillSponsor[]>();
   const legislatorById = new Map<number, Legislator>();
@@ -714,6 +733,44 @@ export function buildAnalytics(
   }
 
   /* ---------------------------------------------- 120-Legislator Matrix */
+  const safeVotesData: VotesData = votesData ?? {
+    generatedAt: "",
+    source: { name: "", portalUrl: "" },
+    rollCalls: [],
+    legislatorStats: {},
+  };
+
+  const extrasById = new Map<
+    number,
+    { bipartisanRatePct: number; topTwoTopicSharePct: number }
+  >();
+
+  for (const leg of legislators) {
+    const totalBills = leg.bills.length;
+    const bipBills = bipartisanCountByLegislator.get(leg.id) ?? 0;
+    const bipartisanRate =
+      totalBills > 0 ? Math.round((bipBills / totalBills) * 100) : 0;
+
+    const topicCounts = topTopicCounterByLeg.get(leg.id);
+    let topTwoTopicSharePct = 0;
+    if (topicCounts && totalBills > 0) {
+      const sortedCounts = Array.from(topicCounts.values()).sort((a, b) => b - a);
+      const top2 = (sortedCounts[0] ?? 0) + (sortedCounts[1] ?? 0);
+      topTwoTopicSharePct = Math.round((top2 / totalBills) * 100);
+    }
+
+    extrasById.set(leg.id, {
+      bipartisanRatePct: bipartisanRate,
+      topTwoTopicSharePct,
+    });
+  }
+
+  const effectivenessMap = computeChamberNormalizedEffectiveness(
+    legislators,
+    billStagesData,
+    extrasById,
+  );
+
   const legislatorMatrix: LegislatorMatrixRow[] = legislators.map((leg) => {
     let primaryBills = 0;
     for (const [, type] of leg.bills) {
@@ -763,6 +820,43 @@ export function buildAnalytics(
     const legDonorProfiles = donorProfilesByLeg.get(leg.id);
     const influenceSummary = computeLegislatorInfluence(leg, legDonorProfiles);
 
+    const rawVoteStats = safeVotesData.legislatorStats?.[String(leg.id)];
+    const voteStats: LegislatorVoteStats = rawVoteStats
+      ? {
+          eligible: rawVoteStats.eligible ?? 0,
+          cast: rawVoteStats.cast ?? 0,
+          yeas: rawVoteStats.yeas ?? 0,
+          nays: rawVoteStats.nays ?? 0,
+          abstains: rawVoteStats.abstains ?? 0,
+          attendancePct: rawVoteStats.attendancePct ?? 0,
+          partyUnityPct: rawVoteStats.partyUnityPct ?? 0,
+        }
+      : {
+          eligible: 0,
+          cast: 0,
+          yeas: 0,
+          nays: 0,
+          abstains: 0,
+          attendancePct: 0,
+          partyUnityPct: 0,
+        };
+
+    const effectivenessSummary: LegislatorEffectivenessSummary =
+      effectivenessMap.get(leg.id) ?? {
+        legislatorId: leg.id,
+        primarySubstantive: 0,
+        cosponsoredSubstantive: 0,
+        primaryCommitteePlus: 0,
+        primaryReportedPlus: 0,
+        primaryFloorPlus: 0,
+        primaryEnacted: 0,
+        cosponsoredEnacted: 0,
+        advancementRatePct: 0,
+        rawPoints: 0,
+        lesScore: 0,
+        archetype: "developing",
+      };
+
     return {
       legislator: leg,
       totalBills,
@@ -782,6 +876,8 @@ export function buildAnalytics(
       topTopic: topicBySlug.get(bestSlug) ?? topicBySlug.get("other")!,
       medianIncome: demo?.medianIncome ?? 0,
       influenceSummary,
+      effectivenessSummary,
+      voteStats,
     };
   });
 
@@ -991,7 +1087,7 @@ export function buildAnalytics(
     });
 
   const coveredLegislators = legislatorMatrix.filter(
-    (row) => row.totalRaised > 0,
+    (row) => row.influenceSummary.totalRaised > 0,
   );
   const avgGrassrootsPct =
     coveredLegislators.length > 0
@@ -1007,6 +1103,126 @@ export function buildAnalytics(
     statewideSectors,
     topAlignedPairs,
     avgGrassrootsPct,
+  };
+
+  /* -------------------------------- Legislative Effectiveness & Benchmarks */
+  const funnelStatewide = buildPipelineFunnel(billStagesData);
+  const funnelSenate = buildPipelineFunnel(billStagesData, "Senate");
+  const funnelAssembly = buildPipelineFunnel(billStagesData, "Assembly");
+  const committeeBottlenecks = buildCommitteeBottlenecks(
+    billStagesData,
+    legislators,
+  );
+
+  const topEffective = legislatorMatrix
+    .slice()
+    .sort(
+      (a, b) =>
+        b.effectivenessSummary.lesScore - a.effectivenessSummary.lesScore ||
+        b.effectivenessSummary.rawPoints - a.effectivenessSummary.rawPoints ||
+        b.effectivenessSummary.primarySubstantive -
+          a.effectivenessSummary.primarySubstantive,
+    );
+
+  function computeChamberBenchmark(
+    chamber: "Senate" | "Assembly",
+  ): ChamberBenchmark {
+    const members = legislatorMatrix.filter(
+      (r) => r.legislator.chamber === chamber,
+    );
+    const count = members.length;
+    if (count === 0) {
+      return {
+        chamber,
+        legislatorCount: 0,
+        avgLes: 0,
+        avgAdvancementRatePct: 0,
+        avgAttendancePct: 0,
+        avgPartyUnityPct: 0,
+        avgBipartisanRatePct: 0,
+        avgGrassrootsPct: 0,
+        avgTotalRaised: 0,
+        avgPrimaryBills: 0,
+      };
+    }
+
+    const eligibleVoters = members.filter((r) => r.voteStats.eligible > 0);
+    const coveredDonors = members.filter(
+      (r) => r.influenceSummary.totalRaised > 0,
+    );
+
+    return {
+      chamber,
+      legislatorCount: count,
+      avgLes: Math.round(
+        members.reduce(
+          (sum, r) => sum + r.effectivenessSummary.lesScore,
+          0,
+        ) / count,
+      ),
+      avgAdvancementRatePct:
+        Math.round(
+          (members.reduce(
+            (sum, r) => sum + r.effectivenessSummary.advancementRatePct,
+            0,
+          ) /
+            count) *
+            10,
+        ) / 10,
+      avgAttendancePct:
+        eligibleVoters.length > 0
+          ? Math.round(
+              eligibleVoters.reduce(
+                (sum, r) => sum + r.voteStats.attendancePct,
+                0,
+              ) / eligibleVoters.length,
+            )
+          : 0,
+      avgPartyUnityPct:
+        eligibleVoters.length > 0
+          ? Math.round(
+              eligibleVoters.reduce(
+                (sum, r) => sum + r.voteStats.partyUnityPct,
+                0,
+              ) / eligibleVoters.length,
+            )
+          : 0,
+      avgBipartisanRatePct: Math.round(
+        members.reduce((sum, r) => sum + r.bipartisanRate, 0) / count,
+      ),
+      avgGrassrootsPct:
+        coveredDonors.length > 0
+          ? Math.round(
+              coveredDonors.reduce(
+                (sum, r) => sum + r.influenceSummary.grassrootsPct,
+                0,
+              ) / coveredDonors.length,
+            )
+          : 0,
+      avgTotalRaised: Math.round(
+        members.reduce((sum, r) => sum + r.totalRaised, 0) / count,
+      ),
+      avgPrimaryBills: Math.round(
+        members.reduce((sum, r) => sum + r.primaryBills, 0) / count,
+      ),
+    };
+  }
+
+  const chamberAverages = {
+    Senate: computeChamberBenchmark("Senate"),
+    Assembly: computeChamberBenchmark("Assembly"),
+  };
+
+  const effectiveness: EffectivenessAnalytics<LegislatorMatrixRow> = {
+    substantiveBillCount: funnelStatewide.total,
+    funnel: funnelStatewide.stages,
+    funnelByChamber: {
+      Senate: funnelSenate.stages,
+      Assembly: funnelAssembly.stages,
+    },
+    committeeBottlenecks,
+    topEffective,
+    chamberAverages,
   };
 
   return {
@@ -1044,6 +1260,8 @@ export function buildAnalytics(
     finance,
     districtComposites,
     influence,
+    effectiveness,
+    votesData: safeVotesData,
   };
 }
 
@@ -1051,8 +1269,15 @@ let analyticsPromise: Promise<Analytics> | null = null;
 
 export function loadAnalytics(): Promise<Analytics> {
   if (!analyticsPromise) {
-    analyticsPromise = Promise.all([loadBills(), loadDonorsData()])
-      .then(([billData, donorsData]) => buildAnalytics(billData, donorsData))
+    analyticsPromise = Promise.all([
+      loadBills(),
+      loadDonorsData(),
+      loadBillStages(),
+      loadVotesData(),
+    ])
+      .then(([billData, donorsData, billStagesData, votesData]) =>
+        buildAnalytics(billData, donorsData, billStagesData, votesData),
+      )
       .catch((error) => {
         analyticsPromise = null;
         throw error;

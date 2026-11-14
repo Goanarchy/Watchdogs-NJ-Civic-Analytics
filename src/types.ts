@@ -501,4 +501,73 @@ export interface InfluenceAnalytics<TRow = any> {
   avgGrassrootsPct: number;
 }
 
+/* ------------------------------------------------ legislative effectiveness & benchmarks */
+
+export type EffectivenessArchetype =
+  | "high_throughput"
+  | "policy_specialist"
+  | "coalition_builder"
+  | "developing";
+
+export interface PipelineStageMetric {
+  stage: BillStage;
+  currentCount: number;     // bills currently resting at this terminal stage
+  reachedCount: number;     // cumulative bills that reached at least this stage
+  reachedPct: number;       // 0-100 share of substantive bills reaching this stage
+}
+
+export interface CommitteeBottleneck {
+  committeeCode: string;
+  committeeName: string;
+  chamber: "Senate" | "Assembly" | "Other";
+  heldInCommitteeCount: number;
+  advancedCount: number;    // reported + floor + enacted (when tagged to this committeeCode)
+  totalSeenCount: number;
+  advancementRatePct: number;
+}
+
+export interface LegislatorEffectivenessSummary {
+  legislatorId: number;
+  primarySubstantive: number;
+  cosponsoredSubstantive: number;
+  primaryCommitteePlus: number;
+  primaryReportedPlus: number;
+  primaryFloorPlus: number;
+  primaryEnacted: number;
+  cosponsoredEnacted: number;
+  advancementRatePct: number; // % of primarySubstantive reaching reported/floor/enacted
+  rawPoints: number;
+  lesScore: number;           // 0-100 objective chamber-normalized score
+  archetype: EffectivenessArchetype;
+}
+
+export interface ChamberBenchmark {
+  chamber: "Senate" | "Assembly";
+  legislatorCount: number;
+  avgLes: number;
+  avgAdvancementRatePct: number;
+  avgAttendancePct: number;
+  avgPartyUnityPct: number;
+  avgBipartisanRatePct: number;
+  avgGrassrootsPct: number;
+  avgTotalRaised: number;
+  avgPrimaryBills: number;
+}
+
+export interface EffectivenessAnalytics<TRow = any> {
+  substantiveBillCount: number;
+  funnel: PipelineStageMetric[];
+  funnelByChamber: {
+    Senate: PipelineStageMetric[];
+    Assembly: PipelineStageMetric[];
+  };
+  committeeBottlenecks: CommitteeBottleneck[];
+  topEffective: TRow[];
+  chamberAverages: {
+    Senate: ChamberBenchmark;
+    Assembly: ChamberBenchmark;
+  };
+}
+
+
 

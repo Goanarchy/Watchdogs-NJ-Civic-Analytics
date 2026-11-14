@@ -27,6 +27,17 @@ import {
   computeLegislatorInfluence,
 } from "../src/lib/sectors.ts";
 
+// Task 3 imports from src/lib/effectiveness.ts
+import {
+  isSubstantiveBillCode,
+  stageOrderIndex,
+  buildPipelineFunnel,
+  buildCommitteeBottlenecks,
+  classifyEffectivenessArchetype,
+  computeRawLegislatorPoints,
+  computeChamberNormalizedEffectiveness,
+} from "../src/lib/effectiveness.ts";
+
 console.log("==> Running Watchdogs v3 Analytics & Bulk Parser Tests...\n");
 
 let passed = 0;
@@ -621,6 +632,344 @@ test("computes valid influence summaries for all 120 legislators against officia
 
   // Real data contains numerous standing committee members receiving funds from aligned sectors
   assert.ok(totalAlignedCount > 0, "Expected at least one real committee-donor alignment in ELEC data");
+});
+
+// ---------------------------------------------------------------------------
+// 10. Legislative Pipeline Funnel & Stage Invariants
+// ---------------------------------------------------------------------------
+console.log("\n--- 10. Legislative Pipeline Funnel & Stage Invariants ---");
+
+test("isSubstantiveBillCode distinguishes substantive bills from resolutions", () => {
+  assert.strictEqual(isSubstantiveBillCode("S100"), true);
+  assert.strictEqual(isSubstantiveBillCode("s4500"), true);
+  assert.strictEqual(isSubstantiveBillCode("A1"), true);
+  assert.strictEqual(isSubstantiveBillCode("a5999"), true);
+  assert.strictEqual(isSubstantiveBillCode("SR10"), false);
+  assert.strictEqual(isSubstantiveBillCode("AR20"), false);
+  assert.strictEqual(isSubstantiveBillCode("SCR100"), false);
+  assert.strictEqual(isSubstantiveBillCode("ACR50"), false);
+  assert.strictEqual(isSubstantiveBillCode("SJR1"), false);
+  assert.strictEqual(isSubstantiveBillCode("AJR2"), false);
+  assert.strictEqual(isSubstantiveBillCode(""), false);
+  assert.strictEqual(isSubstantiveBillCode(null), false);
+});
+
+test("stageOrderIndex enforces monotonically advancing pipeline stages", () => {
+  assert.strictEqual(stageOrderIndex("introduced"), 0);
+  assert.strictEqual(stageOrderIndex("committee"), 1);
+  assert.strictEqual(stageOrderIndex("reported"), 2);
+  assert.strictEqual(stageOrderIndex("floor"), 3);
+  assert.strictEqual(stageOrderIndex("enacted"), 4);
+});
+
+test("buildPipelineFunnel satisfies cumulative and percentage invariants", () => {
+  const mockStages = {
+    A1: { bill: "A1", stage: "introduced", isSubstantive: true, statusCode: "", committeeCode: null, lastAction: "", lastActionDate: null },
+    A2: { bill: "A2", stage: "committee", isSubstantive: true, statusCode: "", committeeCode: "AHE", lastAction: "", lastActionDate: null },
+    A3: { bill: "A3", stage: "reported", isSubstantive: true, statusCode: "", committeeCode: "AHE", lastAction: "", lastActionDate: null },
+    A4: { bill: "A4", stage: "floor", isSubstantive: true, statusCode: "", committeeCode: null, lastAction: "", lastActionDate: null },
+    A5: { bill: "A5", stage: "enacted", isSubstantive: true, statusCode: "", committeeCode: null, lastAction: "", lastActionDate: null },
+    AR1: { bill: "AR1", stage: "floor", isSubstantive: false, statusCode: "", committeeCode: null, lastAction: "", lastActionDate: null },
+    S1: { bill: "S1", stage: "enacted", isSubstantive: true, statusCode: "", committeeCode: null, lastAction: "", lastActionDate: null },
+  };
+
+  const funnel = buildPipelineFunnel(mockStages);
+  assert.strictEqual(funnel.total, 6); // 5 A bills + 1 S bill (AR1 excluded)
+  assert.strictEqual(funnel.stages.length, 5);
+
+  // Invariant 1: Introduced cumulative count matches total
+  assert.strictEqual(funnel.stages[0].stage, "introduced");
+  assert.strictEqual(funnel.stages[0].reachedCount, 6);
+  assert.strictEqual(funnel.stages[0].reachedPct, 100);
+
+  // Invariant 2: Monotonic decrease of cumulative reachedCount and reachedPct
+  for (let i = 0; i < funnel.stages.length - 1; i++) {
+    assert.ok(
+      funnel.stages[i].reachedCount >= funnel.stages[i + 1].reachedCount,
+      `reachedCount not monotonically decreasing: ${funnel.stages[i].stage} (${funnel.stages[i].reachedCount}) vs ${funnel.stages[i + 1].stage} (${funnel.stages[i + 1].reachedCount})`
+    );
+    assert.ok(
+      funnel.stages[i].reachedPct >= funnel.stages[i + 1].reachedPct,
+      `reachedPct not monotonically decreasing: ${funnel.stages[i].stage} vs ${funnel.stages[i + 1].stage}`
+    );
+  }
+
+  // Invariant 3: Sum of currentCount across all stages equals total
+  const sumCurrent = funnel.stages.reduce((acc, s) => acc + s.currentCount, 0);
+  assert.strictEqual(sumCurrent, funnel.total);
+
+  // Chamber filter test
+  const senateFunnel = buildPipelineFunnel(mockStages, "Senate");
+  assert.strictEqual(senateFunnel.total, 1);
+  assert.strictEqual(senateFunnel.stages[4].currentCount, 1);
+
+  const assemblyFunnel = buildPipelineFunnel(mockStages, "Assembly");
+  assert.strictEqual(assemblyFunnel.total, 5);
+
+  // Empty data safety - no NaN
+  const emptyFunnel = buildPipelineFunnel({});
+  assert.strictEqual(emptyFunnel.total, 0);
+  for (const s of emptyFunnel.stages) {
+    assert.strictEqual(s.reachedCount, 0);
+    assert.strictEqual(s.reachedPct, 0);
+    assert.strictEqual(Number.isNaN(s.reachedPct), false);
+  }
+});
+
+// ---------------------------------------------------------------------------
+// 11. Committee Bottlenecks Detector
+// ---------------------------------------------------------------------------
+console.log("\n--- 11. Committee Bottlenecks Detector ---");
+
+test("buildCommitteeBottlenecks detects held bills and advancement rates", () => {
+  const mockLegs = [
+    {
+      id: 1,
+      committees: [
+        { name: "Assembly Health", code: "AHE", position: "Member", url: null },
+        { name: "Senate Judiciary", code: "SJU", position: "Chair", url: null },
+      ],
+    },
+  ];
+
+  const mockStages = {
+    A10: { bill: "A10", stage: "committee", committeeCode: "AHE", isSubstantive: true },
+    A11: { bill: "A11", stage: "committee", committeeCode: "AHE", isSubstantive: true },
+    A12: { bill: "A12", stage: "reported", committeeCode: "AHE", isSubstantive: true },
+    A13: { bill: "A13", stage: "floor", committeeCode: "AHE", isSubstantive: true },
+    S20: { bill: "S20", stage: "committee", committeeCode: "SJU", isSubstantive: true },
+    S21: { bill: "S21", stage: "enacted", committeeCode: "SJU", isSubstantive: true },
+    AR1: { bill: "AR1", stage: "committee", committeeCode: "AHE", isSubstantive: false }, // Ignored non-substantive
+  };
+
+  const bottlenecks = buildCommitteeBottlenecks(mockStages, mockLegs);
+  assert.strictEqual(bottlenecks.length, 2);
+
+  // Sorted by heldInCommitteeCount desc: AHE (2 held) then SJU (1 held)
+  assert.strictEqual(bottlenecks[0].committeeCode, "AHE");
+  assert.strictEqual(bottlenecks[0].committeeName, "Assembly Health");
+  assert.strictEqual(bottlenecks[0].chamber, "Assembly");
+  assert.strictEqual(bottlenecks[0].heldInCommitteeCount, 2);
+  assert.strictEqual(bottlenecks[0].advancedCount, 2);
+  assert.strictEqual(bottlenecks[0].totalSeenCount, 4);
+  assert.strictEqual(bottlenecks[0].advancementRatePct, 50);
+
+  assert.strictEqual(bottlenecks[1].committeeCode, "SJU");
+  assert.strictEqual(bottlenecks[1].committeeName, "Senate Judiciary");
+  assert.strictEqual(bottlenecks[1].chamber, "Senate");
+  assert.strictEqual(bottlenecks[1].heldInCommitteeCount, 1);
+  assert.strictEqual(bottlenecks[1].advancedCount, 1);
+  assert.strictEqual(bottlenecks[1].totalSeenCount, 2);
+  assert.strictEqual(bottlenecks[1].advancementRatePct, 50);
+
+  // Empty data returns empty array
+  assert.deepStrictEqual(buildCommitteeBottlenecks({}, []), []);
+});
+
+// ---------------------------------------------------------------------------
+// 12. Nonpartisan LES & Neutral Archetypes
+// ---------------------------------------------------------------------------
+console.log("\n--- 12. Nonpartisan LES & Neutral Archetypes ---");
+
+test("computeRawLegislatorPoints calculates weighted points and handles zero-bill safety", () => {
+  const zeroLeg = { id: 99, bills: [] };
+  const zeroPoints = computeRawLegislatorPoints(zeroLeg, {});
+  assert.strictEqual(zeroPoints.rawPoints, 0);
+  assert.strictEqual(zeroPoints.primarySubstantive, 0);
+  assert.strictEqual(zeroPoints.cosponsoredSubstantive, 0);
+  assert.strictEqual(zeroPoints.advancementRatePct, 0);
+  assert.strictEqual(Number.isNaN(zeroPoints.advancementRatePct), false);
+  assert.strictEqual(Number.isNaN(zeroPoints.rawPoints), false);
+
+  const activeLeg = {
+    id: 1,
+    bills: [
+      ["A1", "P"], // introduced -> +0.5
+      ["A2", "P"], // committee -> +1
+      ["A3", "P"], // reported -> +3
+      ["A4", "P"], // floor -> +6
+      ["A5", "P"], // enacted -> +12
+      ["A6", "C"], // reported -> +0.15
+      ["A7", "C"], // floor -> +0.3
+      ["A8", "C"], // enacted -> +0.6
+      ["AR1", "P"], // non-substantive -> ignored
+    ],
+  };
+
+  const mockStages = {
+    A1: { bill: "A1", stage: "introduced", isSubstantive: true },
+    A2: { bill: "A2", stage: "committee", isSubstantive: true },
+    A3: { bill: "A3", stage: "reported", isSubstantive: true },
+    A4: { bill: "A4", stage: "floor", isSubstantive: true },
+    A5: { bill: "A5", stage: "enacted", isSubstantive: true },
+    A6: { bill: "A6", stage: "reported", isSubstantive: true },
+    A7: { bill: "A7", stage: "floor", isSubstantive: true },
+    A8: { bill: "A8", stage: "enacted", isSubstantive: true },
+    AR1: { bill: "AR1", stage: "enacted", isSubstantive: false },
+  };
+
+  const pts = computeRawLegislatorPoints(activeLeg, mockStages);
+  assert.strictEqual(pts.primarySubstantive, 5);
+  assert.strictEqual(pts.primaryCommitteePlus, 4);
+  assert.strictEqual(pts.primaryReportedPlus, 3);
+  assert.strictEqual(pts.primaryFloorPlus, 2);
+  assert.strictEqual(pts.primaryEnacted, 1);
+  assert.strictEqual(pts.cosponsoredSubstantive, 3);
+  assert.strictEqual(pts.cosponsoredEnacted, 1);
+  // primary = 0.5 + 1 + 3 + 6 + 12 = 22.5
+  // cosponsored = 0.15 + 0.3 + 0.6 = 1.05
+  // total = 23.55
+  assert.strictEqual(pts.rawPoints, 23.55);
+  // advancement rate: 3 reported+ / 5 primary = 60%
+  assert.strictEqual(pts.advancementRatePct, 60);
+});
+
+test("classifyEffectivenessArchetype applies deterministic nonpartisan rules", () => {
+  // high_throughput: lesScore >= 55 && (primaryEnacted >= 1 || primaryFloorPlus >= 3 || primaryReportedPlus >= 5)
+  assert.strictEqual(
+    classifyEffectivenessArchetype({
+      lesScore: 70,
+      primarySubstantive: 10,
+      primaryReportedPlus: 4,
+      primaryFloorPlus: 2,
+      primaryEnacted: 1,
+      cosponsoredSubstantive: 5,
+      advancementRatePct: 40,
+      bipartisanRatePct: 10,
+      topTwoTopicSharePct: 30,
+    }),
+    "high_throughput"
+  );
+
+  // policy_specialist: primarySubstantive >= 5 && (advancementRatePct >= 12 || topTwoTopicSharePct >= 55)
+  assert.strictEqual(
+    classifyEffectivenessArchetype({
+      lesScore: 40,
+      primarySubstantive: 6,
+      primaryReportedPlus: 1,
+      primaryFloorPlus: 0,
+      primaryEnacted: 0,
+      cosponsoredSubstantive: 2,
+      advancementRatePct: 16.7,
+      bipartisanRatePct: 5,
+      topTwoTopicSharePct: 40,
+    }),
+    "policy_specialist"
+  );
+
+  // coalition_builder: bipartisanRatePct >= 25 || cosponsoredSubstantive >= 25
+  assert.strictEqual(
+    classifyEffectivenessArchetype({
+      lesScore: 30,
+      primarySubstantive: 2,
+      primaryReportedPlus: 0,
+      primaryFloorPlus: 0,
+      primaryEnacted: 0,
+      cosponsoredSubstantive: 30,
+      advancementRatePct: 0,
+      bipartisanRatePct: 10,
+      topTwoTopicSharePct: 20,
+    }),
+    "coalition_builder"
+  );
+
+  // developing: fallback
+  assert.strictEqual(
+    classifyEffectivenessArchetype({
+      lesScore: 10,
+      primarySubstantive: 1,
+      primaryReportedPlus: 0,
+      primaryFloorPlus: 0,
+      primaryEnacted: 0,
+      cosponsoredSubstantive: 2,
+      advancementRatePct: 0,
+      bipartisanRatePct: 0,
+      topTwoTopicSharePct: 10,
+    }),
+    "developing"
+  );
+});
+
+// ---------------------------------------------------------------------------
+// 13. Full Effectiveness Integration on Disk Datasets
+// ---------------------------------------------------------------------------
+console.log("\n--- 13. Full Effectiveness Integration on Disk Datasets ---");
+
+if (fs.existsSync(billStagesPath) && fs.existsSync(votesPath)) {
+  test("computes valid effectiveness metrics across all 120 NJ legislators", () => {
+    const legs = JSON.parse(fs.readFileSync(path.join(root, "src/data/legislators.json"), "utf8"));
+    const billStages = JSON.parse(fs.readFileSync(billStagesPath, "utf8"));
+    const votes = JSON.parse(fs.readFileSync(votesPath, "utf8"));
+
+    const funnel = buildPipelineFunnel(billStages);
+    assert.ok(funnel.total > 8000, `Expected > 8000 substantive bills, got ${funnel.total}`);
+    assert.strictEqual(funnel.stages[0].reachedCount, funnel.total);
+    assert.strictEqual(funnel.stages[0].reachedPct, 100);
+
+    const enactedStage = funnel.stages.find((s) => s.stage === "enacted");
+    assert.ok(enactedStage.reachedCount > 0, "Expected at least 1 enacted substantive bill");
+
+    const bottlenecks = buildCommitteeBottlenecks(billStages, legs);
+    assert.ok(bottlenecks.length > 0, "Expected committee bottlenecks");
+    for (const b of bottlenecks) {
+      assert.ok(b.committeeCode.length > 0);
+      assert.ok(["Senate", "Assembly", "Other"].includes(b.chamber));
+      assert.strictEqual(b.totalSeenCount, b.heldInCommitteeCount + b.advancedCount);
+      assert.strictEqual(Number.isNaN(b.advancementRatePct), false);
+    }
+
+    const effectivenessMap = computeChamberNormalizedEffectiveness(legs, billStages);
+    assert.strictEqual(effectivenessMap.size, 120);
+
+    let maxSenateLes = 0;
+    let maxAssemblyLes = 0;
+    const archetypesFound = new Set();
+
+    for (const leg of legs) {
+      const eff = effectivenessMap.get(leg.id);
+      assert.ok(eff, `Missing effectiveness entry for legislator ${leg.id}`);
+      assert.strictEqual(eff.legislatorId, leg.id);
+      assert.strictEqual(typeof eff.rawPoints, "number");
+      assert.strictEqual(typeof eff.lesScore, "number");
+      assert.strictEqual(Number.isNaN(eff.rawPoints), false);
+      assert.strictEqual(Number.isNaN(eff.lesScore), false);
+      assert.strictEqual(Number.isNaN(eff.advancementRatePct), false);
+      assert.ok(eff.lesScore >= 0 && eff.lesScore <= 100);
+
+      if (leg.chamber === "Senate") {
+        if (eff.lesScore > maxSenateLes) maxSenateLes = eff.lesScore;
+      } else if (leg.chamber === "Assembly") {
+        if (eff.lesScore > maxAssemblyLes) maxAssemblyLes = eff.lesScore;
+      }
+
+      archetypesFound.add(eff.archetype);
+      assert.ok(
+        ["high_throughput", "policy_specialist", "coalition_builder", "developing"].includes(eff.archetype),
+        `Unexpected archetype ${eff.archetype}`
+      );
+    }
+
+    assert.strictEqual(maxSenateLes, 100, "Expected max Senate LES score to normalize to 100");
+    assert.strictEqual(maxAssemblyLes, 100, "Expected max Assembly LES score to normalize to 100");
+    assert.ok(archetypesFound.size >= 3, "Expected diverse archetypes in real legislature");
+  });
+}
+
+// ---------------------------------------------------------------------------
+// 14. Task 2 Polish Checks
+// ---------------------------------------------------------------------------
+console.log("\n--- 14. Task 2 Polish Checks ---");
+
+test("classifyDonorSector handles empty arguments cleanly without throwing", () => {
+  assert.strictEqual(classifyDonorSector(), "civic_grassroots");
+  assert.strictEqual(classifyDonorSector({}), "civic_grassroots");
+});
+
+test("classifyDonorSector matches labor union local prefixes with punctuation/numbers", () => {
+  assert.strictEqual(classifyDonorSector({ name: "Local-825 PAC" }), "labor_unions");
+  assert.strictEqual(classifyDonorSector({ name: "Local#400 PAC" }), "labor_unions");
+  assert.strictEqual(classifyDonorSector({ name: "Local 100" }), "labor_unions");
+  assert.strictEqual(classifyDonorSector({ name: "IBEW Local 102" }), "labor_unions");
 });
 
 console.log(`\n========================================`);
