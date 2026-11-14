@@ -1,0 +1,20 @@
+{
+  "generatedAt": "2026-11-12T02:03:12.607Z",
+  "session": 2026,
+  "sessionLabel": "2026–2027",
+  "sourceName": "New Jersey Legislature",
+  "sourceUrl": "https://www.njleg.state.nj.us/legislative-roster",
+  "sourceBillsUrl": "https://www.njleg.state.nj.us/bill-search",
+  "legislatorCount": 120,
+  "districtCount": 40,
+  "billCount": 11475,
+  "partyCounts": {
+    "D": 82,
+    "R": 38
+  },
+  "chamberCounts": {
+    "Assembly": 80,
+    "Senate": 40
+  },
+  "recordsWithBills": 120
+}
