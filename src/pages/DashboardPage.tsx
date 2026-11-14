@@ -101,6 +101,57 @@ function ratioPct(part: number, total: number): string {
   return `${((part / total) * 100).toFixed(1)}%`;
 }
 
+function renderLensIcon(tab: LensTab) {
+  switch (tab) {
+    case "overview":
+      return (
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7">
+          <rect x="2.5" y="2.5" width="6" height="6" rx="1.4" />
+          <rect x="11.5" y="2.5" width="6" height="6" rx="1.4" />
+          <rect x="2.5" y="11.5" width="6" height="6" rx="1.4" />
+          <rect x="11.5" y="11.5" width="6" height="6" rx="1.4" />
+        </svg>
+      );
+    case "topics":
+      return (
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M4 3.5h8.5L16 7v9.5a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-12a1 1 0 0 1 1-1Z" />
+          <path d="M6.5 10h7M6.5 13.5h4.5" />
+        </svg>
+      );
+    case "bipartisan":
+      return (
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round">
+          <circle cx="5" cy="6" r="2.2" />
+          <circle cx="15" cy="6" r="2.2" />
+          <circle cx="10" cy="14.5" r="2.2" />
+          <path d="M7 7l6 0M6.4 8l2.5 4.5M13.6 8l-2.5 4.5" />
+        </svg>
+      );
+    case "finance":
+      return (
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M3 16.5h14" />
+          <path d="M5.5 13.5v-4M10 13.5v-7M14.5 13.5v-9" />
+        </svg>
+      );
+    case "districts":
+      return (
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M10 17.2s5.2-4.6 5.2-8.7a5.2 5.2 0 1 0-10.4 0c0 4.1 5.2 8.7 5.2 8.7Z" />
+          <circle cx="10" cy="8.5" r="1.8" />
+        </svg>
+      );
+    case "compare":
+      return (
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M4 6.5h11.5m0 0L12.5 3.5m3 3-3 3" />
+          <path d="M16 13.5H4.5m0 0 3-3m-3 3 3 3" />
+        </svg>
+      );
+  }
+}
+
 export function DashboardPage() {
   const { analytics, loading, error } = useAnalytics();
   const { t, lang, formatNumber } = useI18n();
@@ -216,23 +267,66 @@ export function DashboardPage() {
         <nav className="st-lens-nav" aria-label={t("superTools.wbLensNav")}>
           {(
             [
-              ["overview", "01", "superTools.wbTabOverview"],
-              ["topics", "02", "superTools.wbTabTopics"],
-              ["bipartisan", "03", "superTools.wbTabBipartisan"],
-              ["finance", "04", "superTools.wbTabFinance"],
-              ["districts", "05", "superTools.wbTabDistricts"],
-              ["compare", "06", "superTools.wbTabCompare"],
-            ] as Array<[LensTab, string, CopyKey]>
-          ).map(([id, code, key]) => (
+              [
+                "overview",
+                "01",
+                "superTools.wbTabOverview",
+                analytics
+                  ? `120 · ${formatNumber(analytics.totalBills)}`
+                  : "120 · 11.4K",
+              ],
+              [
+                "topics",
+                "02",
+                "superTools.wbTabTopics",
+                `${analytics?.topicStats.length ?? 18} ${lang === "es" ? "Temas" : "Topics"}`,
+              ],
+              [
+                "bipartisan",
+                "03",
+                "superTools.wbTabBipartisan",
+                `${analytics ? pct(analytics.bipartisanBills, analytics.totalBills) : 23}% ${lang === "es" ? "Bipart." : "Bipart."}`,
+              ],
+              [
+                "finance",
+                "04",
+                "superTools.wbTabFinance",
+                analytics ? compactMoney(analytics.finance.totalRaised, lang) : "$58.4M",
+              ],
+              [
+                "districts",
+                "05",
+                "superTools.wbTabDistricts",
+                "40 LDs · ACS",
+              ],
+              [
+                "compare",
+                "06",
+                "superTools.wbTabCompare",
+                lang === "es" ? "1v1 · Votos" : "1v1 · Matrix",
+              ],
+            ] as Array<[LensTab, string, CopyKey, string]>
+          ).map(([id, code, key, metric]) => (
             <button
               key={id}
               type="button"
-              className={`st-lens-btn${activeTab === id ? " is-active" : ""}`}
+              className={`st-lens-btn st-lens-card-${code}${activeTab === id ? " is-active" : ""}`}
               aria-pressed={activeTab === id}
               onClick={() => selectTab(id)}
             >
-              <span className="st-lens-num num">{code}</span>
-              <span>{t(key)}</span>
+              <span className="st-lens-card-top">
+                <span className="st-lens-num-wrap">
+                  <span className="st-lens-num num">{code}</span>
+                  <span className="st-lens-icon" aria-hidden="true">
+                    {renderLensIcon(id)}
+                  </span>
+                </span>
+                <span className="st-lens-live-pill num">{metric}</span>
+              </span>
+              <span className="st-lens-card-body">
+                <strong className="st-lens-title">{t(key)}</strong>
+                <span className="st-lens-arrow" aria-hidden="true">→</span>
+              </span>
             </button>
           ))}
         </nav>

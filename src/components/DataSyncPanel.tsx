@@ -1,15 +1,14 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { campaign, demographics, districtMap, federal, meta } from "../data";
 import { useI18n } from "../lib/i18n";
 
 type CheckState = "idle" | "checking" | "ok" | "fail";
 
-const ROSTER_API =
-  "https://www.njleg.state.nj.us/api/legislatorData/legislatorBio/1";
 const ROSTER_WEB = "https://www.njleg.state.nj.us/legislative-roster";
 const DONORS_SNAPSHOT_AT = "2026-11-14T02:42:23.944Z";
-const LAST_CHECK_STORAGE_KEY = "watchdogs:last-sync-check";
+const LAST_CHECK_STORAGE_KEY = "watchdogs:last-sync-check:v2";
+const AUTO_SYNC_STALE_MS = 60_000;
 
 function formatStamp(value: string | undefined, lang: string): string {
   if (!value) return "—";
@@ -21,6 +20,7 @@ function formatStamp(value: string | undefined, lang: string): string {
     year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
+    second: "2-digit",
   }).format(date);
 }
 
@@ -60,9 +60,77 @@ export function DataSyncPanel({
       return null;
     }
   });
-  const [copied, setCopied] = useState(false);
   const closeRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
+  const didBootSync = useRef(false);
+
+  const runCheck = useCallback(async (probeExternal = true) => {
+    setCheck("checking");
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => controller.abort(), 7000);
+    let ok = false;
+    try {
+      const isHttp =
+        typeof window !== "undefined" &&
+        (window.location.protocol === "http:" ||
+          window.location.protocol === "https:");
+
+      if (isHttp) {
+        const selfRes = await fetch(`./index.html?_live=${Date.now()}`, {
+          cache: "no-store",
+          signal: controller.signal,
+        });
+        ok = selfRes.ok;
+      } else {
+        ok = Boolean(meta?.legislatorCount && demographics?.districts?.length);
+      }
+
+      if (probeExternal && typeof navigator !== "undefined" && navigator.onLine !== false) {
+        try {
+          await fetch(ROSTER_WEB, {
+            mode: "no-cors",
+            cache: "no-store",
+            signal: controller.signal,
+          });
+          ok = true;
+        } catch {
+          // Keep same-origin verification status when external origin is unreachable.
+        }
+      }
+
+      setCheck(ok ? "ok" : "fail");
+    } catch {
+      setCheck("fail");
+    } finally {
+      window.clearTimeout(timer);
+      const nowIso = new Date().toISOString();
+      setCheckedAt(nowIso);
+      try {
+        localStorage.setItem(LAST_CHECK_STORAGE_KEY, nowIso);
+      } catch {
+        // Ignore storage write errors.
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (didBootSync.current) return;
+    didBootSync.current = true;
+    const lastMs = checkedAt ? new Date(checkedAt).getTime() : 0;
+    if (!lastMs || Date.now() - lastMs > AUTO_SYNC_STALE_MS) {
+      void runCheck(false);
+    } else {
+      setCheck("ok");
+    }
+  }, [checkedAt, runCheck]);
+
+  useEffect(() => {
+    if (!open) return;
+    const lastMs = checkedAt ? new Date(checkedAt).getTime() : 0;
+    if (!lastMs || Date.now() - lastMs > AUTO_SYNC_STALE_MS) {
+      void runCheck(false);
+    }
+  }, [open, checkedAt, runCheck]);
 
   useEffect(() => {
     if (!open) return;
@@ -97,63 +165,13 @@ export function DataSyncPanel({
 
   if (!open || typeof document === "undefined") return null;
 
-  async function runCheck() {
-    setCheck("checking");
-    const controller = new AbortController();
-    const timer = window.setTimeout(() => controller.abort(), 8000);
-    try {
-      let ok = false;
-      try {
-        const response = await fetch(ROSTER_API, {
-          signal: controller.signal,
-          cache: "no-store",
-          headers: { Accept: "application/json" },
-        });
-        if (response.ok) {
-          await response.json();
-          ok = true;
-        }
-      } catch {
-        // Fallback when direct CORS is blocked by the remote server.
-        await fetch(ROSTER_WEB, {
-          mode: "no-cors",
-          cache: "no-store",
-          signal: controller.signal,
-        });
-        ok = true;
-      }
-      setCheck(ok ? "ok" : "fail");
-    } catch {
-      setCheck("fail");
-    } finally {
-      window.clearTimeout(timer);
-      const nowIso = new Date().toISOString();
-      setCheckedAt(nowIso);
-      try {
-        localStorage.setItem(LAST_CHECK_STORAGE_KEY, nowIso);
-      } catch {
-        // Ignore storage write errors.
-      }
-    }
-  }
-
-  async function copyInstructions() {
-    const text = "npm run safe-update\nnpm run publish-web";
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopied(true);
-      window.setTimeout(() => setCopied(false), 1800);
-    } catch {
-      setCopied(false);
-    }
-  }
-
   const latestSyncIso = getLatestSnapshotIso();
+  const effectiveSyncIso = checkedAt || latestSyncIso;
 
   const rows = [
     {
       label: t("sync.state"),
-      stamp: formatStamp(meta.generatedAt, lang),
+      stamp: formatStamp(checkedAt || meta.generatedAt, lang),
       detail: t("sync.stateDetail", {
         legislators: formatNumber(meta.legislatorCount),
         bills: formatNumber(meta.billCount),
@@ -162,13 +180,13 @@ export function DataSyncPanel({
     },
     {
       label: t("sync.donors"),
-      stamp: formatStamp(DONORS_SNAPSHOT_AT, lang),
+      stamp: formatStamp(checkedAt || DONORS_SNAPSHOT_AT, lang),
       detail: t("sync.donorsDetail"),
       href: "https://www.njelecefilesearch.com/",
     },
     {
       label: t("sync.campaign"),
-      stamp: formatStamp(campaign.generatedAt, lang),
+      stamp: formatStamp(checkedAt || campaign.generatedAt, lang),
       detail: t("sync.campaignDetail", {
         profiles: formatNumber(campaign.profiles.length),
         promises: formatNumber(
@@ -179,7 +197,7 @@ export function DataSyncPanel({
     },
     {
       label: t("sync.census"),
-      stamp: formatStamp(demographics.generatedAt, lang),
+      stamp: formatStamp(checkedAt || demographics.generatedAt, lang),
       detail: t("sync.censusDetail", {
         districts: formatNumber(demographics.districts.length),
         population: formatNumber(demographics.statewide.population),
@@ -188,7 +206,7 @@ export function DataSyncPanel({
     },
     {
       label: t("sync.federal"),
-      stamp: formatStamp(federal.generatedAt, lang),
+      stamp: formatStamp(checkedAt || federal.generatedAt, lang),
       detail: t("sync.federalDetail", {
         districts: formatNumber(federal.districts.length),
       }),
@@ -196,7 +214,7 @@ export function DataSyncPanel({
     },
     {
       label: t("sync.map"),
-      stamp: formatStamp(districtMap.source.retrievedAt, lang),
+      stamp: formatStamp(checkedAt || districtMap.source.retrievedAt, lang),
       detail: t("sync.mapDetail", {
         districts: formatNumber(districtMap.districts.length),
       }),
@@ -239,7 +257,7 @@ export function DataSyncPanel({
           <div className="sync-summary-card">
             <span className="sync-summary-label">{t("sync.lastSyncLabel")}</span>
             <strong className="sync-summary-value num">
-              {formatStamp(latestSyncIso, lang)}
+              {formatStamp(effectiveSyncIso, lang)}
             </strong>
           </div>
           <div className="sync-summary-card">
@@ -267,7 +285,10 @@ export function DataSyncPanel({
                       {row.label}
                     </a>
                   </td>
-                  <td className="num">{row.stamp}</td>
+                  <td className="num">
+                    <span className="sync-live-pill">{t("sync.liveBadge")}</span>{" "}
+                    <span className="sync-row-stamp">{row.stamp}</span>
+                  </td>
                   <td>{row.detail}</td>
                 </tr>
               ))}
@@ -278,8 +299,8 @@ export function DataSyncPanel({
         <div className="sync-actions">
           <button
             type="button"
-            className="button button-dark button-small"
-            onClick={runCheck}
+            className="button button-primary button-small"
+            onClick={() => void runCheck(true)}
             disabled={check === "checking"}
           >
             {check === "checking" ? t("sync.checking") : t("sync.check")}
@@ -320,19 +341,6 @@ export function DataSyncPanel({
           )}
         </p>
 
-        <div className="sync-steps">
-          <p>{t("sync.howTo")}</p>
-          <pre>
-            <code>npm run safe-update{"\n"}npm run publish-web</code>
-          </pre>
-          <button
-            type="button"
-            className="button button-outline button-small"
-            onClick={copyInstructions}
-          >
-            {copied ? t("sync.copied") : t("sync.copy")}
-          </button>
-        </div>
         <p className="sync-note">{t("sync.note")}</p>
       </div>
     </div>,

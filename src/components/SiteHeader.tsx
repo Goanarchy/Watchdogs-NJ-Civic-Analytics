@@ -101,6 +101,7 @@ export function SiteHeader() {
               aria-haspopup="dialog"
               aria-expanded={syncOpen}
             >
+              <span className="sync-live-dot" aria-hidden="true" />
               <svg viewBox="0 0 20 20" aria-hidden="true" className="sync-icon">
                 <path d="M10 3.2a6.8 6.8 0 0 1 6.3 4.3l.9-2.1 1.6.7-1.7 4.1-4.2-1.1.4-1.7 1.8.5A5.1 5.1 0 1 0 10 15.1v1.7a6.8 6.8 0 1 1 0-13.6Z" />
               </svg>
