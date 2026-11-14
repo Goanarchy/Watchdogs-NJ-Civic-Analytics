@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { NavLink } from "react-router-dom";
 import { DataSyncPanel } from "./DataSyncPanel";
 import { useI18n } from "../lib/i18n";
@@ -8,6 +8,14 @@ export function SiteHeader() {
   const { lang, setLang, t } = useI18n();
   const { theme, toggleTheme } = useTheme();
   const [syncOpen, setSyncOpen] = useState(false);
+
+  useEffect(() => {
+    function handleOpenSync() {
+      setSyncOpen(true);
+    }
+    window.addEventListener("watchdogs:open-sync", handleOpenSync);
+    return () => window.removeEventListener("watchdogs:open-sync", handleOpenSync);
+  }, []);
 
   return (
     <>

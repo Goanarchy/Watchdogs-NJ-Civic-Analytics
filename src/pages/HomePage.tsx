@@ -359,10 +359,13 @@ export function HomePage() {
             <p>{t("home.directorySub")}</p>
           </div>
           <span className="updated-note">
-            {t("home.updatedNote", {
-              source: translateSourceName(meta.sourceName, lang),
-              session: meta.sessionLabel,
-            })}
+            <span className="sync-live-dot" aria-hidden="true" />
+            <span>
+              {t("home.updatedNote", {
+                source: translateSourceName(meta.sourceName, lang),
+                session: meta.sessionLabel,
+              })}
+            </span>
           </span>
         </div>
 

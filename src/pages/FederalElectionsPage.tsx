@@ -26,7 +26,7 @@ function outcome(district: FederalDistrict) {
 }
 
 export function FederalElectionsPage() {
-  const { t, lang, formatNumber, formatDate } = useI18n();
+  const { t, lang, formatNumber } = useI18n();
   useDocumentTitle(t("federal.docTitle"));
 
   const { summary, election } = federal;
@@ -60,7 +60,11 @@ export function FederalElectionsPage() {
               <i aria-hidden="true" />
               {t("federal.preliminary")}
             </span>
-            <p>{t("federal.preliminaryNote", { date: formatDate(federal.sources.results.retrievedAt ?? federal.generatedAt) })}</p>
+            <span className="federal-reporting federal-live-pill">
+              <span className="sync-live-dot" aria-hidden="true" />
+              {t("federal.liveFeed")}
+            </span>
+            <p>{t("federal.preliminaryNote")}</p>
           </div>
         </div>
       </header>

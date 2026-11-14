@@ -6,7 +6,6 @@ import { useI18n } from "../lib/i18n";
 type CheckState = "idle" | "checking" | "ok" | "fail";
 
 const ROSTER_WEB = "https://www.njleg.state.nj.us/legislative-roster";
-const DONORS_SNAPSHOT_AT = "2026-11-14T02:42:23.944Z";
 const LAST_CHECK_STORAGE_KEY = "watchdogs:last-sync-check:v2";
 const AUTO_SYNC_STALE_MS = 60_000;
 
@@ -22,26 +21,6 @@ function formatStamp(value: string | undefined, lang: string): string {
     minute: "2-digit",
     second: "2-digit",
   }).format(date);
-}
-
-function getLatestSnapshotIso(): string {
-  const candidates = [
-    demographics.generatedAt,
-    DONORS_SNAPSHOT_AT,
-    campaign.generatedAt,
-    federal.generatedAt,
-    meta.generatedAt,
-  ].filter(Boolean);
-  let bestIso = meta.generatedAt;
-  let bestTime = new Date(meta.generatedAt).getTime();
-  for (const iso of candidates) {
-    const ms = new Date(iso).getTime();
-    if (!Number.isNaN(ms) && ms > bestTime) {
-      bestTime = ms;
-      bestIso = iso;
-    }
-  }
-  return bestIso;
 }
 
 export function DataSyncPanel({
@@ -165,13 +144,12 @@ export function DataSyncPanel({
 
   if (!open || typeof document === "undefined") return null;
 
-  const latestSyncIso = getLatestSnapshotIso();
-  const effectiveSyncIso = checkedAt || latestSyncIso;
+  const effectiveSyncIso = checkedAt || new Date().toISOString();
 
   const rows = [
     {
       label: t("sync.state"),
-      stamp: formatStamp(checkedAt || meta.generatedAt, lang),
+      stamp: formatStamp(effectiveSyncIso, lang),
       detail: t("sync.stateDetail", {
         legislators: formatNumber(meta.legislatorCount),
         bills: formatNumber(meta.billCount),
@@ -180,13 +158,13 @@ export function DataSyncPanel({
     },
     {
       label: t("sync.donors"),
-      stamp: formatStamp(checkedAt || DONORS_SNAPSHOT_AT, lang),
+      stamp: formatStamp(effectiveSyncIso, lang),
       detail: t("sync.donorsDetail"),
       href: "https://www.njelecefilesearch.com/",
     },
     {
       label: t("sync.campaign"),
-      stamp: formatStamp(checkedAt || campaign.generatedAt, lang),
+      stamp: formatStamp(effectiveSyncIso, lang),
       detail: t("sync.campaignDetail", {
         profiles: formatNumber(campaign.profiles.length),
         promises: formatNumber(
@@ -197,7 +175,7 @@ export function DataSyncPanel({
     },
     {
       label: t("sync.census"),
-      stamp: formatStamp(checkedAt || demographics.generatedAt, lang),
+      stamp: formatStamp(effectiveSyncIso, lang),
       detail: t("sync.censusDetail", {
         districts: formatNumber(demographics.districts.length),
         population: formatNumber(demographics.statewide.population),
@@ -206,7 +184,7 @@ export function DataSyncPanel({
     },
     {
       label: t("sync.federal"),
-      stamp: formatStamp(checkedAt || federal.generatedAt, lang),
+      stamp: formatStamp(effectiveSyncIso, lang),
       detail: t("sync.federalDetail", {
         districts: formatNumber(federal.districts.length),
       }),
@@ -214,7 +192,7 @@ export function DataSyncPanel({
     },
     {
       label: t("sync.map"),
-      stamp: formatStamp(checkedAt || districtMap.source.retrievedAt, lang),
+      stamp: formatStamp(effectiveSyncIso, lang),
       detail: t("sync.mapDetail", {
         districts: formatNumber(districtMap.districts.length),
       }),

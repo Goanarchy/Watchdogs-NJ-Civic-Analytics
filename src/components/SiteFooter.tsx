@@ -2,7 +2,7 @@ import { demographics, meta } from "../data";
 import { useI18n } from "../lib/i18n";
 
 export function SiteFooter() {
-  const { t, formatDate, lang } = useI18n();
+  const { t, lang } = useI18n();
 
   return (
     <footer className="site-footer">
@@ -59,10 +59,17 @@ export function SiteFooter() {
       </div>
 
       <div className="footer-bottom">
-        <span>
-          © {new Date().getFullYear()} {t("brand.name")} · {t("common.updated")}{" "}
-          {formatDate(meta.generatedAt)}
-        </span>
+        <button
+          type="button"
+          className="footer-live-badge"
+          onClick={() => window.dispatchEvent(new CustomEvent("watchdogs:open-sync"))}
+          aria-label={t("sync.open")}
+        >
+          <span className="sync-live-dot" aria-hidden="true" />
+          <span>
+            © {new Date().getFullYear()} {t("brand.name")} · {t("footer.liveSync")}
+          </span>
+        </button>
         <span className="num">
           {t("common.session", { session: meta.sessionLabel })} ·{" "}
           {meta.billCount.toLocaleString(lang === "es" ? "es-US" : "en-US")}{" "}

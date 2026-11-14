@@ -4,7 +4,7 @@ import { useI18n } from "../lib/i18n";
 import { useDocumentTitle } from "../lib/useDocumentTitle";
 
 export function AboutPage() {
-  const { t, formatDate } = useI18n();
+  const { t } = useI18n();
   useDocumentTitle(t("about.docTitle"));
 
   return (
@@ -40,10 +40,13 @@ export function AboutPage() {
         <h2>{t("about.updatedTitle")}</h2>
         <p>
           {t("about.updatedText", {
-            date: formatDate(meta.generatedAt),
             session: meta.sessionLabel,
           })}
         </p>
+        <div className="about-sync-callout">
+          <span className="sync-live-dot" aria-hidden="true" />
+          <span>{t("about.syncCallout")}</span>
+        </div>
         <pre className="code-block">
           <code>npm run refresh-data</code>
         </pre>

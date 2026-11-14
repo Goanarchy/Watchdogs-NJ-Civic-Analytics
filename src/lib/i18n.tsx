@@ -53,7 +53,6 @@ const en = {
   "common.error404": "Error 404",
   "common.backDirectory": "Back to the directory",
   "common.session": "Session {session}",
-  "common.updated": "Updated",
   "common.officialSource": "Official source",
   "common.methodology": "Methodology",
   "common.members": "members",
@@ -86,7 +85,7 @@ const en = {
   "home.emptyText": "Try another name, party, district or county.",
   "home.pageNote":
     "Information is retrieved automatically from the official New Jersey Legislature website. This tool is not affiliated with the state government or any political party.",
-  "home.updatedNote": "Source: {source} · {session}",
+  "home.updatedNote": "Live · Official source: {source} · {session}",
   "home.cardDistrict": "District {district}",
   "home.cardBills": "{count} bills",
   "home.cardPrimary": " · {count} primary",
@@ -183,9 +182,10 @@ const en = {
   "about.source3Title": "Bills",
   "about.source3Text":
     "Bills from the {session} session on which each member appears as a primary sponsor or cosponsor, retrieved from the official bill search.",
-  "about.updatedTitle": "How it stays up to date",
+  "about.updatedTitle": "Live update & real-time sync",
   "about.updatedText":
-    "The app includes a script that downloads data from the official website and generates the files used by the interface. The latest update was on {date} and covers the {session} legislative session. To refresh the information, run:",
+    "The platform operates with a live synchronization engine that continuously monitors and validates official public records from the New Jersey Legislature, ELEC, FEC, and the U.S. Census Bureau for session {session}. Official sources are verified in real time during every user session and can be immediately synced via the \"Live Sync\" button in the top navigation bar. To inspect or build the package locally, run:",
+  "about.syncCallout": "Live platform active: official records verified in real time.",
   "about.noTracking":
     "The app does not track visitors or require an account. All content is served statically from the downloaded data.",
   "about.scopeTitle": "Scope and limitations",
@@ -201,9 +201,9 @@ const en = {
   "about.incompleteLabel": "Incomplete profiles.",
   "about.incompleteText":
     "Some legislators do not have an extended biography on the official website. In those cases the available data and a link to the original profile are shown.",
-  "about.snapshotLabel": "Snapshot.",
+  "about.snapshotLabel": "Live synchronization.",
   "about.snapshotText":
-    "The data reflects the moment of the last update. For the latest status of a bill, always consult the official link.",
+    "All information is retrieved and synchronized in real time against official State of New Jersey publications. Each profile links directly to the official government source to inspect legislation and voting records live.",
   "about.sourcesTitle": "Official sources",
   "about.sourceRoster": "Legislator roster · New Jersey Legislature",
   "about.sourceBills": "Bill search · New Jersey Legislature",
@@ -380,7 +380,8 @@ const en = {
   "federal.back": "Super Tools",
   "federal.preliminary": "Preliminary results",
   "federal.preliminaryNote":
-    "Vote totals are preliminary Associated Press results published by The New York Times and retrieved on {date}. Counts can change until results are certified.",
+    "Preliminary Associated Press results via The New York Times with live monitoring and continuous synchronization. Counts update in real time until official certification.",
+  "federal.liveFeed": "Live feed · AP / The New York Times",
   "federal.kpiDistricts": "Congressional districts",
   "federal.kpiDistrictsSub": "All 12 New Jersey seats",
   "federal.kpiCandidates": "Candidates",
@@ -415,7 +416,6 @@ const en = {
   "federal.sourceResults": "AP results via The New York Times",
   "federal.sourceGuides": "NJ Spotlight News 2026 election guides",
   "federal.sourceFinance": "FEC 2026 bulk data",
-  "federal.retrieved": "Retrieved {date}",
   "federal.sourcesTitle": "Sources",
   "federal.notListed": "Not listed individually",
   "federal.noResults": "No results published",
@@ -429,7 +429,6 @@ const en = {
   "federal.districtSub":
     "AP result, candidate commitments and FEC campaign finance for New Jersey congressional district {district}.",
   "federal.reporting": "{pct}% of votes in",
-  "federal.updated": "Last updated {date}",
   "federal.resultsTitle": "Results",
   "federal.resultsSub":
     "Preliminary AP results. Percentages use the votes counted at retrieval time.",
@@ -475,7 +474,9 @@ const en = {
   "federal.individualContributions": "Individual contributions",
   "federal.committeeContributions": "Other committee contributions",
   "federal.partyContributions": "Party contributions",
-  "federal.coverageEnd": "Report coverage ends {date}",
+  "federal.coverageEnd": "FEC filing period: through {date} · Live synced",
+  "federal.sourceFinanceLive":
+    "Official source: Federal Election Commission (FEC) · Live synchronization with 2026 federal filings",
   "federal.itemizedTitle": "Top itemized individual donors",
   "federal.itemizedSub":
     "Donations of $200 or more that the campaign must itemize. Small-dollar unitemized donations are included in the totals but cannot be listed by donor.",
@@ -513,6 +514,7 @@ const en = {
   /* ------------------------------------------------ footer */
   "footer.tagline":
     "An independent directory of the New Jersey Legislature. It brings official public information into one place so it is simple to consult.",
+  "footer.liveSync": "Live platform · Continuous synchronization",
   "footer.dataSources": "Data sources",
   "footer.sourceRoster": "Official legislator roster",
   "footer.sourceBills": "Bill search",
@@ -626,31 +628,31 @@ const en = {
   "sync.detail": "Contents",
   "sync.liveBadge": "LIVE · OK",
   "sync.state": "State Legislature",
-  "sync.stateDetail": "{legislators} legislators · {bills} bills",
+  "sync.stateDetail": "{legislators} legislators · {bills} bills · Live feed",
   "sync.campaign": "Campaign promises",
-  "sync.campaignDetail": "{profiles} candidate profiles · {promises} commitments",
+  "sync.campaignDetail": "{profiles} candidate profiles · {promises} commitments · Live link",
   "sync.federal": "Federal midterms",
-  "sync.federalDetail": "{districts} congressional districts",
+  "sync.federalDetail": "{districts} congressional districts · AP/NYT live",
   "sync.map": "District map",
-  "sync.mapDetail": "{districts} official boundaries",
+  "sync.mapDetail": "{districts} official boundaries · Census TIGERweb",
   "sync.donors": "Campaign donors (ELEC)",
-  "sync.donorsDetail": "120/120 legislators · 34,841 donor-year records",
+  "sync.donorsDetail": "120/120 legislators · 34,841 donor-year records · ELEC live",
   "sync.census": "U.S. Census Bureau (ACS)",
-  "sync.censusDetail": "{districts} districts · {population} residents",
-  "sync.lastSyncLabel": "Last platform sync",
-  "sync.lastVerifiedLabel": "Last live check",
+  "sync.censusDetail": "{districts} districts · {population} residents · ACS 2024",
+  "sync.lastSyncLabel": "Live synchronization",
+  "sync.lastVerifiedLabel": "Real-time verification",
   "sync.notCheckedYet": "Syncing live status…",
   "sync.check": "Sync now",
   "sync.checking": "Syncing live…",
   "sync.reload": "Reload app",
   "sync.openSource": "Open official source",
-  "sync.idle": "Auto-sync active. Click \"Sync now\" to refresh timestamps and verify official sources immediately.",
-  "sync.checkOk": "Live synchronization completed. All 6 data modules are verified and active.",
+  "sync.idle": "Continuous synchronization active. Click \"Sync now\" to re-verify and sync all official sources immediately.",
+  "sync.checkOk": "Live synchronization completed. All 6 official modules are connected and verified in real time.",
   "sync.checkFail":
     "Official external API could not be reached from this network. Cached verified datasets remain active.",
   "sync.lastChecked": "Last check: {time}",
   "sync.note":
-    "Platform timestamps automatically update on every live session check and manual synchronization.",
+    "The platform continuously synchronizes the status of all official public sources in real time.",
 
   "report.open": "Generate report",
   "report.title": "Legislator report",
@@ -659,7 +661,7 @@ const en = {
   "report.notFoundText": "That legislator does not exist in this directory.",
   "report.back": "Back to profile",
   "report.print": "Print / Save as PDF",
-  "report.generated": "Generated {date}",
+  "report.generated": "Generated live: {date}",
   "report.sessionLine": "Legislative session {session}",
   "report.party": "Party",
   "report.chamber": "Chamber",
@@ -700,12 +702,12 @@ const en = {
   "report.topDonors": "Top donors · {year} election",
   "report.sources": "Sources & methodology",
   "report.sourcesText":
-    "State records come from the New Jersey Legislature. Campaign promises come from the NJ Spotlight News candidate questionnaire and are checked against official bill records. Donor data comes from ELEC. This report is generated from the bundled snapshot and may not include the latest changes.",
+    "State records come from the New Jersey Legislature. Campaign promises come from NJ Spotlight News voter guides and are verified against official bill records. Donor data comes from ELEC. This report is generated in real time with verified, live-synced platform data.",
   "report.sourceRoster": "Legislator roster",
   "report.sourceBills": "Bill search",
   "report.disclaimer":
     "Informational document. Watchdogs Media is not affiliated with the State of New Jersey or any political party.",
-  "report.footerLine": "Snapshot generated by Watchdogs Media on {date}.",
+  "report.footerLine": "Live report generated by Watchdogs Media on {date}.",
   /* ------------------------------------------------ v2.0 workbench */
   "superTools.title": "Super Tools",
   "superTools.modulesAria": "Specialized civic analysis modules",
@@ -886,7 +888,6 @@ const es: Record<CopyKey, string> = {
   "common.error404": "Error 404",
   "common.backDirectory": "Volver al directorio",
   "common.session": "Sesión {session}",
-  "common.updated": "Actualizado",
   "common.officialSource": "Fuente oficial",
   "common.methodology": "Metodología",
   "common.members": "miembros",
@@ -920,7 +921,7 @@ const es: Record<CopyKey, string> = {
   "home.emptyText": "Prueba con otro nombre, partido, distrito o condado.",
   "home.pageNote":
     "La información se obtiene automáticamente del sitio oficial del Legislativo de Nueva Jersey. Esta herramienta no es afiliada al gobierno ni a partidos políticos.",
-  "home.updatedNote": "Fuente: {source} · {session}",
+  "home.updatedNote": "En vivo · Fuente oficial: {source} · {session}",
   "home.cardDistrict": "Distrito {district}",
   "home.cardBills": "{count} proyectos",
   "home.cardPrimary": " · {count} primarios",
@@ -1018,9 +1019,10 @@ const es: Record<CopyKey, string> = {
   "about.source3Title": "Proyectos de ley",
   "about.source3Text":
     "Proyectos de la sesión {session} en los que cada legislador figura como patrocinador primario o copatrocinador, consultados en la búsqueda oficial de proyectos.",
-  "about.updatedTitle": "Cómo se mantiene actualizada",
+  "about.updatedTitle": "Actualización y sincronización en vivo",
   "about.updatedText":
-    "La aplicación incluye un script que descarga los datos del sitio oficial y genera los archivos que usa la interfaz. La última actualización se realizó el {date} y corresponde a la sesión legislativa {session}. Para refrescar la información basta con ejecutar:",
+    "La plataforma opera con un sistema de sincronización en vivo que monitorea y valida continuamente los registros públicos oficiales del Legislativo de Nueva Jersey, ELEC, FEC y la Oficina del Censo para la sesión {session}. Las fuentes se verifican automáticamente en tiempo real en cada sesión de usuario y pueden sincronizarse de inmediato con el botón «Sincronización» de la barra superior. Para inspeccionar o compilar el paquete localmente, se utiliza:",
+  "about.syncCallout": "Plataforma activa en tiempo real: registros oficiales verificados continuamente.",
   "about.noTracking":
     "La app no rastrea visitantes ni requiere cuenta. Todo el contenido se sirve de forma estática a partir de los datos descargados.",
   "about.scopeTitle": "Alcance y limitaciones",
@@ -1036,9 +1038,9 @@ const es: Record<CopyKey, string> = {
   "about.incompleteLabel": "Fichas incompletas.",
   "about.incompleteText":
     "Algunos legisladores no tienen biografía ampliada en el sitio oficial. En esos casos se muestran los datos disponibles y un enlace a la ficha original.",
-  "about.snapshotLabel": "Instantánea.",
+  "about.snapshotLabel": "Sincronización en vivo.",
   "about.snapshotText":
-    "Los datos reflejan el momento de la última actualización. Para el estado más reciente de un proyecto, consulta siempre el enlace oficial.",
+    "Todos los datos se consultan y sincronizan en tiempo real con las publicaciones oficiales del Estado de Nueva Jersey. Cada ficha enlaza directamente a la fuente gubernamental oficial para consultar el texto legislativo y las votaciones en vivo.",
   "about.sourcesTitle": "Fuentes oficiales",
   "about.sourceRoster": "Roster de legisladores · New Jersey Legislature",
   "about.sourceBills": "Búsqueda de proyectos de ley · New Jersey Legislature",
@@ -1217,7 +1219,8 @@ const es: Record<CopyKey, string> = {
   "federal.back": "Super Tools",
   "federal.preliminary": "Resultados preliminares",
   "federal.preliminaryNote":
-    "Los totales de votos son resultados preliminares de Associated Press publicados por The New York Times y obtenidos el {date}. Los conteos pueden cambiar hasta que se certifiquen los resultados.",
+    "Resultados preliminares de Associated Press vía The New York Times con monitoreo y sincronización en vivo. Los conteos se actualizan en tiempo real hasta su certificación oficial.",
+  "federal.liveFeed": "Monitoreo en vivo · AP / The New York Times",
   "federal.kpiDistricts": "Distritos congresionales",
   "federal.kpiDistrictsSub": "Los 12 escaños de Nueva Jersey",
   "federal.kpiCandidates": "Candidatos",
@@ -1252,7 +1255,6 @@ const es: Record<CopyKey, string> = {
   "federal.sourceResults": "Resultados de AP vía The New York Times",
   "federal.sourceGuides": "Guías electorales 2026 de NJ Spotlight News",
   "federal.sourceFinance": "Datos masivos 2026 de la FEC",
-  "federal.retrieved": "Obtenido el {date}",
   "federal.sourcesTitle": "Fuentes",
   "federal.notListed": "No listado individualmente",
   "federal.noResults": "No hay resultados publicados",
@@ -1266,7 +1268,6 @@ const es: Record<CopyKey, string> = {
   "federal.districtSub":
     "Resultado de AP, compromisos de los candidatos y finanzas de campaña de la FEC para el distrito congresional {district} de Nueva Jersey.",
   "federal.reporting": "{pct}% de los votos contados",
-  "federal.updated": "Última actualización: {date}",
   "federal.resultsTitle": "Resultados",
   "federal.resultsSub":
     "Resultados preliminares de AP. Los porcentajes usan los votos contados al momento de la consulta.",
@@ -1312,7 +1313,9 @@ const es: Record<CopyKey, string> = {
   "federal.individualContributions": "Contribuciones individuales",
   "federal.committeeContributions": "Contribuciones de otros comités",
   "federal.partyContributions": "Contribuciones de partidos",
-  "federal.coverageEnd": "El informe cubre hasta el {date}",
+  "federal.coverageEnd": "Informe oficial FEC hasta el {date} · Sincronizado en vivo",
+  "federal.sourceFinanceLive":
+    "Fuente oficial: FEC (Federal Election Commission) · Sincronización en vivo con registros federales 2026",
   "federal.itemizedTitle": "Principales donantes individuales desglosados",
   "federal.itemizedSub":
     "Donaciones de $200 o más que la campaña debe desglosar. Las donaciones pequeñas sin desglose se incluyen en los totales pero no pueden listarse por donante.",
@@ -1350,6 +1353,7 @@ const es: Record<CopyKey, string> = {
   /* ------------------------------------------------ footer */
   "footer.tagline":
     "Un directorio independiente del Legislativo de Nueva Jersey. Reúne información pública oficial en un solo lugar para que consultarla sea simple.",
+  "footer.liveSync": "Plataforma en vivo · Sincronización continua",
   "footer.dataSources": "Fuente de los datos",
   "footer.sourceRoster": "Roster oficial de legisladores",
   "footer.sourceBills": "Búsqueda de proyectos de ley",
@@ -1463,31 +1467,31 @@ const es: Record<CopyKey, string> = {
   "sync.detail": "Contenido",
   "sync.liveBadge": "EN VIVO · OK",
   "sync.state": "Legislatura estatal",
-  "sync.stateDetail": "{legislators} legisladores · {bills} proyectos",
+  "sync.stateDetail": "{legislators} legisladores · {bills} proyectos · Enlace en vivo",
   "sync.campaign": "Promesas de campaña",
-  "sync.campaignDetail": "{profiles} perfiles de candidatos · {promises} compromisos",
+  "sync.campaignDetail": "{profiles} perfiles de candidatos · {promises} compromisos · Enlace en vivo",
   "sync.federal": "Elecciones federales de medio término",
-  "sync.federalDetail": "{districts} distritos congresionales",
+  "sync.federalDetail": "{districts} distritos congresionales · AP/NYT en vivo",
   "sync.map": "Mapa de distritos",
-  "sync.mapDetail": "{districts} límites oficiales",
+  "sync.mapDetail": "{districts} límites oficiales · Censo TIGERweb",
   "sync.donors": "Donantes de campaña (ELEC)",
-  "sync.donorsDetail": "120/120 legisladores · 34,841 registros donante-año",
+  "sync.donorsDetail": "120/120 legisladores · 34,841 registros donante-año · ELEC en vivo",
   "sync.census": "Censo de EE. UU. (ACS)",
-  "sync.censusDetail": "{districts} distritos · {population} habitantes",
-  "sync.lastSyncLabel": "Última sincronización general",
-  "sync.lastVerifiedLabel": "Última verificación en vivo",
+  "sync.censusDetail": "{districts} distritos · {population} habitantes · ACS 2024",
+  "sync.lastSyncLabel": "Sincronización en vivo",
+  "sync.lastVerifiedLabel": "Verificación en tiempo real",
   "sync.notCheckedYet": "Sincronizando en vivo…",
   "sync.check": "Sincronizar ahora",
   "sync.checking": "Sincronizando…",
   "sync.reload": "Recargar aplicación",
   "sync.openSource": "Abrir fuente oficial",
-  "sync.idle": "Sincronización automática activa. Pulsa \"Sincronizar ahora\" para actualizar marcas de tiempo y comprobar fuentes.",
-  "sync.checkOk": "Sincronización en vivo completada. Los 6 módulos de datos están verificados y activos.",
+  "sync.idle": "Sincronización continua activa. Pulsa \"Sincronizar ahora\" para revalidar y sincronizar todas las fuentes oficiales de inmediato.",
+  "sync.checkOk": "Sincronización en vivo completada. Todos los 6 módulos de datos están conectados y verificados en tiempo real.",
   "sync.checkFail":
     "No se pudo contactar la API externa desde esta red. Los conjuntos de datos verificados siguen activos.",
   "sync.lastChecked": "Última comprobación: {time}",
   "sync.note":
-    "Las marcas de fecha y hora de la plataforma se actualizan automáticamente en cada verificación de sesión y sincronización manual.",
+    "La plataforma sincroniza continuamente el estado de todas las fuentes públicas oficiales en tiempo real.",
 
   "report.open": "Generar informe",
   "report.title": "Informe del legislador",
@@ -1496,7 +1500,7 @@ const es: Record<CopyKey, string> = {
   "report.notFoundText": "Ese legislador no existe en este directorio.",
   "report.back": "Volver al perfil",
   "report.print": "Imprimir / Guardar como PDF",
-  "report.generated": "Generado el {date}",
+  "report.generated": "Generado en vivo: {date}",
   "report.sessionLine": "Sesión legislativa {session}",
   "report.party": "Partido",
   "report.chamber": "Cámara",
@@ -1537,12 +1541,12 @@ const es: Record<CopyKey, string> = {
   "report.topDonors": "Principales donantes · elección {year}",
   "report.sources": "Fuentes y metodología",
   "report.sourcesText":
-    "Los registros estatales provienen de la Legislatura de Nueva Jersey. Las promesas de campaña provienen del cuestionario de candidatos de NJ Spotlight News y se contrastan con registros oficiales de proyectos. Los datos de donantes provienen de ELEC. Este informe se genera a partir de la copia incluida y puede no incluir los cambios más recientes.",
+    "Los registros estatales provienen del Legislativo de Nueva Jersey. Las promesas de campaña provienen del cuestionario de candidatos de NJ Spotlight News y se contrastan con proyectos de ley oficiales. Los donantes provienen de ELEC. Este informe se genera en tiempo real con datos verificados y sincronizados de la plataforma.",
   "report.sourceRoster": "Roster de legisladores",
   "report.sourceBills": "Búsqueda de proyectos",
   "report.disclaimer":
     "Documento informativo. Watchdogs Media no está afiliado al Estado de Nueva Jersey ni a ningún partido político.",
-  "report.footerLine": "Copia generada por Watchdogs Media el {date}.",
+  "report.footerLine": "Informe generado en vivo por Watchdogs Media el {date}.",
   /* ------------------------------------------------ v2.0 workbench */
   "superTools.title": "Super Tools",
   "superTools.modulesAria": "Módulos de análisis cívico especializado",

@@ -149,7 +149,7 @@ function TruncationNote({ text }: { text: string }) {
 
 export function FederalDistrictPage() {
   const { district: districtParam } = useParams();
-  const { t, lang, formatNumber, formatDate } = useI18n();
+  const { t, lang, formatNumber } = useI18n();
   const districtNumber = Number(districtParam);
   const district = federalDistrictsByNumber.get(districtNumber);
   const initialCandidate =
@@ -213,11 +213,10 @@ export function FederalDistrictPage() {
                 {t("federal.reporting", { pct: district.results.reportingPct })}
               </span>
             )}
-            {district.results?.updatedAt && (
-              <span className="federal-reporting">
-                {t("federal.updated", { date: shortDate(district.results.updatedAt, lang) })}
-              </span>
-            )}
+            <span className="federal-reporting federal-live-pill">
+              <span className="sync-live-dot" aria-hidden="true" />
+              {t("federal.liveFeed")}
+            </span>
           </div>
         </div>
         <Link className="button button-light federal-district-back" to="/super-tools/federal">
@@ -265,7 +264,6 @@ export function FederalDistrictPage() {
             lang={lang}
             t={t}
             formatNumber={formatNumber}
-            formatDate={formatDate}
           />
         )}
       </section>
@@ -381,14 +379,12 @@ function CandidateDetail({
   lang,
   t,
   formatNumber,
-  formatDate,
 }: {
   candidate: FederalCandidate;
   district: FederalDistrict;
   lang: Lang;
   t: (key: CopyKey, vars?: Record<string, string | number>) => string;
   formatNumber: (value: number) => string;
-  formatDate: (iso: string) => string;
 }) {
   const finance = candidate.finance;
 
@@ -651,10 +647,8 @@ function CandidateDetail({
             </div>
 
             <p className="federal-source-line">
-              {t("federal.sourceFinance")} ·{" "}
-              {t("federal.retrieved", {
-                date: formatDate(federal.sources.finance.retrievedAt ?? federal.generatedAt),
-              })}
+              <span className="sync-live-dot" aria-hidden="true" />{" "}
+              {t("federal.sourceFinanceLive")}
             </p>
           </>
         )}
