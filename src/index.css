@@ -354,7 +354,7 @@ button {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 24px;
+  gap: 16px;
   max-width: 1280px;
   margin: 0 auto;
   padding: 13px 28px;
@@ -417,7 +417,7 @@ button {
 .site-nav {
   display: flex;
   align-items: center;
-  gap: 22px;
+  gap: 18px;
   font-size: 15px;
   font-weight: 500;
 }
@@ -483,7 +483,7 @@ button {
   align-items: center;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 62px 28px 74px;
+  padding: 54px 28px 54px;
 }
 
 .hero-title {
@@ -617,7 +617,7 @@ button {
 .toolbar {
   position: relative;
   z-index: 5;
-  margin-top: -34px;
+  margin-top: 28px;
   padding: 18px;
   border: 1px solid var(--line);
   background: var(--card);
@@ -639,8 +639,9 @@ button {
 
 .search-field {
   position: relative;
-  flex: 1 1 280px;
-  min-width: 220px;
+  flex: 1 1 300px;
+  min-width: 0;
+  width: 100%;
 }
 
 .search-field input {
@@ -985,11 +986,8 @@ button {
 }
 
 .breadcrumb span:last-child {
-  max-width: 60vw;
-  overflow: hidden;
   color: var(--ink-soft);
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
 }
 
 .profile-card {
@@ -1093,6 +1091,8 @@ button {
 }
 
 .panel {
+  min-width: 0;
+  max-width: 100%;
   margin-bottom: 20px;
   padding: 24px 26px;
   border: 1px solid var(--line);
@@ -1106,9 +1106,10 @@ button {
 
 .panel-head {
   display: flex;
+  flex-wrap: wrap;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 18px;
+  gap: 10px 18px;
   margin-bottom: 18px;
   padding-bottom: 14px;
   border-bottom: 1px solid var(--line);
@@ -1132,12 +1133,16 @@ button {
 }
 
 .panel-source {
-  flex: 0 0 auto;
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 100%;
   padding-top: 6px;
   color: var(--muted);
   font-size: 12.5px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+  white-space: normal;
+  overflow-wrap: break-word;
 }
 
 .panel-intro {
@@ -2360,12 +2365,10 @@ button {
 }
 
 .participant-name {
-  overflow: hidden;
   font-size: 14px;
   font-weight: 500;
   line-height: 1.25;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: break-word;
 }
 
 .participant-flag {
@@ -2409,10 +2412,9 @@ button {
 
 .featured-rank-name {
   flex: 1;
-  overflow: hidden;
+  min-width: 0;
   color: #d8d2c5;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: break-word;
 }
 
 .featured-rank-count {
@@ -2751,13 +2753,11 @@ button {
 }
 
 .ranking-name {
-  overflow: hidden;
   font-family: var(--font-serif);
   font-size: 16px;
   font-weight: 600;
-  line-height: 1.2;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  line-height: 1.25;
+  overflow-wrap: break-word;
 }
 
 .ranking-meta {
@@ -3661,13 +3661,11 @@ button {
 }
 
 .participant-card-info strong {
-  overflow: hidden;
   font-family: var(--font-serif);
   font-size: 15px;
   font-weight: 600;
   line-height: 1.25;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: break-word;
 }
 
 .participant-card-info small {
@@ -3759,13 +3757,10 @@ button {
 }
 
 .top-bill-synopsis {
-  display: -webkit-box;
-  overflow: hidden;
+  display: block;
   color: var(--ink-soft);
   font-size: 14px;
-  line-height: 1.45;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
+  line-height: 1.5;
 }
 
 .top-bill-sponsors {
@@ -4196,40 +4191,43 @@ button {
 }
 
 @media (max-width: 700px) {
-  html,
-  body {
-    overflow-x: clip;
-  }
-
   .page {
-    padding-right: 18px;
-    padding-left: 18px;
+    padding-right: 16px;
+    padding-left: 16px;
   }
 
   .header-inner {
     flex-wrap: wrap;
     max-width: 100%;
-    padding-right: 16px;
-    padding-left: 16px;
+    padding: 12px 16px;
+    gap: 10px 12px;
   }
 
   .header-actions {
-    flex-wrap: wrap;
+    flex-direction: column;
+    align-items: stretch;
+    flex: 1 1 100%;
     max-width: 100%;
     gap: 10px;
   }
 
   .site-nav {
+    display: flex;
     flex-wrap: wrap;
+    width: 100%;
     max-width: 100%;
-    gap: 10px;
-    font-size: 13.5px;
+    gap: 8px 12px;
+    padding-top: 8px;
+    border-top: 1px solid var(--line);
+    font-size: 14px;
+    justify-content: flex-start;
   }
 
   .header-controls {
     flex-wrap: wrap;
     max-width: 100%;
     gap: 8px;
+    justify-content: flex-start;
   }
 
   .site-nav .nav-external {
@@ -4237,58 +4235,74 @@ button {
   }
 
   .hero-inner {
-    padding-right: 18px;
-    padding-left: 18px;
+    padding-right: 16px;
+    padding-left: 16px;
   }
 
   .hero-title {
-    font-size: clamp(34px, 9vw, 44px);
+    font-size: clamp(32px, 8.5vw, 42px);
+  }
+
+  .hero-panel {
+    max-width: 100%;
   }
 
   .toolbar {
-    padding: 14px;
+    margin-top: 20px;
+    padding: 16px;
   }
 
   .filters {
     flex-direction: column;
     align-items: stretch;
+    gap: 12px;
   }
 
   .search-field {
-    flex-basis: auto;
+    flex: 0 0 auto;
+    width: 100%;
     min-width: 0;
   }
 
   .segmented {
     display: flex;
+    flex-wrap: wrap;
     width: 100%;
-    overflow-x: auto;
+    overflow-x: visible;
+    gap: 4px;
   }
 
   .segmented button {
-    flex: 1;
-    padding-right: 8px;
-    padding-left: 8px;
-    font-size: 13px;
+    flex: 1 1 auto;
+    min-width: 90px;
+    padding: 9px 10px;
+    font-size: 13.5px;
+    white-space: normal;
+    text-align: center;
   }
 
   .filters-secondary {
-    align-items: flex-start;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
   }
 
   .select-field {
-    flex: 1 1 140px;
+    flex: 0 0 auto;
+    width: 100%;
     flex-direction: column;
-    align-items: flex-start;
-    gap: 4px;
+    align-items: stretch;
+    gap: 5px;
   }
 
   .select-field select {
     width: 100%;
+    max-width: 100%;
   }
 
   .results-meta {
-    flex: 1 1 100%;
+    flex: 0 0 auto;
+    width: 100%;
     margin-left: 0;
     padding-top: 6px;
   }
@@ -4353,7 +4367,8 @@ button {
   }
 
   .search-field-small {
-    flex-basis: auto;
+    flex: 0 0 auto;
+    width: 100%;
   }
 
   .empty-state {
@@ -4550,22 +4565,18 @@ button {
     width: 100%;
   }
 
-  .button-super-copy small {
-    display: none;
-  }
-
   .site-nav {
-    gap: 9px;
-    font-size: 12.5px;
+    gap: 8px 10px;
+    font-size: 13.5px;
   }
 
   .nav-super {
-    padding: 5px 8px !important;
+    padding: 5px 10px !important;
   }
 
   .lang-switch button {
-    min-width: 26px;
-    padding: 4px 6px;
+    min-width: 28px;
+    padding: 4px 7px;
   }
 
   .featured-stats {
@@ -5428,9 +5439,8 @@ button {
 }
 
 .federal-share-name {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: break-word;
+  white-space: normal;
 }
 
 .federal-share-note {
@@ -5741,17 +5751,15 @@ button {
 }
 
 .federal-tab-name {
-  overflow: hidden;
   font-size: 15px;
   font-weight: 600;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: break-word;
+  white-space: normal;
 }
 
 .federal-tab-meta {
   color: var(--muted);
   font-size: 12.5px;
-  white-space: nowrap;
 }
 
 .federal-candidate-detail {
@@ -6431,12 +6439,11 @@ button {
 
 .rep-card-email {
   margin-top: 2px;
-  overflow: hidden;
   color: var(--muted);
   font-size: 14px;
-  text-overflow: ellipsis;
   text-decoration: none;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .rep-card-email:hover {
@@ -6455,15 +6462,18 @@ button {
 
 .district-committee-list a {
   display: inline-flex;
+  flex-wrap: wrap;
+  max-width: 100%;
   gap: 6px;
   align-items: center;
   padding: 7px 12px;
   border: 1px solid var(--line);
-  border-radius: 999px;
+  border-radius: 12px;
   background: var(--paper-soft);
   color: var(--ink-soft);
   font-size: 14px;
   text-decoration: none;
+  overflow-wrap: break-word;
   transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
 }
 
@@ -6858,13 +6868,12 @@ summary:focus-visible,
 
 /* ------------------------------------------------ donor UI v2 */
 .donor-summary {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .donor-summary strong {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: break-word;
+  white-space: normal;
 }
 
 .donor-split {
@@ -7934,9 +7943,9 @@ summary:focus-visible,
 }
 
 .st-lens-bar {
-  position: sticky;
-  top: 66px;
-  z-index: 40;
+  position: relative;
+  top: auto;
+  z-index: 20;
   border-bottom: 1px solid var(--line);
   background: rgba(251, 249, 244, 0.96);
   backdrop-filter: blur(10px);
@@ -7994,6 +8003,8 @@ summary:focus-visible,
   display: flex;
   flex-direction: column;
   gap: 20px;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .st-summary-grid,
@@ -8001,6 +8012,7 @@ summary:focus-visible,
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 20px;
+  min-width: 0;
 }
 
 .st-stat-pair {
@@ -8423,8 +8435,8 @@ summary:focus-visible,
   display: inline-block;
 }
 
-/* Committee list in Topics lens */
-.committee-list {
+/* Committee grid in Topics lens */
+.st-committee-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
@@ -8516,8 +8528,9 @@ summary:focus-visible,
 
 .st-chamber-row {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
-  gap: 12px;
+  gap: 6px 12px;
   padding-top: 10px;
   border-top: 1px solid var(--line);
   font-size: 15px;
@@ -8531,8 +8544,9 @@ summary:focus-visible,
 
 .st-bucket-meta {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
-  gap: 10px;
+  gap: 4px 10px;
   font-size: 15px;
 }
 
@@ -8566,7 +8580,7 @@ summary:focus-visible,
 
 .st-top-recipients-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
   margin-top: 14px;
 }
@@ -8574,6 +8588,7 @@ summary:focus-visible,
 .st-recipient-card {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 10px;
   padding: 12px;
   border: 1px solid var(--line);
@@ -8598,16 +8613,15 @@ summary:focus-visible,
 
 .st-rec-info {
   min-width: 0;
-  flex: 1 1 auto;
+  flex: 1 1 160px;
 }
 
 .st-rec-info strong {
   display: block;
   font-size: 15px;
+  line-height: 1.25;
   color: var(--navy-ink);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  overflow-wrap: break-word;
 }
 
 .st-rec-info span {
@@ -8749,6 +8763,8 @@ summary:focus-visible,
 }
 
 .st-compare-card {
+  min-width: 0;
+  max-width: 100%;
   padding: 16px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
@@ -8760,6 +8776,7 @@ summary:focus-visible,
   flex-direction: column;
   gap: 5px;
   margin-bottom: 14px;
+  min-width: 0;
 }
 
 .st-compare-select-label span {
@@ -8771,11 +8788,14 @@ summary:focus-visible,
 }
 
 .st-compare-select-label select {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
   padding: 9px 11px;
   border: 1px solid var(--line-strong);
   border-radius: var(--radius);
   background: var(--card);
-  font-size: 15.5px;
+  font-size: 15px;
 }
 
 .st-compare-hero {
@@ -8848,26 +8868,30 @@ summary:focus-visible,
   .district-explorer,
   .st-compare-grid,
   .district-acs-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .st-telemetry-ribbon,
   .st-kpi-four,
   .featured-metrics,
-  .st-top-recipients-grid {
+  .st-top-recipients-grid,
+  .st-stat-pair {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .committee-list {
-    grid-template-columns: 1fr;
+  .st-committee-grid {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
 @media (max-width: 640px) {
+  .brand-sub {
+    display: none;
+  }
+
   .page-shell,
   .st-hero-inner,
-  .st-lens-nav,
-  .home-command-inner {
+  .st-lens-nav {
     padding-left: 16px;
     padding-right: 16px;
   }
@@ -8875,23 +8899,30 @@ summary:focus-visible,
   .st-telemetry-ribbon,
   .st-kpi-four,
   .featured-metrics,
-  .st-top-recipients-grid {
-    grid-template-columns: 1fr;
+  .st-top-recipients-grid,
+  .st-stat-pair,
+  .district-acs-grid,
+  .donor-summary {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .st-compare-table thead th {
+    white-space: normal;
+  }
+
+  .panel-head,
+  .committee-row,
+  .st-rank-mini-row {
+    flex-wrap: wrap;
   }
 
   .st-lens-bar {
-    top: 58px;
+    position: relative;
+    top: auto;
   }
 }
 
 /* ------------------------------------------------ sync summary & header spacing */
-.header-inner {
-  gap: 16px;
-}
-
-.site-nav {
-  gap: 18px;
-}
 
 .sync-summary-grid {
   display: grid;

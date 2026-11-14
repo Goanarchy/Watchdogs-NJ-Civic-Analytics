@@ -10,8 +10,7 @@ import {
 
 export type Lang = "en" | "es";
 
-const STORAGE_KEY = "watchdogs:language";
-const LEGACY_STORAGE_KEY = "civica:language";
+const STORAGE_KEY = "watchdogs:language:v2";
 
 const en = {
   "brand.name": "Watchdogs Media",
@@ -97,8 +96,6 @@ const en = {
   "home.party": "Party",
   "home.chamber": "Chamber",
   "home.district": "District",
-  "home.cmdCampaignProfiles": "Campaign profiles tracked",
-  "home.cmdCensusDistricts": "Census ACS districts",
 
   "profile.notFoundDoc": "Profile not found · Watchdogs Media",
   "profile.notFoundTitle": "We couldn't find that profile",
@@ -935,8 +932,6 @@ const es: Record<CopyKey, string> = {
   "home.party": "Partido",
   "home.chamber": "Cámara",
   "home.district": "Distrito",
-  "home.cmdCampaignProfiles": "Perfiles de campaña evaluados",
-  "home.cmdCensusDistricts": "Distritos con datos Census ACS",
 
   "profile.notFoundDoc": "Perfil no encontrado · Watchdogs Media",
   "profile.notFoundTitle": "No encontramos ese perfil",
@@ -1721,9 +1716,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
       // URL no disponible.
     }
     try {
-      const saved =
-        localStorage.getItem(STORAGE_KEY) ??
-        localStorage.getItem(LEGACY_STORAGE_KEY);
+      const saved = localStorage.getItem(STORAGE_KEY);
       if (saved === "es" || saved === "en") return saved;
     } catch {
       // localStorage may be unavailable.

@@ -816,7 +816,7 @@ function TopicsLens({ analytics }: { analytics: Analytics }) {
             {formatNumber(analytics.committees.length)} {t("superTools.committeesShort")}
           </span>
         </div>
-        <div className="committee-list">
+        <div className="st-committee-grid">
           {analytics.committees.slice(0, 10).map((committee) => (
             <Link
               className="committee-row"

@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="dark" style="color-scheme: dark;">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -7,13 +7,16 @@
       name="description"
       content="Watchdogs Media: bilingual New Jersey civic intelligence and legislative analytics platform — profiles, committees, 11,475+ bills, $58.4M ELEC campaign finance, U.S. Census ACS district profiles, and elections."
     />
-    <meta name="theme-color" content="#102a3c" />
+    <meta name="theme-color" content="#0b131b" />
     <title>Watchdogs Media · New Jersey Civic Intelligence</title>
     <script>
       (function () {
         try {
-          var t = localStorage.getItem("watchdogs:theme");
-          if (t === "dark") {
+          var t = localStorage.getItem("watchdogs:theme:v2");
+          if (t === "light") {
+            document.documentElement.setAttribute("data-theme", "light");
+            document.documentElement.style.colorScheme = "light";
+          } else {
             document.documentElement.setAttribute("data-theme", "dark");
             document.documentElement.style.colorScheme = "dark";
           }

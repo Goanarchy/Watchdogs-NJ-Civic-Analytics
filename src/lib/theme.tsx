@@ -10,7 +10,7 @@ import {
 
 export type Theme = "light" | "dark";
 
-const THEME_STORAGE_KEY = "watchdogs:theme";
+const THEME_STORAGE_KEY = "watchdogs:theme:v2";
 
 interface ThemeContextValue {
   theme: Theme;
@@ -27,7 +27,7 @@ function getInitialTheme(): Theme {
   } catch {
     // Ignore storage access errors.
   }
-  return "light";
+  return "dark";
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {

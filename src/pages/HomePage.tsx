@@ -1,7 +1,7 @@
 import { useEffect, useMemo } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { LegislatorCard } from "../components/LegislatorCard";
-import { campaign, counties, demographics, districts, legislators, meta } from "../data";
+import { counties, districts, legislators, meta } from "../data";
 import { useI18n } from "../lib/i18n";
 import { padDistrict, translateSourceName } from "../lib/labels";
 import { rememberDirectory } from "../lib/lastDirectory";
@@ -202,32 +202,6 @@ export function HomePage() {
               {t("home.billsNote", { count: formatNumber(meta.billCount) })}
             </p>
           </aside>
-        </div>
-      </section>
-
-      <section className="home-command-strip" aria-label={t("superTools.wbLensNav")}>
-        <div className="home-command-inner">
-          <div className="home-command-metrics num">
-            <span>
-              <strong>120</strong> {t("common.members")}
-            </span>
-            <span>
-              <strong>{formatNumber(meta.billCount)}</strong> {t("superTools.billsShort")}
-            </span>
-            <span>
-              <strong>{formatNumber(campaign.profiles.length)}</strong> {t("home.cmdCampaignProfiles")}
-            </span>
-            <span>
-              <strong>{demographics.districts.length}</strong> {t("home.cmdCensusDistricts")}
-            </span>
-          </div>
-          <nav className="home-command-links">
-            <Link to="/super-tools?tab=overview">{t("superTools.wbTabOverview")}</Link>
-            <Link to="/super-tools?tab=bipartisan">{t("superTools.wbTabBipartisan")}</Link>
-            <Link to="/super-tools?tab=finance">{t("superTools.wbTabFinance")}</Link>
-            <Link to="/super-tools?tab=districts">{t("superTools.wbTabDistricts")}</Link>
-            <Link to="/super-tools?tab=compare">{t("superTools.wbTabCompare")}</Link>
-          </nav>
         </div>
       </section>
 
