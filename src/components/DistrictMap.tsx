@@ -2,6 +2,7 @@ import { useId, type KeyboardEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { districtMap } from "../data";
 import { useI18n } from "../lib/i18n";
+import { useTheme } from "../lib/theme";
 
 interface DistrictMapProps {
   /** Totals by district used to color the map (for example, bills, income, ELEC). */
@@ -19,10 +20,16 @@ interface DistrictMapProps {
   staticMap?: boolean;
 }
 
-const PALETTES: Record<"navy" | "gold" | "emerald", [number, number, number]> = {
+const PALETTES_LIGHT: Record<"navy" | "gold" | "emerald", [number, number, number]> = {
   navy: [16, 42, 60],
   gold: [154, 103, 18],
   emerald: [15, 118, 110],
+};
+
+const PALETTES_DARK: Record<"navy" | "gold" | "emerald", [number, number, number]> = {
+  navy: [56, 152, 236],
+  gold: [218, 165, 68],
+  emerald: [45, 185, 165],
 };
 
 /**
@@ -39,13 +46,14 @@ export function DistrictMap({
   staticMap = false,
 }: DistrictMapProps) {
   const { t, lang } = useI18n();
+  const { theme } = useTheme();
   const navigate = useNavigate();
   const titleId = useId();
 
   const totals = values ? [...values.values()] : [];
   const max = totals.length ? Math.max(...totals) : 1;
   const min = totals.length ? Math.min(...totals) : 0;
-  const [r, g, b] = PALETTES[palette];
+  const [r, g, b] = (theme === "dark" ? PALETTES_DARK : PALETTES_LIGHT)[palette];
 
   function openDistrict(district: number) {
     if (staticMap) return;
@@ -74,9 +82,21 @@ export function DistrictMap({
           const total = values?.get(shape.district);
           const ratio = total === undefined ? 0 : (total - min) / (max - min || 1);
           const background = values
-            ? `rgba(${r}, ${g}, ${b}, ${0.09 + ratio * 0.84})`
-            : "#12354c";
-          const textColor = ratio > 0.5 ? "#f7f3e9" : "#0f172a";
+            ? theme === "dark"
+              ? `rgba(${r}, ${g}, ${b}, ${0.18 + ratio * 0.72})`
+              : `rgba(${r}, ${g}, ${b}, ${0.09 + ratio * 0.84})`
+            : theme === "dark"
+              ? "#1b3147"
+              : "#12354c";
+          const textColor =
+            theme === "dark"
+              ? ratio > 0.55
+                ? "#08121c"
+                : "#f1f5f9"
+              : ratio > 0.5
+                ? "#f7f3e9"
+                : "#0f172a";
+          const strokeColor = theme === "dark" ? "#0f1e2e" : "#f7f3e9";
           const isHighlighted = highlight === shape.district;
           const label = t("superTools.districtLabel", {
             district: shape.district,
@@ -117,7 +137,7 @@ export function DistrictMap({
                 d={shape.path}
                 fill={isHighlighted ? "#c9852b" : background}
                 fillRule="evenodd"
-                stroke="#f7f3e9"
+                stroke={strokeColor}
                 strokeWidth={isHighlighted ? 3 : 1}
                 vectorEffect="non-scaling-stroke"
               />

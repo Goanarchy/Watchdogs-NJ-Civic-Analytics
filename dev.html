@@ -9,6 +9,17 @@
     />
     <meta name="theme-color" content="#102a3c" />
     <title>Watchdogs Media · New Jersey Civic Intelligence</title>
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem("watchdogs:theme");
+          if (t === "dark") {
+            document.documentElement.setAttribute("data-theme", "dark");
+            document.documentElement.style.colorScheme = "dark";
+          }
+        } catch (e) {}
+      })();
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link

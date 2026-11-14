@@ -4,6 +4,7 @@ import { ReportErrorBoundary } from "./components/ReportErrorBoundary";
 import { SiteFooter } from "./components/SiteFooter";
 import { SiteHeader } from "./components/SiteHeader";
 import { LanguageProvider, useI18n } from "./lib/i18n";
+import { ThemeProvider } from "./lib/theme";
 import { AboutPage } from "./pages/AboutPage";
 import { CommitteePage } from "./pages/CommitteePage";
 import { DashboardPage } from "./pages/DashboardPage";
@@ -90,10 +91,12 @@ function AppShell() {
 
 export default function App() {
   return (
-    <LanguageProvider>
-      <HashRouter>
-        <AppShell />
-      </HashRouter>
-    </LanguageProvider>
+    <ThemeProvider>
+      <LanguageProvider>
+        <HashRouter>
+          <AppShell />
+        </HashRouter>
+      </LanguageProvider>
+    </ThemeProvider>
   );
 }

@@ -1,11 +1,15 @@
 import { useEffect, useRef, useState } from "react";
-import { campaign, districtMap, federal, meta } from "../data";
+import { createPortal } from "react-dom";
+import { campaign, demographics, districtMap, federal, meta } from "../data";
 import { useI18n } from "../lib/i18n";
 
 type CheckState = "idle" | "checking" | "ok" | "fail";
 
 const ROSTER_API =
   "https://www.njleg.state.nj.us/api/legislatorData/legislatorBio/1";
+const ROSTER_WEB = "https://www.njleg.state.nj.us/legislative-roster";
+const DONORS_SNAPSHOT_AT = "2026-11-14T02:42:23.944Z";
+const LAST_CHECK_STORAGE_KEY = "watchdogs:last-sync-check";
 
 function formatStamp(value: string | undefined, lang: string): string {
   if (!value) return "—";
@@ -20,6 +24,26 @@ function formatStamp(value: string | undefined, lang: string): string {
   }).format(date);
 }
 
+function getLatestSnapshotIso(): string {
+  const candidates = [
+    demographics.generatedAt,
+    DONORS_SNAPSHOT_AT,
+    campaign.generatedAt,
+    federal.generatedAt,
+    meta.generatedAt,
+  ].filter(Boolean);
+  let bestIso = meta.generatedAt;
+  let bestTime = new Date(meta.generatedAt).getTime();
+  for (const iso of candidates) {
+    const ms = new Date(iso).getTime();
+    if (!Number.isNaN(ms) && ms > bestTime) {
+      bestTime = ms;
+      bestIso = iso;
+    }
+  }
+  return bestIso;
+}
+
 export function DataSyncPanel({
   open,
   onClose,
@@ -27,16 +51,25 @@ export function DataSyncPanel({
   open: boolean;
   onClose: () => void;
 }) {
-  const { t, lang } = useI18n();
+  const { t, lang, formatNumber } = useI18n();
   const [check, setCheck] = useState<CheckState>("idle");
-  const [checkedAt, setCheckedAt] = useState<string | null>(null);
+  const [checkedAt, setCheckedAt] = useState<string | null>(() => {
+    try {
+      return localStorage.getItem(LAST_CHECK_STORAGE_KEY);
+    } catch {
+      return null;
+    }
+  });
   const [copied, setCopied] = useState(false);
   const closeRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!open) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
     closeRef.current?.focus();
+
     function onKey(event: KeyboardEvent) {
       if (event.key === "Escape") onClose();
       if (event.key !== "Tab" || !panelRef.current) return;
@@ -54,29 +87,53 @@ export function DataSyncPanel({
         first.focus();
       }
     }
+
     document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      document.removeEventListener("keydown", onKey);
+    };
   }, [open, onClose]);
 
-  if (!open) return null;
+  if (!open || typeof document === "undefined") return null;
 
   async function runCheck() {
     setCheck("checking");
     const controller = new AbortController();
     const timer = window.setTimeout(() => controller.abort(), 8000);
     try {
-      const response = await fetch(ROSTER_API, {
-        signal: controller.signal,
-        headers: { Accept: "application/json" },
-      });
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      await response.json();
-      setCheck("ok");
+      let ok = false;
+      try {
+        const response = await fetch(ROSTER_API, {
+          signal: controller.signal,
+          cache: "no-store",
+          headers: { Accept: "application/json" },
+        });
+        if (response.ok) {
+          await response.json();
+          ok = true;
+        }
+      } catch {
+        // Fallback when direct CORS is blocked by the remote server.
+        await fetch(ROSTER_WEB, {
+          mode: "no-cors",
+          cache: "no-store",
+          signal: controller.signal,
+        });
+        ok = true;
+      }
+      setCheck(ok ? "ok" : "fail");
     } catch {
       setCheck("fail");
     } finally {
       window.clearTimeout(timer);
-      setCheckedAt(new Date().toISOString());
+      const nowIso = new Date().toISOString();
+      setCheckedAt(nowIso);
+      try {
+        localStorage.setItem(LAST_CHECK_STORAGE_KEY, nowIso);
+      } catch {
+        // Ignore storage write errors.
+      }
     }
   }
 
@@ -91,33 +148,49 @@ export function DataSyncPanel({
     }
   }
 
+  const latestSyncIso = getLatestSnapshotIso();
+
   const rows = [
     {
       label: t("sync.state"),
       stamp: formatStamp(meta.generatedAt, lang),
       detail: t("sync.stateDetail", {
-        legislators: meta.legislatorCount,
-        bills: meta.billCount,
+        legislators: formatNumber(meta.legislatorCount),
+        bills: formatNumber(meta.billCount),
       }),
       href: meta.sourceUrl,
+    },
+    {
+      label: t("sync.donors"),
+      stamp: formatStamp(DONORS_SNAPSHOT_AT, lang),
+      detail: t("sync.donorsDetail"),
+      href: "https://www.njelecefilesearch.com/",
     },
     {
       label: t("sync.campaign"),
       stamp: formatStamp(campaign.generatedAt, lang),
       detail: t("sync.campaignDetail", {
-        profiles: campaign.profiles.length,
-        promises: campaign.profiles.reduce(
-          (total, profile) => total + profile.promises.length,
-          0,
+        profiles: formatNumber(campaign.profiles.length),
+        promises: formatNumber(
+          campaign.profiles.reduce((total, profile) => total + profile.promises.length, 0),
         ),
       }),
       href: campaign.source.url,
     },
     {
+      label: t("sync.census"),
+      stamp: formatStamp(demographics.generatedAt, lang),
+      detail: t("sync.censusDetail", {
+        districts: formatNumber(demographics.districts.length),
+        population: formatNumber(demographics.statewide.population),
+      }),
+      href: demographics.source.url,
+    },
+    {
       label: t("sync.federal"),
       stamp: formatStamp(federal.generatedAt, lang),
       detail: t("sync.federalDetail", {
-        districts: federal.districts.length,
+        districts: formatNumber(federal.districts.length),
       }),
       href: federal.sources.finance.url,
     },
@@ -125,19 +198,13 @@ export function DataSyncPanel({
       label: t("sync.map"),
       stamp: formatStamp(districtMap.source.retrievedAt, lang),
       detail: t("sync.mapDetail", {
-        districts: districtMap.districts.length,
+        districts: formatNumber(districtMap.districts.length),
       }),
       href: districtMap.source.url,
     },
-    {
-      label: t("sync.donors"),
-      stamp: t("sync.onDemand"),
-      detail: t("sync.donorsDetail"),
-      href: "https://www.elec.state.nj.us/",
-    },
   ];
 
-  return (
+  return createPortal(
     <div
       className="sync-backdrop"
       onMouseDown={(event) => {
@@ -168,6 +235,21 @@ export function DataSyncPanel({
         </div>
         <p className="panel-intro">{t("sync.sub")}</p>
 
+        <div className="sync-summary-grid">
+          <div className="sync-summary-card">
+            <span className="sync-summary-label">{t("sync.lastSyncLabel")}</span>
+            <strong className="sync-summary-value num">
+              {formatStamp(latestSyncIso, lang)}
+            </strong>
+          </div>
+          <div className="sync-summary-card">
+            <span className="sync-summary-label">{t("sync.lastVerifiedLabel")}</span>
+            <strong className="sync-summary-value num">
+              {checkedAt ? formatStamp(checkedAt, lang) : t("sync.notCheckedYet")}
+            </strong>
+          </div>
+        </div>
+
         <div className="sync-table-wrap">
           <table className="sync-table">
             <thead>
@@ -185,7 +267,7 @@ export function DataSyncPanel({
                       {row.label}
                     </a>
                   </td>
-                  <td>{row.stamp}</td>
+                  <td className="num">{row.stamp}</td>
                   <td>{row.detail}</td>
                 </tr>
               ))}
@@ -211,7 +293,7 @@ export function DataSyncPanel({
           </button>
           <a
             className="button button-outline button-small"
-            href="https://www.njleg.state.nj.us/legislative-roster"
+            href={ROSTER_WEB}
             target="_blank"
             rel="noreferrer"
           >
@@ -229,7 +311,7 @@ export function DataSyncPanel({
           {check === "ok" && t("sync.checkOk")}
           {check === "fail" && t("sync.checkFail")}
           {checkedAt && check !== "checking" && (
-            <span className="sync-checked">
+            <span className="sync-checked num">
               {" "}
               · {t("sync.lastChecked", {
                 time: formatStamp(checkedAt, lang),
@@ -253,6 +335,7 @@ export function DataSyncPanel({
         </div>
         <p className="sync-note">{t("sync.note")}</p>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

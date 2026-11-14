@@ -2,13 +2,16 @@ import { useState } from "react";
 import { NavLink } from "react-router-dom";
 import { DataSyncPanel } from "./DataSyncPanel";
 import { useI18n } from "../lib/i18n";
+import { useTheme } from "../lib/theme";
 
 export function SiteHeader() {
   const { lang, setLang, t } = useI18n();
+  const { theme, toggleTheme } = useTheme();
   const [syncOpen, setSyncOpen] = useState(false);
 
   return (
-    <header className="site-header">
+    <>
+      <header className="site-header">
       <div className="header-inner">
         <NavLink
           to="/"
@@ -79,11 +82,18 @@ export function SiteHeader() {
             </a>
           </nav>
 
-          <div
-            className="lang-switch"
-            role="group"
-            aria-label={t("nav.language")}
-          >
+          <div className="header-controls">
+            <button
+              type="button"
+              className={`theme-trigger${theme === "dark" ? " is-dark" : ""}`}
+              onClick={toggleTheme}
+              aria-pressed={theme === "dark"}
+              aria-label={t("nav.themeAria")}
+            >
+              {theme === "dark" ? <SunIcon /> : <MoonIcon />}
+              <span>{theme === "dark" ? t("nav.themeLight") : t("nav.themeDark")}</span>
+            </button>
+
             <button
               type="button"
               className="sync-trigger"
@@ -96,29 +106,54 @@ export function SiteHeader() {
               </svg>
               <span>{t("sync.open")}</span>
             </button>
-            <button
-              type="button"
-              className={lang === "en" ? "active" : ""}
-              onClick={() => setLang("en")}
-              aria-pressed={lang === "en"}
-              aria-label={t("nav.switchToEnglish")}
+
+            <div
+              className="lang-switch"
+              role="group"
+              aria-label={t("nav.language")}
             >
-              EN
-            </button>
-            <button
-              type="button"
-              className={lang === "es" ? "active" : ""}
-              onClick={() => setLang("es")}
-              aria-pressed={lang === "es"}
-              aria-label={t("nav.switchToSpanish")}
-            >
-              ES
-            </button>
+              <button
+                type="button"
+                className={lang === "en" ? "active" : ""}
+                onClick={() => setLang("en")}
+                aria-pressed={lang === "en"}
+                aria-label={t("nav.switchToEnglish")}
+              >
+                EN
+              </button>
+              <button
+                type="button"
+                className={lang === "es" ? "active" : ""}
+                onClick={() => setLang("es")}
+                aria-pressed={lang === "es"}
+                aria-label={t("nav.switchToSpanish")}
+              >
+                ES
+              </button>
+            </div>
+          </div>
           </div>
         </div>
-      </div>
+      </header>
       <DataSyncPanel open={syncOpen} onClose={() => setSyncOpen(false)} />
-    </header>
+    </>
+  );
+}
+
+function MoonIcon() {
+  return (
+    <svg viewBox="0 0 20 20" aria-hidden="true" className="theme-icon">
+      <path d="M16.4 13.1A6.8 6.8 0 0 1 7.9 3.6a7.2 7.2 0 1 0 9.5 9.5Z" />
+    </svg>
+  );
+}
+
+function SunIcon() {
+  return (
+    <svg viewBox="0 0 20 20" aria-hidden="true" className="theme-icon">
+      <circle cx="10" cy="10" r="3.6" />
+      <path d="M10 1.8v2.1M10 16.1v2.1M3.9 3.9l1.5 1.5M14.6 14.6l1.5 1.5M1.8 10h2.1M16.1 10h2.1M3.9 16.1l1.5-1.5M14.6 5.4l1.5-1.5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" fill="none" />
+    </svg>
   );
 }
 

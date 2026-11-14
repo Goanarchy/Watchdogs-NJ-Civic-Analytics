@@ -23,9 +23,9 @@ const PROMISE_STATUS_BY_LANG: Record<
       icon: "🏆",
       check: true,
       description: "A related bill became law.",
-      color: "#1f7a45",
-      bg: "#e8f6ee",
-      border: "#1f7a4533",
+      color: "var(--promise-fulfilled-fg)",
+      bg: "var(--promise-fulfilled-bg)",
+      border: "var(--promise-fulfilled-border)",
     },
     underway: {
       label: "In progress",
@@ -34,9 +34,9 @@ const PROMISE_STATUS_BY_LANG: Record<
       check: false,
       description:
         "A related bill was introduced or advanced. This is evidence of legislative work, not a final outcome.",
-      color: "#9a6700",
-      bg: "#fff6d8",
-      border: "#9a670033",
+      color: "var(--promise-underway-fg)",
+      bg: "var(--promise-underway-bg)",
+      border: "var(--promise-underway-border)",
     },
     pending: {
       label: "Pending",
@@ -45,9 +45,9 @@ const PROMISE_STATUS_BY_LANG: Record<
       check: false,
       description:
         "No clear evidence yet. The commitment may still be in process or awaiting action.",
-      color: "#475467",
-      bg: "#f2f4f7",
-      border: "#47546733",
+      color: "var(--promise-pending-fg)",
+      bg: "var(--promise-pending-bg)",
+      border: "var(--promise-pending-border)",
     },
     failed: {
       label: "Not fulfilled",
@@ -55,9 +55,9 @@ const PROMISE_STATUS_BY_LANG: Record<
       icon: "✕",
       check: false,
       description: "Verified evidence shows the commitment was not met.",
-      color: "#b42318",
-      bg: "#fdeceb",
-      border: "#b4231833",
+      color: "var(--promise-failed-fg)",
+      bg: "var(--promise-failed-bg)",
+      border: "var(--promise-failed-border)",
     },
   },
   es: {
@@ -67,9 +67,9 @@ const PROMISE_STATUS_BY_LANG: Record<
       icon: "🏆",
       check: true,
       description: "Un proyecto relacionado se convirtió en ley.",
-      color: "#1f7a45",
-      bg: "#e8f6ee",
-      border: "#1f7a4533",
+      color: "var(--promise-fulfilled-fg)",
+      bg: "var(--promise-fulfilled-bg)",
+      border: "var(--promise-fulfilled-border)",
     },
     underway: {
       label: "En curso",
@@ -78,9 +78,9 @@ const PROMISE_STATUS_BY_LANG: Record<
       check: false,
       description:
         "Se presentó o avanzó un proyecto relacionado. Es evidencia de trabajo legislativo, no un resultado final.",
-      color: "#9a6700",
-      bg: "#fff6d8",
-      border: "#9a670033",
+      color: "var(--promise-underway-fg)",
+      bg: "var(--promise-underway-bg)",
+      border: "var(--promise-underway-border)",
     },
     pending: {
       label: "Pendiente",
@@ -89,9 +89,9 @@ const PROMISE_STATUS_BY_LANG: Record<
       check: false,
       description:
         "Sin evidencia clara aún. El compromiso puede seguir en proceso o a la espera de acción.",
-      color: "#475467",
-      bg: "#f2f4f7",
-      border: "#47546733",
+      color: "var(--promise-pending-fg)",
+      bg: "var(--promise-pending-bg)",
+      border: "var(--promise-pending-border)",
     },
     failed: {
       label: "No cumplida",
@@ -100,9 +100,9 @@ const PROMISE_STATUS_BY_LANG: Record<
       check: false,
       description:
         "La evidencia verificada muestra que el compromiso no se cumplió.",
-      color: "#b42318",
-      bg: "#fdeceb",
-      border: "#b4231833",
+      color: "var(--promise-failed-fg)",
+      bg: "var(--promise-failed-bg)",
+      border: "var(--promise-failed-border)",
     },
   },
 };
