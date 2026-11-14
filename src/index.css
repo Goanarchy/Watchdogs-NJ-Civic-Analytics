@@ -937,7 +937,7 @@ button {
 .empty-state {
   padding: 56px 28px;
   border: 1px dashed var(--line-strong);
-  background: rgba(255, 255, 255, 0.5);
+  background: var(--paper-soft);
   text-align: center;
 }
 
@@ -1363,7 +1363,7 @@ button {
 .bill-number {
   display: block;
   padding: 3px 5px;
-  border: 1px solid #e4ddcf;
+  border: 1px solid var(--line-strong);
   background: var(--paper-soft);
   color: var(--navy-ink);
   font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
@@ -6613,7 +6613,7 @@ button {
   padding: 4px 10px;
   border-radius: 999px;
   background: var(--navy);
-  color: var(--paper);
+  color: #f8fafc;
   font-family: var(--font-sans);
   font-size: 13px;
   font-weight: 700;
@@ -6692,7 +6692,7 @@ button {
   padding: 10px 16px;
   border-radius: 2px;
   background: var(--navy);
-  color: var(--paper);
+  color: #f8fafc;
   font-size: 15px;
   font-weight: 600;
   text-decoration: none;
@@ -7551,7 +7551,7 @@ html[data-theme="dark"] .sync-live-pill {
 }
 
 .report-sources a {
-  color: #1d4ed8;
+  color: var(--blue);
 }
 
 .report-footer {
@@ -9502,6 +9502,7 @@ html[data-theme="dark"] .button-light:hover {
 }
 
 html[data-theme="dark"] .vote-entry-card,
+html[data-theme="dark"] .federal-profile,
 html[data-theme="dark"] .federal-profile-card {
   background: linear-gradient(135deg, #162433 0%, #1d2934 100%);
 }
@@ -9582,9 +9583,57 @@ html[data-theme="dark"] .meta-chip {
   border-color: var(--line);
 }
 
-html[data-theme="dark"] .federal-chip-win {
+html[data-theme="dark"] .federal-chip-win,
+html[data-theme="dark"] .federal-winner-badge {
   background: #103322;
   color: #6ee7a8;
+}
+
+html[data-theme="dark"] .federal-share-seg.is-u,
+html[data-theme="dark"] .federal-dot.is-u {
+  background: #64748b;
+}
+
+html[data-theme="dark"] .type-c {
+  background: #1a2a3a;
+  color: #cbd5e1;
+  border: 1px solid #2d4a6a;
+}
+
+html[data-theme="dark"] .empty-state {
+  background: rgba(13, 22, 34, 0.72);
+  border-color: var(--line-strong);
+}
+
+html[data-theme="dark"] .district-number {
+  color: #16283a;
+  -webkit-text-stroke: 1px #2d4a6a;
+}
+
+html[data-theme="dark"] .vote-entry-meta span {
+  background: rgba(13, 22, 34, 0.78);
+  border-color: var(--line-strong);
+  color: var(--ink-soft);
+}
+
+html[data-theme="dark"] .federal-entry-map span:not(.is-dem):not(.is-rep):not(.is-on) {
+  background: #24384d;
+}
+
+html[data-theme="dark"] .ranking-trophy {
+  background: linear-gradient(135deg, #3b2d13, #5c4318);
+  color: #fde68a;
+}
+
+html[data-theme="dark"] .about-callout .button-dark {
+  background: #1d4464;
+  border-color: #2f628c;
+  color: #f3f7fb;
+}
+
+html[data-theme="dark"] .about-callout .button-dark:hover {
+  background: #25567e;
+  border-color: #3e79a8;
 }
 
 
