@@ -136,6 +136,13 @@ test("normalizes enacted stage via chapterLaw or governorAction", () => {
     normalizeBillStage({ currentStatus: "APP" }),
     { stage: "enacted", committeeCode: null }
   );
+  assert.deepStrictEqual(
+    normalizeBillStage({
+      governorAction: "APP",
+      historyActions: ["INT 1RA REF ATR", "REP 2RA", "PA PBH"],
+    }),
+    { stage: "enacted", committeeCode: "ATR" }
+  );
 });
 
 test("normalizes floor stage from floor status or 3RDG/PA/PS history", () => {
@@ -160,7 +167,7 @@ test("normalizes floor stage from floor status or 3RDG/PA/PS history", () => {
       currentStatus: "",
       historyActions: ["INT 1RA REF ATR", "3RDG FINAL PASSAGE"],
     }),
-    { stage: "floor", committeeCode: null }
+    { stage: "floor", committeeCode: "ATR" }
   );
 });
 
@@ -178,7 +185,7 @@ test("normalizes reported stage from REP status or history", () => {
       currentStatus: "",
       historyActions: ["INT 1RA REF ATR", "REP"],
     }),
-    { stage: "reported", committeeCode: null }
+    { stage: "reported", committeeCode: "ATR" }
   );
 });
 
@@ -917,6 +924,10 @@ if (fs.existsSync(billStagesPath) && fs.existsSync(votesPath)) {
       assert.strictEqual(b.totalSeenCount, b.heldInCommitteeCount + b.advancedCount);
       assert.strictEqual(Number.isNaN(b.advancementRatePct), false);
     }
+    assert.ok(
+      bottlenecks.some((c) => c.advancedCount > 0 && c.advancementRatePct > 0),
+      "Expected committee bottlenecks to have non-zero advancement rates in real NJ data"
+    );
 
     const effectivenessMap = computeChamberNormalizedEffectiveness(legs, billStages);
     assert.strictEqual(effectivenessMap.size, 120);

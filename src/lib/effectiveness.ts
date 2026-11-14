@@ -56,7 +56,8 @@ export function buildPipelineFunnel(
 ): { total: number; stages: PipelineStageMetric[] } {
   const entries = Object.values(billStages ?? {}).filter((entry) => {
     if (!entry) return false;
-    const isSub = entry.isSubstantive ?? isSubstantiveBillCode(entry.bill);
+    const isSub =
+      (entry.isSubstantive ?? true) && isSubstantiveBillCode(entry.bill);
     if (!isSub) return false;
     if (chamberFilter === "Senate") {
       return entry.bill.toUpperCase().startsWith("S");
@@ -374,7 +375,12 @@ export function computeChamberNormalizedEffectiveness(
 
   for (const leg of legislators) {
     const pts = rawMap.get(leg.id)!;
-    const chamberMax = leg.chamber === "Senate" ? maxSenateRaw : maxAssemblyRaw;
+    const chamberMax =
+      leg.chamber === "Senate"
+        ? maxSenateRaw
+        : leg.chamber === "Assembly"
+          ? maxAssemblyRaw
+          : 0;
 
     const lesScore =
       chamberMax > 0

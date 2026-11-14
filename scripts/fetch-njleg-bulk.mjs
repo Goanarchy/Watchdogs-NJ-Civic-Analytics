@@ -120,7 +120,7 @@ export function extractCommitteeCode(status, historyActions = []) {
   }
   if (Array.isArray(historyActions)) {
     for (let i = historyActions.length - 1; i >= 0; i--) {
-      const match = historyActions[i].match(/\bREF\s+([A-Z]{3,4})\b/);
+      const match = historyActions[i].match(/\b(?:REF|RCM|TRANS)\s+([A-Z]{3,4})\b/);
       if (match && KNOWN_COMMITTEES.has(match[1])) {
         return match[1];
       }
@@ -138,6 +138,8 @@ export function normalizeBillStage(row = {}) {
   const govAction = (row.governorAction || "").trim().toUpperCase();
   const history = Array.isArray(row.historyActions) ? row.historyActions : [];
 
+  const commCode = extractCommitteeCode(status, history);
+
   // 1. Enacted: chapterLaw present or Governor Approved
   if (
     chapterLaw.length > 0 ||
@@ -145,7 +147,7 @@ export function normalizeBillStage(row = {}) {
     govAction === "APP W/CH" ||
     status === "APP"
   ) {
-    return { stage: "enacted", committeeCode: null };
+    return { stage: "enacted", committeeCode: commCode };
   }
 
   // 2. Floor: passed either/both houses, 2nd reading calendar, or 3rd reading vote
@@ -156,19 +158,18 @@ export function normalizeBillStage(row = {}) {
   const hasFloorStatus = floorStatuses.has(status);
   const hasFloorHistory = history.some((a) => /\b(3RDG|PA|PS)\b/.test(a));
   if (hasFloorStatus || hasFloorHistory) {
-    return { stage: "floor", committeeCode: null };
+    return { stage: "floor", committeeCode: commCode };
   }
 
   // 3. Reported: reported out of committee
   const isReportedStatus = status.startsWith("REP") || status === "R/S" || status === "R/A";
   const hasReportedHistory = history.some((a) => /\b(REP|R\/S|R\/A)\b/.test(a));
   if (isReportedStatus || hasReportedHistory) {
-    return { stage: "reported", committeeCode: null };
+    return { stage: "reported", committeeCode: commCode };
   }
 
   // 4. Committee: actively in committee or referred
-  const commCode = extractCommitteeCode(status, history);
-  const hasRefHistory = history.some((a) => /\bREF\b/.test(a));
+  const hasRefHistory = history.some((a) => /\b(?:REF|RCM|TRANS)\b/.test(a));
   if (commCode || hasRefHistory) {
     return { stage: "committee", committeeCode: commCode };
   }
