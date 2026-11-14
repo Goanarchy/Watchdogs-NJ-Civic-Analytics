@@ -705,7 +705,7 @@ function CampaignDonorsPanel({ legislator }: { legislator: Legislator }) {
                             </span>
                           )}
                         </td>
-                        <td>
+                        <td data-label={t("profile.donorType")}>
                           <span className="donor-type">
                             {type ??
                               (donor.isIndividual
@@ -718,8 +718,8 @@ function CampaignDonorsPanel({ legislator }: { legislator: Legislator }) {
                             </span>
                           )}
                         </td>
-                        <td>{donor.year}</td>
-                        <td className="donor-amount-col">
+                        <td data-label={t("profile.donorYear")}>{donor.year}</td>
+                        <td className="donor-amount-col" data-label={t("profile.donorAmount")}>
                           {formatMoney(donor.amount, lang)}
                         </td>
                       </tr>

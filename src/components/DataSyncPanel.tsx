@@ -285,11 +285,11 @@ export function DataSyncPanel({
                       {row.label}
                     </a>
                   </td>
-                  <td className="num">
+                  <td className="num" data-label={t("sync.updated")}>
                     <span className="sync-live-pill">{t("sync.liveBadge")}</span>{" "}
                     <span className="sync-row-stamp">{row.stamp}</span>
                   </td>
-                  <td>{row.detail}</td>
+                  <td data-label={t("sync.detail")}>{row.detail}</td>
                 </tr>
               ))}
             </tbody>

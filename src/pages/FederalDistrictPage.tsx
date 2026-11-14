@@ -100,7 +100,7 @@ function DonorTable({
                   )}
                 </td>
                 {kind === "individual" && (
-                  <td>
+                  <td data-label={t("federal.donorLocation")}>
                     <span className="donor-detail">
                       {[donor.city, donor.state].filter(Boolean).join(", ")}
                       {donor.zip ? ` ${donor.zip}` : ""}
@@ -108,14 +108,14 @@ function DonorTable({
                   </td>
                 )}
                 {kind === "individual" && (
-                  <td>
+                  <td data-label={t("federal.donorEmployer")}>
                     <span className="donor-detail">
                       {[donor.employer, donor.occupation].filter(Boolean).join(" · ") || "—"}
                     </span>
                   </td>
                 )}
-                <td className="donor-amount-col">{donorMoney(donor.amount, lang)}</td>
-                <td className="donor-amount-col">{donor.count}</td>
+                <td className="donor-amount-col" data-label={t("federal.donorAmount")}>{donorMoney(donor.amount, lang)}</td>
+                <td className="donor-amount-col" data-label={t("federal.donorGifts")}>{donor.count}</td>
               </tr>
             ))}
           </tbody>
@@ -320,16 +320,16 @@ function DistrictResults({ district }: { district: FederalDistrict }) {
                     <td>
                       <span className="donor-name">{row.name}</span>
                     </td>
-                    <td>
+                    <td data-label={t("federal.tableParty")}>
                       <span className={`party ${partyClass(row.party)}`}>
                         {partyLabel(row.party, lang)}
                       </span>
                     </td>
-                    <td className="donor-amount-col">{formatNumber(row.votes)}</td>
-                    <td className="donor-amount-col">
+                    <td className="donor-amount-col" data-label={t("federal.tableVotes")}>{formatNumber(row.votes)}</td>
+                    <td className="donor-amount-col" data-label={t("federal.tablePct")}>
                       {row.pct === null ? "—" : `${row.pct}%`}
                     </td>
-                    <td>
+                    <td data-label={t("federal.statusWinner")}>
                       {row.winner ? (
                         <span className="federal-winner-badge">
                           <span aria-hidden="true">✓</span>
@@ -347,16 +347,16 @@ function DistrictResults({ district }: { district: FederalDistrict }) {
                       <span className="donor-name">{t("federal.residualLabel")}</span>
                       <span className="donor-detail">{t("federal.notListed")}</span>
                     </td>
-                    <td>—</td>
-                    <td className="donor-amount-col">
+                    <td data-label={t("federal.tableParty")}>—</td>
+                    <td className="donor-amount-col" data-label={t("federal.tableVotes")}>
                       {formatNumber(results.residualVotes)}
                     </td>
-                    <td className="donor-amount-col">
+                    <td className="donor-amount-col" data-label={t("federal.tablePct")}>
                       {results.totalVotes
                         ? `${((results.residualVotes / results.totalVotes) * 100).toFixed(1)}%`
                         : "—"}
                     </td>
-                    <td>—</td>
+                    <td data-label={t("federal.statusWinner")}>—</td>
                   </tr>
                 )}
               </tbody>

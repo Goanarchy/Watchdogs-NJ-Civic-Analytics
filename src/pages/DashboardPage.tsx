@@ -672,7 +672,7 @@ function OverviewLens({
                       </div>
                     </div>
                   </td>
-                  <td className="num">
+                  <td className="num" data-label={t("home.district")}>
                     <Link
                       className="st-dist-pill"
                       to={`/district/${row.legislator.district}`}
@@ -680,13 +680,13 @@ function OverviewLens({
                       D{padDistrict(row.legislator.district)}
                     </Link>
                   </td>
-                  <td className="num text-right">
+                  <td className="num text-right" data-label={t("superTools.wbColBills")}>
                     <strong>{formatNumber(row.totalBills)}</strong>
                     <span className="st-cell-sub">
                       {row.primaryBills}P · {row.cosponsoredBills}C
                     </span>
                   </td>
-                  <td className="num text-right">
+                  <td className="num text-right" data-label={t("superTools.wbColPrimaryPct")}>
                     <div className="st-ratio-cell">
                       <span>{row.primaryRatio}%</span>
                       <span className="st-ratio-track" aria-hidden="true">
@@ -697,17 +697,17 @@ function OverviewLens({
                       </span>
                     </div>
                   </td>
-                  <td className="num text-right">
+                  <td className="num text-right" data-label={t("superTools.wbColBipartisan")}>
                     <strong>{formatNumber(row.bipartisanBills)}</strong>
                     <span className="st-cell-sub">{row.bipartisanRate}%</span>
                   </td>
-                  <td className="num text-right">
+                  <td className="num text-right" data-label={t("superTools.wbColElec")}>
                     <strong>{compactMoney(row.totalRaised, lang)}</strong>
                     <span className="st-cell-sub">
                       {formatNumber(row.donorCount)} {t("superTools.wbDonorsShort")}
                     </span>
                   </td>
-                  <td className="num text-right">
+                  <td className="num text-right" data-label={t("superTools.wbColPromises")}>
                     {row.promisesTotal > 0 ? (
                       <>
                         <strong>
@@ -719,7 +719,7 @@ function OverviewLens({
                       <span className="st-muted-dash">—</span>
                     )}
                   </td>
-                  <td>
+                  <td data-label={t("superTools.wbColFocusTopic")}>
                     <Link
                       className="st-topic-chip"
                       to={`/super-tools/topics/${row.topTopic.slug}`}
@@ -861,13 +861,13 @@ function TopicsLens({ analytics }: { analytics: Analytics }) {
                         />
                       </div>
                     </td>
-                    <td className="num text-right">
+                    <td className="num text-right" data-label={t("superTools.wbColBills")}>
                       <strong>{formatNumber(topicStat.billCount)}</strong>
                       <span className="st-cell-sub">
                         {ratioPct(topicStat.billCount, analytics.totalBills)}
                       </span>
                     </td>
-                    <td>
+                    <td data-label={t("superTools.wbColPartisanSplit")}>
                       <div className="st-split-mini">
                         <span className="st-split-track" aria-hidden="true">
                           <span className="split-dem" style={{ width: `${demW}%` }} />
@@ -881,14 +881,14 @@ function TopicsLens({ analytics }: { analytics: Analytics }) {
                         </span>
                       </div>
                     </td>
-                    <td className="num text-right">
+                    <td className="num text-right" data-label={t("superTools.wbColBipartisan")}>
                       <strong>{formatNumber(topicStat.bipartisanBills)}</strong>
                       <span className="st-cell-sub">{bipPct}%</span>
                     </td>
-                    <td className="num text-right">
+                    <td className="num text-right" data-label={t("superTools.wbColMembers")}>
                       {formatNumber(topicStat.participants.length)}
                     </td>
-                    <td className="num text-right">
+                    <td className="num text-right" data-label={t("superTools.wbColChambers")}>
                       A {formatNumber(topicStat.chamberBills.Assembly)} · S{" "}
                       {formatNumber(topicStat.chamberBills.Senate)}
                     </td>
@@ -1002,7 +1002,7 @@ function BipartisanshipLens({ analytics }: { analytics: Analytics }) {
         </ul>
       </section>
 
-      <div className="st-two-col">
+      <div className="st-lens-stack">
         <section className="panel super-panel">
           <div className="panel-head super-panel-head">
             <div>
@@ -1036,8 +1036,8 @@ function BipartisanshipLens({ analytics }: { analytics: Analytics }) {
               <tbody>
                 {leaders.map((row, idx) => (
                   <tr key={row.legislator.id}>
-                    <td className="num">{idx + 1}</td>
-                    <td>
+                    <td className="num" data-label="#">{idx + 1}</td>
+                    <td data-label={t("superTools.wbColLegislator")}>
                       <Link
                         className="st-person-link"
                         to={`/legislador/${row.legislator.id}`}
@@ -1052,10 +1052,10 @@ function BipartisanshipLens({ analytics }: { analytics: Analytics }) {
                         </span>
                       </div>
                     </td>
-                    <td className="num text-right">
+                    <td className="num text-right" data-label={t("superTools.wbColBipartisan")}>
                       <strong>{formatNumber(row.bipartisanBills)}</strong>
                     </td>
-                    <td className="num text-right">{row.bipartisanRate}%</td>
+                    <td className="num text-right" data-label={t("superTools.wbColRate")}>{row.bipartisanRate}%</td>
                   </tr>
                 ))}
               </tbody>
@@ -1086,7 +1086,7 @@ function BipartisanshipLens({ analytics }: { analytics: Analytics }) {
               <tbody>
                 {analytics.crossPartyPairs.slice(0, 20).map((pair) => (
                   <tr key={`${pair.dem.id}-${pair.rep.id}`}>
-                    <td>
+                    <td data-label={t("superTools.wbColDemPartner")}>
                       <Link
                         className="st-person-link"
                         to={`/legislador/${pair.dem.id}`}
@@ -1097,7 +1097,7 @@ function BipartisanshipLens({ analytics }: { analytics: Analytics }) {
                         D · D{padDistrict(pair.dem.district)}
                       </span>
                     </td>
-                    <td>
+                    <td data-label={t("superTools.wbColRepPartner")}>
                       <Link
                         className="st-person-link"
                         to={`/legislador/${pair.rep.id}`}
@@ -1108,10 +1108,10 @@ function BipartisanshipLens({ analytics }: { analytics: Analytics }) {
                         R · D{padDistrict(pair.rep.district)}
                       </span>
                     </td>
-                    <td className="num text-right">
+                    <td className="num text-right" data-label={t("superTools.wbColFocusedBills")}>
                       <strong>{formatNumber(pair.focusedBills)}</strong>
                     </td>
-                    <td className="num text-right">
+                    <td className="num text-right" data-label={t("superTools.wbColSharedAll")}>
                       {formatNumber(pair.sharedBills)}
                     </td>
                   </tr>
@@ -1442,20 +1442,20 @@ function DonorAccordionRow({
   return (
     <>
       <tr>
-        <td className="num">{rank}</td>
-        <td>
+        <td className="num" data-label="#">{rank}</td>
+        <td data-label={t("profile.donorName")}>
           <strong>{donor.name}</strong>
           <span className="st-cell-sub num">
             {formatNumber(donor.contributionCount)} {t("profile.donorContributionsCount")}
           </span>
         </td>
-        <td>
+        <td data-label={t("profile.donorType")}>
           <span className="chip">{categoryLabel}</span>
         </td>
-        <td className="num text-right">
+        <td className="num text-right" data-label={t("superTools.wbColTotalDonated")}>
           <strong>{money(donor.totalAmount, lang)}</strong>
         </td>
-        <td>
+        <td data-label={t("superTools.wbColPartisanSplit")}>
           <div className="st-split-mini">
             <span className="st-split-track" aria-hidden="true">
               <span className="split-dem" style={{ width: `${demW}%` }} />
@@ -1466,7 +1466,7 @@ function DonorAccordionRow({
             </span>
           </div>
         </td>
-        <td className="num text-right">
+        <td className="num text-right" data-label={t("superTools.wbColLegislatorsFunded")}>
           <strong>{donor.legislatorCount}</strong>
         </td>
         <td className="text-right">
@@ -1782,29 +1782,29 @@ function DistrictsLens({ analytics }: { analytics: Analytics }) {
                       LD {padDistrict(d.district)}
                     </Link>
                   </td>
-                  <td>{d.counties}</td>
-                  <td className="num text-right">
+                  <td data-label={t("report.counties")}>{d.counties}</td>
+                  <td className="num text-right" data-label={t("superTools.wbColBills")}>
                     <strong>{formatNumber(d.bills)}</strong>
                     <span className="st-cell-sub">{d.bipartisanBills} bip.</span>
                   </td>
-                  <td className="num text-right">
+                  <td className="num text-right" data-label={t("superTools.wbColElec")}>
                     <strong>{compactMoney(d.totalRaised, lang)}</strong>
                   </td>
-                  <td className="num text-right">
+                  <td className="num text-right" data-label={t("census.population")}>
                     {d.demographics ? formatNumber(d.demographics.population) : "—"}
                   </td>
-                  <td className="num text-right">
+                  <td className="num text-right" data-label={t("census.medianIncome")}>
                     <strong>
                       {d.demographics ? money(d.demographics.medianIncome, lang) : "—"}
                     </strong>
                   </td>
-                  <td className="num text-right">
+                  <td className="num text-right" data-label={t("census.homeValue")}>
                     {d.demographics ? money(d.demographics.medianHomeValue, lang) : "—"}
                   </td>
-                  <td className="num text-right">
+                  <td className="num text-right" data-label={t("census.povertyRate")}>
                     {d.demographics ? `${d.demographics.povertyRate}%` : "—"}
                   </td>
-                  <td className="num text-right">
+                  <td className="num text-right" data-label={t("census.bachelorsPlus")}>
                     {d.demographics ? `${d.demographics.bachelorsPlusRate}%` : "—"}
                   </td>
                 </tr>
@@ -2019,7 +2019,7 @@ function CompareLens({ analytics }: { analytics: Analytics }) {
                   <td>
                     <strong>{m.label}</strong>
                   </td>
-                  <td className="num text-right">
+                  <td className="num text-right" data-label={rowA.legislator.fullName}>
                     <div className="st-compare-val-wrap">
                       <strong>{m.aVal}</strong>
                       <span className="st-compare-bar" aria-hidden="true">
@@ -2027,7 +2027,7 @@ function CompareLens({ analytics }: { analytics: Analytics }) {
                       </span>
                     </div>
                   </td>
-                  <td className="num text-right">
+                  <td className="num text-right" data-label={rowB.legislator.fullName}>
                     <div className="st-compare-val-wrap">
                       <strong>{m.bVal}</strong>
                       <span className="st-compare-bar is-b" aria-hidden="true">
@@ -2042,7 +2042,7 @@ function CompareLens({ analytics }: { analytics: Analytics }) {
               <td>
                 <strong>{t("superTools.wbColFocusTopic")}</strong>
               </td>
-              <td className="text-right">
+              <td className="text-right" data-label={rowA.legislator.fullName}>
                 <Link
                   className="st-topic-chip"
                   to={`/super-tools/topics/${rowA.topTopic.slug}`}
@@ -2050,7 +2050,7 @@ function CompareLens({ analytics }: { analytics: Analytics }) {
                   {rowA.topTopic.label[lang]}
                 </Link>
               </td>
-              <td className="text-right">
+              <td className="text-right" data-label={rowB.legislator.fullName}>
                 <Link
                   className="st-topic-chip"
                   to={`/super-tools/topics/${rowB.topTopic.slug}`}
