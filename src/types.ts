@@ -451,3 +451,54 @@ export interface VotesData {
   legislatorStats: Record<string, LegislatorVoteStats>;
 }
 
+/* ------------------------------------------------ economic sectors & influence */
+
+export type DonorSectorKey =
+  | "real_estate"
+  | "healthcare_pharma"
+  | "energy_utilities"
+  | "finance_insurance"
+  | "labor_unions"
+  | "law_lobbying"
+  | "tech_telecom"
+  | "civic_grassroots";
+
+export interface SectorDefinition {
+  key: DonorSectorKey;
+  color: string;
+  committeeCodes: string[];
+}
+
+export interface SectorTotal {
+  sector: DonorSectorKey;
+  amount: number;
+  pct: number;
+  legislatorCount?: number;
+}
+
+export interface CommitteeAlignment {
+  committeeCode: string;
+  committeeName: string;
+  sector: DonorSectorKey;
+  sectorAmount: number;
+}
+
+export interface LegislatorInfluenceSummary {
+  legislatorId: number;
+  totalRaised: number;
+  grassrootsAmount: number;
+  institutionalAmount: number;
+  grassrootsPct: number;
+  institutionalPct: number;
+  sectorTotals: Record<DonorSectorKey, number>;
+  topSectors: SectorTotal[];
+  committeeAlignments: CommitteeAlignment[];
+}
+
+export interface InfluenceAnalytics<TRow = any> {
+  statewideSectors: SectorTotal[];
+  topAlignedPairs: TRow[];
+  avgGrassrootsPct: number;
+}
+
+

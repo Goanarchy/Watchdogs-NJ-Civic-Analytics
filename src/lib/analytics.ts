@@ -9,9 +9,17 @@ import {
 import type {
   Bill,
   DistrictDemographics,
+  DonorProfile,
   DonorsData,
+  InfluenceAnalytics,
   Legislator,
+  LegislatorInfluenceSummary,
+  SectorTotal,
 } from "../types";
+import {
+  SECTOR_DEFINITIONS,
+  computeLegislatorInfluence,
+} from "./sectors";
 import {
   TOPICS,
   classifyTopic,
@@ -86,6 +94,7 @@ export interface LegislatorMatrixRow {
   contributionCount: number;
   topTopic: TopicDefinition;
   medianIncome: number;
+  influenceSummary: LegislatorInfluenceSummary;
 }
 
 export interface CrossPartyPair {
@@ -201,6 +210,7 @@ export interface Analytics {
   crossPartyPairs: CrossPartyPair[];
   finance: FinanceAnalytics;
   districtComposites: DistrictComposite[];
+  influence: InfluenceAnalytics;
 }
 
 function chamberOfBill(code: string): "Assembly" | "Senate" {
@@ -613,11 +623,16 @@ export function buildAnalytics(
   let totalRaised = 0;
   let totalContributions = 0;
   let totalDonorRecords = 0;
+  const donorProfilesByLeg = new Map<number, DonorProfile[]>();
 
   for (const profile of donorsData?.profiles ?? []) {
     totalRaised += profile.totalAmount;
     totalContributions += profile.contributionCount;
     totalDonorRecords += profile.donorCount;
+
+    const legProfiles = donorProfilesByLeg.get(profile.legislatorId) ?? [];
+    legProfiles.push(profile);
+    donorProfilesByLeg.set(profile.legislatorId, legProfiles);
 
     const legMoney = raisedByLeg.get(profile.legislatorId) ?? {
       total: 0,
@@ -745,6 +760,8 @@ export function buildAnalytics(
     };
 
     const demo = demographicsByDistrict.get(leg.district);
+    const legDonorProfiles = donorProfilesByLeg.get(leg.id);
+    const influenceSummary = computeLegislatorInfluence(leg, legDonorProfiles);
 
     return {
       legislator: leg,
@@ -764,6 +781,7 @@ export function buildAnalytics(
       contributionCount: money.contributionCount,
       topTopic: topicBySlug.get(bestSlug) ?? topicBySlug.get("other")!,
       medianIncome: demo?.medianIncome ?? 0,
+      influenceSummary,
     };
   });
 
@@ -929,6 +947,68 @@ export function buildAnalytics(
     },
   );
 
+  /* ------------------------------------------------ Influence Radar Lab */
+  const allSectorsTotal = legislatorMatrix.reduce(
+    (sum, row) => sum + row.influenceSummary.totalRaised,
+    0,
+  );
+
+  const statewideSectors: SectorTotal[] = SECTOR_DEFINITIONS.map((sec) => {
+    const amount =
+      Math.round(
+        legislatorMatrix.reduce(
+          (sum, row) => sum + (row.influenceSummary.sectorTotals[sec.key] ?? 0),
+          0,
+        ) * 100,
+      ) / 100;
+    const legislatorCount = legislatorMatrix.filter(
+      (row) => (row.influenceSummary.sectorTotals[sec.key] ?? 0) > 0,
+    ).length;
+    const pct =
+      allSectorsTotal > 0
+        ? Math.round((amount / allSectorsTotal) * 100)
+        : 0;
+    return {
+      sector: sec.key,
+      amount,
+      pct,
+      legislatorCount,
+    };
+  }).sort((a, b) => b.amount - a.amount);
+
+  const topAlignedPairs: LegislatorMatrixRow[] = legislatorMatrix
+    .filter((row) => row.influenceSummary.committeeAlignments.length > 0)
+    .sort((a, b) => {
+      const sumA = a.influenceSummary.committeeAlignments.reduce(
+        (acc, item) => acc + item.sectorAmount,
+        0,
+      );
+      const sumB = b.influenceSummary.committeeAlignments.reduce(
+        (acc, item) => acc + item.sectorAmount,
+        0,
+      );
+      return sumB - sumA || b.totalRaised - a.totalRaised;
+    });
+
+  const coveredLegislators = legislatorMatrix.filter(
+    (row) => row.totalRaised > 0,
+  );
+  const avgGrassrootsPct =
+    coveredLegislators.length > 0
+      ? Math.round(
+          coveredLegislators.reduce(
+            (sum, row) => sum + row.influenceSummary.grassrootsPct,
+            0,
+          ) / coveredLegislators.length,
+        )
+      : 0;
+
+  const influence: InfluenceAnalytics = {
+    statewideSectors,
+    topAlignedPairs,
+    avgGrassrootsPct,
+  };
+
   return {
     totalBills: Object.keys(billData).length,
     totalSponsorships,
@@ -963,6 +1043,7 @@ export function buildAnalytics(
     crossPartyPairs,
     finance,
     districtComposites,
+    influence,
   };
 }
 

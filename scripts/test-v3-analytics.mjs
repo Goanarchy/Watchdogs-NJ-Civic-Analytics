@@ -20,6 +20,13 @@ import {
   calculateLegislatorVoteStats,
 } from "./fetch-njleg-bulk.mjs";
 
+// Task 2 imports from src/lib/sectors.ts
+import {
+  SECTOR_DEFINITIONS,
+  classifyDonorSector,
+  computeLegislatorInfluence,
+} from "../src/lib/sectors.ts";
+
 console.log("==> Running Watchdogs v3 Analytics & Bulk Parser Tests...\n");
 
 let passed = 0;
@@ -352,6 +359,269 @@ if (fs.existsSync(billStagesPath) && fs.existsSync(votesPath)) {
     }
   });
 }
+
+// ---------------------------------------------------------------------------
+// 7. Sector Definitions & Committee Jurisdictions
+// ---------------------------------------------------------------------------
+console.log("\n--- 7. Sector Definitions & Committee Jurisdictions ---");
+
+test("defines 8 distinct economic sectors with color and committee mappings", () => {
+  assert.strictEqual(Array.isArray(SECTOR_DEFINITIONS), true);
+  assert.strictEqual(SECTOR_DEFINITIONS.length, 8);
+
+  const expectedKeys = [
+    "real_estate",
+    "healthcare_pharma",
+    "energy_utilities",
+    "finance_insurance",
+    "labor_unions",
+    "law_lobbying",
+    "tech_telecom",
+    "civic_grassroots",
+  ];
+
+  const actualKeys = SECTOR_DEFINITIONS.map((s) => s.key);
+  assert.deepStrictEqual(actualKeys, expectedKeys);
+
+  for (const s of SECTOR_DEFINITIONS) {
+    assert.strictEqual(typeof s.color, "string");
+    assert.ok(s.color.startsWith("#"), `Sector ${s.key} color must be a hex code`);
+    assert.strictEqual(Array.isArray(s.committeeCodes), true);
+  }
+
+  const sectorMap = new Map(SECTOR_DEFINITIONS.map((s) => [s.key, s]));
+  assert.deepStrictEqual(sectorMap.get("real_estate").committeeCodes, ["AHO", "SCU", "ACE", "SEG"]);
+  assert.deepStrictEqual(sectorMap.get("healthcare_pharma").committeeCodes, ["AHE", "AHN", "SHH"]);
+  assert.deepStrictEqual(sectorMap.get("energy_utilities").committeeCodes, ["AEN", "SEN", "ATU"]);
+  assert.deepStrictEqual(sectorMap.get("finance_insurance").committeeCodes, ["AFI", "AAP", "ABU", "SBA", "SCM"]);
+  assert.deepStrictEqual(sectorMap.get("labor_unions").committeeCodes, ["ALA", "SLA"]);
+  assert.deepStrictEqual(sectorMap.get("law_lobbying").committeeCodes, ["AJU", "SJU", "SLP", "APS"]);
+  assert.deepStrictEqual(sectorMap.get("tech_telecom").committeeCodes, ["AST", "ATU"]);
+  assert.deepStrictEqual(sectorMap.get("civic_grassroots").committeeCodes, []);
+});
+
+// ---------------------------------------------------------------------------
+// 8. Donor Sector Classification
+// ---------------------------------------------------------------------------
+console.log("\n--- 8. Donor Sector Classification ---");
+
+test("classifies key NJ PACs and organizations into sectors", () => {
+  assert.strictEqual(classifyDonorSector({ name: "NJEA PAC" }), "labor_unions");
+  assert.strictEqual(classifyDonorSector({ name: "IBEW LOCAL 400 PAC" }), "labor_unions");
+  assert.strictEqual(classifyDonorSector({ name: "Hackensack Meridian Health" }), "healthcare_pharma");
+  assert.strictEqual(classifyDonorSector({ name: "RWJ Barnabas Health PAC" }), "healthcare_pharma");
+  assert.strictEqual(classifyDonorSector({ name: "NJ Realtors PAC" }), "real_estate");
+  assert.strictEqual(classifyDonorSector({ name: "PSEG" }), "energy_utilities");
+  assert.strictEqual(classifyDonorSector({ name: "Prudential Financial" }), "finance_insurance");
+  assert.strictEqual(classifyDonorSector({ name: "Verizon New Jersey" }), "tech_telecom");
+  assert.strictEqual(classifyDonorSector({ name: "Gibbons P.C." }), "law_lobbying");
+});
+
+test("classifies grassroots individual contributions cleanly", () => {
+  const indDonor = {
+    name: "Jane Smith",
+    amount: 250,
+    isIndividual: true,
+    contributorType: "INDIVIDUAL",
+    employer: "Public School Teacher",
+    occupation: "Teacher",
+  };
+  assert.strictEqual(classifyDonorSector(indDonor), "civic_grassroots");
+
+  const uncatInd = {
+    name: "John Doe",
+    amount: 250,
+    isIndividual: true,
+    contributorType: null,
+  };
+  assert.strictEqual(classifyDonorSector(uncatInd), "civic_grassroots");
+});
+
+test("classifies generic non-individual contributor types as fallback", () => {
+  assert.strictEqual(
+    classifyDonorSector({ name: "ABC LLC", isIndividual: false, contributorType: "BUSINESS/CORP" }),
+    "finance_insurance"
+  );
+  assert.strictEqual(
+    classifyDonorSector({ name: "DEF Committee", isIndividual: false, contributorType: "PROFESSIONAL PAC" }),
+    "law_lobbying"
+  );
+  assert.strictEqual(
+    classifyDonorSector({ name: "GHI Association", isIndividual: false, contributorType: "UNION" }),
+    "labor_unions"
+  );
+});
+
+// ---------------------------------------------------------------------------
+// 9. Legislator Influence Analytics & Committee Alignment
+// ---------------------------------------------------------------------------
+console.log("\n--- 9. Legislator Influence Analytics & Committee Alignment ---");
+
+const mockLegislator = {
+  id: 1,
+  fullName: "John Doe",
+  sortName: "Doe, John",
+  firstName: "John",
+  lastName: "Doe",
+  suffix: "",
+  party: "D",
+  partyName: "Democrat",
+  chamber: "Assembly",
+  district: 1,
+  title: "Assemblyman",
+  leadership: "",
+  email: "asmdoe@njleg.org",
+  photo: null,
+  officialUrl: "https://www.njleg.state.nj.us/",
+  contactUrl: "https://www.njleg.state.nj.us/",
+  education: [],
+  occupation: [],
+  publicService: [],
+  militaryService: [],
+  legislativeService: [],
+  addresses: [],
+  committees: [
+    {
+      name: "Health",
+      code: "AHE",
+      position: "Member",
+      url: null,
+    },
+    {
+      name: "Environment and Solid Waste",
+      code: "AEN",
+      position: "Member",
+      url: null,
+    },
+  ],
+  districtInfo: null,
+  bills: [],
+};
+
+test("safely handles undefined or empty donorProfiles returning zero values without NaN", () => {
+  const summaryUndefined = computeLegislatorInfluence(mockLegislator, undefined);
+  assert.strictEqual(summaryUndefined.legislatorId, 1);
+  assert.strictEqual(summaryUndefined.totalRaised, 0);
+  assert.strictEqual(summaryUndefined.grassrootsAmount, 0);
+  assert.strictEqual(summaryUndefined.institutionalAmount, 0);
+  assert.strictEqual(summaryUndefined.grassrootsPct, 0);
+  assert.strictEqual(summaryUndefined.institutionalPct, 0);
+  assert.deepStrictEqual(summaryUndefined.topSectors, []);
+  assert.deepStrictEqual(summaryUndefined.committeeAlignments, []);
+  assert.strictEqual(Number.isNaN(summaryUndefined.grassrootsPct), false);
+  assert.strictEqual(Number.isNaN(summaryUndefined.institutionalPct), false);
+  assert.strictEqual(Number.isNaN(summaryUndefined.totalRaised), false);
+
+  for (const s of SECTOR_DEFINITIONS) {
+    assert.strictEqual(summaryUndefined.sectorTotals[s.key], 0);
+  }
+
+  const summaryEmpty = computeLegislatorInfluence(mockLegislator, []);
+  assert.strictEqual(summaryEmpty.totalRaised, 0);
+  assert.strictEqual(summaryEmpty.grassrootsPct, 0);
+  assert.strictEqual(summaryEmpty.institutionalPct, 0);
+});
+
+test("detects committee overlap and calculates grassroots vs institutional percentage", () => {
+  const donorProfile = {
+    key: "doe-1",
+    legislatorId: 1,
+    name: "John Doe",
+    district: 1,
+    chamber: "Assembly",
+    party: "D",
+    electionYear: 2023,
+    entities: [],
+    source: { label: "ELEC", portalUrl: "" },
+    totalAmount: 20000,
+    contributionCount: 2,
+    donorCount: 2,
+    donors: [
+      {
+        name: "Hackensack Meridian Health",
+        isIndividual: false,
+        contributorType: "BUSINESS/CORP",
+        year: "2023",
+        amount: 10000,
+        count: 1,
+        employer: null,
+        occupation: null,
+        lastDate: "2023-10-01",
+      },
+      {
+        name: "Jane Grassroots",
+        isIndividual: true,
+        contributorType: "INDIVIDUAL",
+        year: "2023",
+        amount: 10000,
+        count: 1,
+        employer: "Public School",
+        occupation: "Teacher",
+        lastDate: "2023-10-05",
+      },
+    ],
+  };
+
+  const summary = computeLegislatorInfluence(mockLegislator, [donorProfile]);
+
+  assert.strictEqual(summary.totalRaised, 20000);
+  assert.strictEqual(summary.grassrootsAmount, 10000);
+  assert.strictEqual(summary.institutionalAmount, 10000);
+  assert.strictEqual(summary.grassrootsPct, 50);
+  assert.strictEqual(summary.institutionalPct, 50);
+
+  // Committee alignment hit: mockLegislator is on AHE ("Health"), which matches healthcare_pharma
+  assert.strictEqual(summary.committeeAlignments.length, 1);
+  assert.strictEqual(summary.committeeAlignments[0].committeeCode, "AHE");
+  assert.strictEqual(summary.committeeAlignments[0].committeeName, "Health");
+  assert.strictEqual(summary.committeeAlignments[0].sector, "healthcare_pharma");
+  assert.strictEqual(summary.committeeAlignments[0].sectorAmount, 10000);
+});
+
+test("computes valid influence summaries for all 120 legislators against official ELEC donors", () => {
+  const legs = JSON.parse(fs.readFileSync(path.join(root, "src/data/legislators.json"), "utf8"));
+  const donors = JSON.parse(fs.readFileSync(path.join(root, "src/data/donors.json"), "utf8"));
+
+  const profilesByLeg = new Map();
+  for (const p of donors.profiles) {
+    const list = profilesByLeg.get(p.legislatorId) || [];
+    list.push(p);
+    profilesByLeg.set(p.legislatorId, list);
+  }
+
+  assert.strictEqual(legs.length, 120);
+
+  let totalAlignedCount = 0;
+  for (const leg of legs) {
+    const profiles = profilesByLeg.get(leg.id);
+    const summary = computeLegislatorInfluence(leg, profiles);
+
+    assert.strictEqual(summary.legislatorId, leg.id);
+    assert.strictEqual(typeof summary.totalRaised, "number");
+    assert.strictEqual(typeof summary.grassrootsPct, "number");
+    assert.strictEqual(typeof summary.institutionalPct, "number");
+    assert.strictEqual(Number.isNaN(summary.totalRaised), false);
+    assert.strictEqual(Number.isNaN(summary.grassrootsPct), false);
+    assert.strictEqual(Number.isNaN(summary.institutionalPct), false);
+
+    if (summary.totalRaised > 0) {
+      assert.strictEqual(summary.grassrootsPct + summary.institutionalPct, 100);
+    } else {
+      assert.strictEqual(summary.grassrootsPct, 0);
+      assert.strictEqual(summary.institutionalPct, 0);
+    }
+
+    for (const align of summary.committeeAlignments) {
+      assert.ok(align.sectorAmount > 0);
+      assert.ok(SECTOR_DEFINITIONS.some((s) => s.key === align.sector));
+      assert.ok(leg.committees.some((c) => c.code === align.committeeCode));
+      totalAlignedCount++;
+    }
+  }
+
+  // Real data contains numerous standing committee members receiving funds from aligned sectors
+  assert.ok(totalAlignedCount > 0, "Expected at least one real committee-donor alignment in ELEC data");
+});
 
 console.log(`\n========================================`);
 console.log(`✓ All ${passed}/${total} test assertions passed cleanly.`);
