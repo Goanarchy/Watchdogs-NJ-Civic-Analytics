@@ -233,7 +233,7 @@ export interface Analytics {
   crossPartyPairs: CrossPartyPair[];
   finance: FinanceAnalytics;
   districtComposites: DistrictComposite[];
-  influence: InfluenceAnalytics;
+  influence: InfluenceAnalytics<LegislatorMatrixRow>;
   effectiveness: EffectivenessAnalytics<LegislatorMatrixRow>;
   pocketbook: PocketbookAnalytics<LegislatorMatrixRow>;
   votesData: VotesData;
