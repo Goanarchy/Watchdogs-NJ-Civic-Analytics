@@ -19,7 +19,9 @@
     "build:map": "node scripts/build-district-map.mjs",
     "validate-data": "node scripts/validate-data.mjs",
     "verify-official": "node scripts/verify-official.mjs",
-    "check-i18n": "node scripts/check-i18n.mjs"
+    "check-i18n": "node scripts/check-i18n.mjs",
+    "refresh-bulk": "node scripts/fetch-njleg-bulk.mjs",
+    "test:v3": "node scripts/test-v3-analytics.mjs"
   },
   "dependencies": {
     "react": "^19.1.1",

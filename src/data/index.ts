@@ -7,6 +7,8 @@ import legislatorsJson from "./legislators.json";
 import metaJson from "./meta.json";
 import type {
   Bill,
+  BillStageEntry,
+  BillStagesMap,
   CampaignData,
   CampaignProfile,
   DemographicsData,
@@ -19,6 +21,7 @@ import type {
   FederalDistrict,
   Legislator,
   Meta,
+  VotesData,
 } from "../types";
 
 export const legislators = legislatorsJson as unknown as Legislator[];
@@ -105,3 +108,32 @@ export async function loadBills(): Promise<Record<string, Bill>> {
   billCache = module.default as unknown as Record<string, Bill>;
   return billCache;
 }
+
+export type { BillStageEntry, BillStagesMap, VotesData };
+
+let billStagesCache: BillStagesMap | null = null;
+
+/**
+ * Mapeo de estados legislativos de los 11.000+ proyectos (introduced, committee,
+ * reported, floor, enacted). Se carga bajo demanda para mantener liviano el bundle inicial.
+ */
+export async function loadBillStages(): Promise<BillStagesMap> {
+  if (billStagesCache) return billStagesCache;
+  const module = await import("./bill-stages.json");
+  billStagesCache = module.default as unknown as BillStagesMap;
+  return billStagesCache;
+}
+
+let votesDataCache: VotesData | null = null;
+
+/**
+ * Registros oficiales de votaciones por lista (roll calls) y estadísticas de
+ * asistencia y disciplina partidaria de los 120 legisladores. Se carga bajo demanda.
+ */
+export async function loadVotesData(): Promise<VotesData> {
+  if (votesDataCache) return votesDataCache;
+  const module = await import("./votes.json");
+  votesDataCache = module.default as unknown as VotesData;
+  return votesDataCache;
+}
+

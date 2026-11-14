@@ -403,3 +403,51 @@ export interface DemographicsData {
   statewide: AcsMetrics;
   districts: DistrictDemographics[];
 }
+
+export type BillStage = "introduced" | "committee" | "reported" | "floor" | "enacted";
+
+export interface BillStageEntry {
+  bill: string;
+  stage: BillStage;
+  statusCode: string;
+  committeeCode: string | null;
+  lastAction: string;
+  lastActionDate: string | null;
+  isSubstantive: boolean;
+}
+
+export type BillStagesMap = Record<string, BillStageEntry>;
+
+export type VoteChoice = "Y" | "N" | "A" | "NV";
+
+export interface RollCallEvent {
+  id: string;
+  bill: string;
+  chamber: "Senate" | "Assembly";
+  date: string;
+  action: string;
+  abstract: string;
+  yeas: number;
+  nays: number;
+  abstains: number;
+  notVoting: number;
+  votesByLegislatorId: Record<string, VoteChoice>;
+}
+
+export interface LegislatorVoteStats {
+  eligible: number;
+  cast: number;
+  yeas: number;
+  nays: number;
+  abstains: number;
+  attendancePct: number;
+  partyUnityPct: number;
+}
+
+export interface VotesData {
+  generatedAt: string;
+  source: { name: string; portalUrl: string };
+  rollCalls: RollCallEvent[];
+  legislatorStats: Record<string, LegislatorVoteStats>;
+}
+

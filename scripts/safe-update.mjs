@@ -48,6 +48,8 @@ function assertInvariants() {
   const bills = readJson("bills.json");
   const donors = readJson("donors.json");
   const demographics = readJson("demographics.json");
+  const billStages = readJson("bill-stages.json");
+  const votes = readJson("votes.json");
 
   const checks = [
     [Array.isArray(legislators) && legislators.length === 120, `Expected 120 legislators, got ${legislators?.length}`],
@@ -55,6 +57,9 @@ function assertInvariants() {
     [bills && typeof bills === "object" && Object.keys(bills).length >= 10000, `Expected >= 10,000 bills, got ${bills ? Object.keys(bills).length : 0}`],
     [Array.isArray(donors?.profiles) && donors.profiles.length >= 120, `Expected >= 120 donor profiles, got ${donors?.profiles?.length}`],
     [Array.isArray(demographics?.districts) && demographics.districts.length === 40, `Expected 40 Census ACS districts, got ${demographics?.districts?.length}`],
+    [billStages && typeof billStages === "object" && Object.keys(billStages).length >= 1000, `Expected >= 1,000 bill stage records, got ${billStages ? Object.keys(billStages).length : 0}`],
+    [votes && Array.isArray(votes?.rollCalls) && votes.rollCalls.length > 0, `Expected >= 1 roll calls, got ${votes?.rollCalls?.length}`],
+    [votes && typeof votes?.legislatorStats === "object" && Object.keys(votes.legislatorStats).length === 120, `Expected 120 legislator vote stats, got ${votes?.legislatorStats ? Object.keys(votes.legislatorStats).length : 0}`],
   ];
 
   for (const [ok, message] of checks) {
@@ -82,6 +87,7 @@ try {
     runNode("scripts/fetch-njleg-data.mjs");
     runNode("scripts/fetch-census-acs.mjs");
     runNode("scripts/build-campaign-data.mjs");
+    runNode("scripts/fetch-njleg-bulk.mjs");
   } else {
     console.log("==> Verifying current datasets (use --refresh to fetch upstream updates)...");
   }
