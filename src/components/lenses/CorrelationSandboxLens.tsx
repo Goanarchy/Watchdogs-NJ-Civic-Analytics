@@ -28,6 +28,13 @@ const DIMENSION_LABEL_KEYS: Record<SandboxMetricKey, CopyKey> = {
   homeownershipRate: "superTools.sandboxDim.homeownershipRate",
 };
 
+const QUADRANT_LABEL_KEYS: Record<SandboxScatterPoint["quadrant"], CopyKey> = {
+  topRight: "superTools.sandboxQuad.topRight",
+  topLeft: "superTools.sandboxQuad.topLeft",
+  bottomRight: "superTools.sandboxQuad.bottomRight",
+  bottomLeft: "superTools.sandboxQuad.bottomLeft",
+};
+
 interface PresetDef {
   key: string;
   labelKey: CopyKey;
@@ -536,25 +543,25 @@ export function CorrelationSandboxLens({ analytics }: { analytics: Analytics }) 
           <div className="grid grid-cols-2 gap-2">
             <div className="panel p-3">
               <span className="text-xs text-muted block">
-                Top-Right (High X, High Y)
+                {t(QUADRANT_LABEL_KEYS.topRight)}
               </span>
               <strong className="num text-lg">{quadrantCounts.topRight}</strong>
             </div>
             <div className="panel p-3">
               <span className="text-xs text-muted block">
-                Top-Left (Low X, High Y)
+                {t(QUADRANT_LABEL_KEYS.topLeft)}
               </span>
               <strong className="num text-lg">{quadrantCounts.topLeft}</strong>
             </div>
             <div className="panel p-3">
               <span className="text-xs text-muted block">
-                Bottom-Right (High X, Low Y)
+                {t(QUADRANT_LABEL_KEYS.bottomRight)}
               </span>
               <strong className="num text-lg">{quadrantCounts.bottomRight}</strong>
             </div>
             <div className="panel p-3">
               <span className="text-xs text-muted block">
-                Bottom-Left (Low X, Low Y)
+                {t(QUADRANT_LABEL_KEYS.bottomLeft)}
               </span>
               <strong className="num text-lg">{quadrantCounts.bottomLeft}</strong>
             </div>
@@ -627,7 +634,8 @@ export function CorrelationSandboxLens({ analytics }: { analytics: Analytics }) 
 
               <div className="flex justify-between items-center mt-1">
                 <span className="chip text-xs">
-                  Quadrant: <strong>{activePoint.quadrant}</strong>
+                  {t("superTools.sandboxQuadrantLabel")}:{" "}
+                  <strong>{t(QUADRANT_LABEL_KEYS[activePoint.quadrant])}</strong>
                 </span>
                 <Link
                   to={`/legislador/${activePoint.legislatorId}`}

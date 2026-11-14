@@ -957,6 +957,11 @@ const en = {
   "superTools.sandboxDim.medianRent": "District Median Rent ($/mo)",
   "superTools.sandboxDim.transitCommuteRate": "District Transit Commute (%)",
   "superTools.sandboxDim.homeownershipRate": "District Homeownership (%)",
+  "superTools.sandboxQuad.topRight": "Top-Right (High X, High Y)",
+  "superTools.sandboxQuad.topLeft": "Top-Left (Low X, High Y)",
+  "superTools.sandboxQuad.bottomRight": "Bottom-Right (High X, Low Y)",
+  "superTools.sandboxQuad.bottomLeft": "Bottom-Left (Low X, Low Y)",
+  "superTools.sandboxQuadrantLabel": "Quadrant",
 
   /* Watchdogs v3.0 — Lens 10: Pocketbook Impact & Floor Roll Calls */
   "superTools.pocketbookKicker": "Everyday cost-of-living record",
@@ -977,6 +982,10 @@ const en = {
   "superTools.pocketbookChamberAvg": "Chamber benchmark",
   "superTools.pocketbookRecentVotes": "Official floor roll calls",
   "superTools.pocketbookBillsVotesMeta": "{bills} primary · {votes} floor votes",
+  "superTools.pocketbookViewRollCall": "Inspect roll call",
+  "superTools.pocketbookHideRollCall": "Hide roll call",
+  "superTools.pocketbookMemberVotes": "Member votes",
+  "superTools.ldShort": "LD",
 
   /* Watchdogs v3.0 — Profile, Report & Dossier Card Generator */
   "profile.v3BenchKicker": "Chamber performance context",
@@ -1946,6 +1955,11 @@ const es: Record<CopyKey, string> = {
   "superTools.sandboxDim.medianRent": "Alquiler mediano del distrito ($/mes)",
   "superTools.sandboxDim.transitCommuteRate": "% Viaje en transporte público",
   "superTools.sandboxDim.homeownershipRate": "% Propiedad de vivienda",
+  "superTools.sandboxQuad.topRight": "Superior der. (Alto X, Alto Y)",
+  "superTools.sandboxQuad.topLeft": "Superior izq. (Bajo X, Alto Y)",
+  "superTools.sandboxQuad.bottomRight": "Inferior der. (Alto X, Bajo Y)",
+  "superTools.sandboxQuad.bottomLeft": "Inferior izq. (Bajo X, Bajo Y)",
+  "superTools.sandboxQuadrantLabel": "Cuadrante",
 
   /* Watchdogs v3.0 — Lens 10: Pocketbook Impact & Floor Roll Calls */
   "superTools.pocketbookKicker": "Impacto en el costo de vida",
@@ -1966,6 +1980,10 @@ const es: Record<CopyKey, string> = {
   "superTools.pocketbookChamberAvg": "Promedio de cámara",
   "superTools.pocketbookRecentVotes": "Votaciones nominales recientes",
   "superTools.pocketbookBillsVotesMeta": "{bills} propios · {votes} votos en pleno",
+  "superTools.pocketbookViewRollCall": "Ver votación",
+  "superTools.pocketbookHideRollCall": "Ocultar votación",
+  "superTools.pocketbookMemberVotes": "Voto por legislador",
+  "superTools.ldShort": "LD",
 
   /* Watchdogs v3.0 — Profile, Report & Dossier Card Generator */
   "profile.v3BenchKicker": "Contexto comparativo por cámara",

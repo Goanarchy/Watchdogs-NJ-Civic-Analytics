@@ -676,8 +676,8 @@ export function PocketbookVotesLens({ analytics }: { analytics: Analytics }) {
                       >
                         {isExpanded ? "▲" : "▼"}{" "}
                         {isExpanded
-                          ? t("superTools.wbHideRecipients")
-                          : t("superTools.wbViewRecipients")}
+                          ? t("superTools.pocketbookHideRollCall")
+                          : t("superTools.pocketbookViewRollCall")}
                       </button>
                     </div>
                   </div>
@@ -694,7 +694,7 @@ export function PocketbookVotesLens({ analytics }: { analytics: Analytics }) {
                     <div className="panel p-3 mt-2 border-t border-line">
                       <div className="flex items-center justify-between gap-2 mb-3 flex-wrap">
                         <span className="text-xs font-semibold">
-                          {t("superTools.pocketbookRecentVotes")}:
+                          {t("superTools.pocketbookMemberVotes")}:
                         </span>
                         <div className="flex gap-1">
                           {(["all", "Y", "N", "A", "NV"] as const).map(
@@ -734,9 +734,12 @@ export function PocketbookVotesLens({ analytics }: { analytics: Analytics }) {
                                 >
                                   {m.name}
                                 </Link>
-                                <span className="text-muted text-xs">
-                                  {m.party} · LD{padDistrict(m.district)}
-                                </span>
+                                <div className="flex items-center gap-1.5 mt-0.5">
+                                  <PartyBadge party={m.party} />
+                                  <span className="text-muted text-xs">
+                                    {t("superTools.ldShort")} {padDistrict(m.district)}
+                                  </span>
+                                </div>
                               </div>
                             </div>
                             <span
