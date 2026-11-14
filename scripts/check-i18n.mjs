@@ -23,7 +23,7 @@ function parseDictionary(source, startMarker) {
   const end = source.indexOf("\n};", start);
   if (end === -1) throw new Error(`No se encontró el cierre de ${startMarker}`);
   const block = source.slice(start, end);
-  const keyPattern = /"([a-z][A-Za-z0-9]*(?:\.[A-Za-z0-9]+)+)"\s*:/g;
+  const keyPattern = /"([a-z][A-Za-z0-9_]*(?:\.[A-Za-z0-9_]+)+)"\s*:/g;
   const matches = [...block.matchAll(keyPattern)];
   const entries = new Map();
   matches.forEach((match, index) => {
