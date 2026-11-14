@@ -884,6 +884,8 @@ const en = {
   "superTools.influenceTopSectorCol": "Top sector",
   "superTools.influenceGrassrootsCol": "Grassroots %",
   "superTools.influenceLegislatorsCount": "{count} legislators",
+  "superTools.influenceElecTotal": "ELEC Total",
+  "superTools.influenceShowTop25": "Collapse to top 25",
 
   /* Watchdogs v3.0 — Lens 08: Legislative Effectiveness & Pipeline Funnel */
   "superTools.effKicker": "NJLeg bulk progression tracker",
@@ -917,6 +919,11 @@ const en = {
   "superTools.effChamberBenchmark": "Senate avg LES: {senate} · Assembly avg LES: {assembly}",
   "superTools.effAttendanceCol": "Floor vote %",
   "superTools.effEnactedCol": "Enacted",
+  "superTools.effSubstantiveBillsBadge": "{count} substantive bills",
+  "superTools.effColAdvance": "Advancement",
+  "superTools.effSignedLawsTitle": "Signed Laws",
+  "superTools.effSignedLawsDesc": "Substantive public laws enacted during this two-year legislative session.",
+  "superTools.effAvgAbbr": "avg {score}",
 
   /* Watchdogs v3.0 — Lens 09: Multi-Variable Correlation Sandbox */
   "superTools.sandboxKicker": "Interactive statistical explorer",
@@ -1866,6 +1873,8 @@ const es: Record<CopyKey, string> = {
   "superTools.influenceTopSectorCol": "Sector principal",
   "superTools.influenceGrassrootsCol": "% Base",
   "superTools.influenceLegislatorsCount": "{count} legisladores",
+  "superTools.influenceElecTotal": "Total ELEC",
+  "superTools.influenceShowTop25": "Contraer al Top 25",
 
   /* Watchdogs v3.0 — Lens 08: Legislative Effectiveness & Pipeline Funnel */
   "superTools.effKicker": "Rastreador oficial NJLeg",
@@ -1899,6 +1908,11 @@ const es: Record<CopyKey, string> = {
   "superTools.effChamberBenchmark": "Promedio Senado: {senate} · Promedio Asamblea: {assembly}",
   "superTools.effAttendanceCol": "Asistencia pleno",
   "superTools.effEnactedCol": "Leyes",
+  "superTools.effSubstantiveBillsBadge": "{count} proyectos sustantivos",
+  "superTools.effColAdvance": "Avance",
+  "superTools.effSignedLawsTitle": "Leyes promulgadas",
+  "superTools.effSignedLawsDesc": "Leyes públicas sustantivas aprobadas durante esta sesión legislativa de dos años.",
+  "superTools.effAvgAbbr": "prom. {score}",
 
   /* Watchdogs v3.0 — Lens 09: Multi-Variable Correlation Sandbox */
   "superTools.sandboxKicker": "Explorador estadístico interactivo",

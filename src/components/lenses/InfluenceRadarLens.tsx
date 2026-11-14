@@ -57,7 +57,10 @@ function SortTh({
   onClick: () => void;
 }) {
   return (
-    <th className={align === "right" ? "text-right" : undefined}>
+    <th
+      className={align === "right" ? "text-right" : undefined}
+      aria-sort={active ? (dir === "desc" ? "descending" : "ascending") : "none"}
+    >
       <button
         type="button"
         className={`st-sort-btn${active ? " is-active" : ""}`}
@@ -305,6 +308,7 @@ export function InfluenceRadarLens({ analytics }: { analytics: Analytics }) {
               aria-label={t("superTools.influenceTitle")}
               role="img"
             >
+              <title>{t("superTools.influenceTitle")}</title>
               {/* Neutral background track circle */}
               <circle
                 cx="110"
@@ -345,6 +349,7 @@ export function InfluenceRadarLens({ analytics }: { analytics: Analytics }) {
                       }
                       role="button"
                       tabIndex={0}
+                      aria-pressed={isSelected}
                       aria-label={`${t(SECTOR_LABEL_KEYS[seg.sector])}: ${compactMoney(seg.amount, lang)} (${seg.pct}%)`}
                       onKeyDown={(e) => {
                         if (e.key === "Enter" || e.key === " ") {
@@ -352,7 +357,9 @@ export function InfluenceRadarLens({ analytics }: { analytics: Analytics }) {
                           setSelectedSector(selectedSector === seg.sector ? "all" : seg.sector);
                         }
                       }}
-                    />
+                    >
+                      <title>{`${t(SECTOR_LABEL_KEYS[seg.sector])}: ${compactMoney(seg.amount, lang)} (${seg.pct}%)`}</title>
+                    </circle>
                   );
                 })}
               </g>
@@ -387,7 +394,7 @@ export function InfluenceRadarLens({ analytics }: { analytics: Analytics }) {
               >
                 {activeSectorData
                   ? `${activeSectorData.pct}% · ${t(SECTOR_LABEL_KEYS[activeSectorData.sector])}`
-                  : "ELEC Total"}
+                  : t("superTools.influenceElecTotal")}
               </text>
             </svg>
 
@@ -514,6 +521,7 @@ export function InfluenceRadarLens({ analytics }: { analytics: Analytics }) {
           </div>
           <div className="st-head-actions">
             <span className="panel-source num">
+              {t("superTools.influenceAlignedMembers")}:{" "}
               {t("superTools.wbShowingCount", {
                 shown: formatNumber(sortedPairs.length),
                 total: formatNumber(analytics.influence.topAlignedPairs.length),
@@ -769,8 +777,10 @@ export function InfluenceRadarLens({ analytics }: { analytics: Analytics }) {
               onClick={() => setShowAllRows((v) => !v)}
             >
               {showAllRows
-                ? "Show top 25"
-                : `${t("superTools.influenceAlignedMembers")}: Show all (${sortedPairs.length})`}
+                ? t("superTools.influenceShowTop25")
+                : t("superTools.wbShowAllRows", {
+                    count: formatNumber(sortedPairs.length),
+                  })}
             </button>
           </div>
         )}

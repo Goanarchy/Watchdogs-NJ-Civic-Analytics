@@ -37,7 +37,10 @@ function SortTh({
   onClick: () => void;
 }) {
   return (
-    <th className={align === "right" ? "text-right" : undefined}>
+    <th
+      className={align === "right" ? "text-right" : undefined}
+      aria-sort={active ? (dir === "desc" ? "descending" : "ascending") : "none"}
+    >
       <button
         type="button"
         className={`st-sort-btn${active ? " is-active" : ""}`}
@@ -230,7 +233,9 @@ export function EffectivenessFunnelLens({ analytics }: { analytics: Analytics })
             <h2>{t("superTools.effTitle")}</h2>
           </div>
           <span className="badge badge-navy num">
-            {formatNumber(analytics.effectiveness.substantiveBillCount)} substantive bills
+            {t("superTools.effSubstantiveBillsBadge", {
+              count: formatNumber(analytics.effectiveness.substantiveBillCount),
+            })}
           </span>
         </div>
         <p className="panel-intro">
@@ -246,7 +251,7 @@ export function EffectivenessFunnelLens({ analytics }: { analytics: Analytics })
           <div className="panel-head super-panel-head">
             <div>
               <p className="panel-kicker">{t("common.senate")}</p>
-              <h3>{t("superTools.effChamberBenchmark", { senate: senateAvgLes, assembly: assemblyAvgLes }).split("·")[0]?.trim()}</h3>
+              <h3>{chamberLabel("Senate", lang)}</h3>
             </div>
             <span className="badge badge-navy num">{senateAvgLes} / 100</span>
           </div>
@@ -256,7 +261,7 @@ export function EffectivenessFunnelLens({ analytics }: { analytics: Analytics })
               <strong className="num">{senateAttendance}%</strong>
             </div>
             <div>
-              <span className="st-stat-mini-label">Advancement</span>
+              <span className="st-stat-mini-label">{t("superTools.effColAdvance")}</span>
               <strong className="num">
                 {analytics.effectiveness.chamberAverages.Senate.avgAdvancementRatePct}%
               </strong>
@@ -268,7 +273,7 @@ export function EffectivenessFunnelLens({ analytics }: { analytics: Analytics })
           <div className="panel-head super-panel-head">
             <div>
               <p className="panel-kicker">{t("common.assembly")}</p>
-              <h3>{t("superTools.effChamberBenchmark", { senate: senateAvgLes, assembly: assemblyAvgLes }).split("·")[1]?.trim()}</h3>
+              <h3>{chamberLabel("Assembly", lang)}</h3>
             </div>
             <span className="badge badge-navy num">{assemblyAvgLes} / 100</span>
           </div>
@@ -278,7 +283,7 @@ export function EffectivenessFunnelLens({ analytics }: { analytics: Analytics })
               <strong className="num">{assemblyAttendance}%</strong>
             </div>
             <div>
-              <span className="st-stat-mini-label">Advancement</span>
+              <span className="st-stat-mini-label">{t("superTools.effColAdvance")}</span>
               <strong className="num">
                 {analytics.effectiveness.chamberAverages.Assembly.avgAdvancementRatePct}%
               </strong>
@@ -289,13 +294,13 @@ export function EffectivenessFunnelLens({ analytics }: { analytics: Analytics })
         <article className="panel super-panel">
           <div className="panel-head super-panel-head">
             <div>
-              <p className="panel-kicker">Signed Laws</p>
+              <p className="panel-kicker">{t("superTools.effSignedLawsTitle")}</p>
               <h3>{t("superTools.effStage.enacted")}</h3>
             </div>
             <span className="badge badge-navy num">{formatNumber(enactedTotal)}</span>
           </div>
           <p className="panel-intro" style={{ marginTop: 8 }}>
-            Substantive public laws enacted during this two-year legislative session.
+            {t("superTools.effSignedLawsDesc")}
           </p>
         </article>
       </div>
@@ -322,6 +327,7 @@ export function EffectivenessFunnelLens({ analytics }: { analytics: Analytics })
               type="button"
               className={`button button-small ${funnelChamber === "all" ? "button-primary" : "button-outline"}`}
               onClick={() => setFunnelChamber("all")}
+              aria-pressed={funnelChamber === "all"}
             >
               {t("superTools.effAllChambers")}
             </button>
@@ -329,6 +335,7 @@ export function EffectivenessFunnelLens({ analytics }: { analytics: Analytics })
               type="button"
               className={`button button-small ${funnelChamber === "Senate" ? "button-primary" : "button-outline"}`}
               onClick={() => setFunnelChamber("Senate")}
+              aria-pressed={funnelChamber === "Senate"}
             >
               {t("superTools.effSenateOnly")}
             </button>
@@ -336,6 +343,7 @@ export function EffectivenessFunnelLens({ analytics }: { analytics: Analytics })
               type="button"
               className={`button button-small ${funnelChamber === "Assembly" ? "button-primary" : "button-outline"}`}
               onClick={() => setFunnelChamber("Assembly")}
+              aria-pressed={funnelChamber === "Assembly"}
             >
               {t("superTools.effAssemblyOnly")}
             </button>
@@ -586,7 +594,7 @@ export function EffectivenessFunnelLens({ analytics }: { analytics: Analytics })
                   onClick={() => toggleSort("enacted")}
                 />
                 <SortTh
-                  label="Adv. %"
+                  label={t("superTools.effColAdvance")}
                   active={sortBy === "advancement"}
                   dir={sortDir}
                   align="right"
@@ -650,7 +658,7 @@ export function EffectivenessFunnelLens({ analytics }: { analytics: Analytics })
                             {row.effectivenessSummary.lesScore}
                           </strong>
                           <span className="num" style={{ fontSize: 11, color: "var(--muted)" }}>
-                            avg {chamberAvg}
+                            {t("superTools.effAvgAbbr", { score: chamberAvg })}
                           </span>
                         </div>
                         <div
@@ -662,7 +670,6 @@ export function EffectivenessFunnelLens({ analytics }: { analytics: Analytics })
                             className="st-bar-fill"
                             style={{
                               width: `${row.effectivenessSummary.lesScore}%`,
-                              background: "var(--navy-soft)",
                             }}
                           />
                           <div
@@ -698,7 +705,7 @@ export function EffectivenessFunnelLens({ analytics }: { analytics: Analytics })
                       </strong>
                     </td>
 
-                    <td className="num text-right" data-label="Adv. %">
+                    <td className="num text-right" data-label={t("superTools.effColAdvance")}>
                       <strong>{row.effectivenessSummary.advancementRatePct}%</strong>
                     </td>
 
@@ -721,8 +728,10 @@ export function EffectivenessFunnelLens({ analytics }: { analytics: Analytics })
               onClick={() => setShowAllRows((v) => !v)}
             >
               {showAllRows
-                ? "Show top 30"
-                : `Show all (${sortedRows.length})`}
+                ? t("superTools.wbShowTop30")
+                : t("superTools.wbShowAllRows", {
+                    count: formatNumber(sortedRows.length),
+                  })}
             </button>
           </div>
         )}
