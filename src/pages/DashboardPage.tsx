@@ -3,6 +3,12 @@ import { Link, useSearchParams } from "react-router-dom";
 import { DistrictMap } from "../components/DistrictMap";
 import { PartyBadge } from "../components/PartyBadge";
 import { Portrait } from "../components/Portrait";
+import {
+  CorrelationSandboxLens,
+  EffectivenessFunnelLens,
+  InfluenceRadarLens,
+  PocketbookVotesLens,
+} from "../components/lenses";
 import { campaign, demographics, federal } from "../data";
 import type {
   Analytics,
@@ -28,7 +34,11 @@ type LensTab =
   | "bipartisan"
   | "finance"
   | "districts"
-  | "compare";
+  | "compare"
+  | "influence"
+  | "effectiveness"
+  | "sandbox"
+  | "pocketbook";
 
 type MatrixSortKey =
   | "totalBills"
@@ -66,6 +76,10 @@ const VALID_TABS: LensTab[] = [
   "finance",
   "districts",
   "compare",
+  "influence",
+  "effectiveness",
+  "sandbox",
+  "pocketbook",
 ];
 
 function isValidTab(value: string | null): value is LensTab {
@@ -147,6 +161,39 @@ function renderLensIcon(tab: LensTab) {
         <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
           <path d="M4 6.5h11.5m0 0L12.5 3.5m3 3-3 3" />
           <path d="M16 13.5H4.5m0 0 3-3m-3 3 3 3" />
+        </svg>
+      );
+    case "influence":
+      return (
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="10" cy="10" r="7.5" />
+          <circle cx="10" cy="10" r="3.5" />
+          <path d="M10 2.5v4M10 13.5v4M2.5 10h4M13.5 10h4" />
+        </svg>
+      );
+    case "effectiveness":
+      return (
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M3 4h14l-5.5 6.5v5.5l-3-1.8v-3.7L3 4Z" />
+        </svg>
+      );
+    case "sandbox":
+      return (
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M3.5 3.5v13h13" />
+          <circle cx="7" cy="12.5" r="1.3" fill="currentColor" />
+          <circle cx="10" cy="9" r="1.3" fill="currentColor" />
+          <circle cx="13" cy="11.5" r="1.3" fill="currentColor" />
+          <circle cx="15" cy="6.5" r="1.3" fill="currentColor" />
+          <path d="M6 13.5l3.5-4 3 2.5 3-5" strokeDasharray="1.5 1.5" />
+        </svg>
+      );
+    case "pocketbook":
+      return (
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="4.5" width="14" height="11" rx="2" />
+          <path d="M3 8.5h14" />
+          <circle cx="13.5" cy="11.5" r="1" fill="currentColor" />
         </svg>
       );
   }
@@ -305,6 +352,34 @@ export function DashboardPage() {
                 "superTools.wbTabCompare",
                 lang === "es" ? "1v1 · Votos" : "1v1 · Matrix",
               ],
+              [
+                "influence",
+                "07",
+                "superTools.tabInfluence",
+                `${compactMoney(analytics?.finance.totalRaised ?? 0, lang)} · ${t("superTools.metricInfluence")}`,
+              ],
+              [
+                "effectiveness",
+                "08",
+                "superTools.tabEffectiveness",
+                `${formatNumber(analytics?.effectiveness.substantiveBillCount ?? 0)} · ${t("superTools.metricEffectiveness")}`,
+              ],
+              [
+                "sandbox",
+                "09",
+                "superTools.tabSandbox",
+                `${t("superTools.metricSandbox")} · r`,
+              ],
+              [
+                "pocketbook",
+                "10",
+                "superTools.tabPocketbook",
+                t("superTools.metricPocketbook", {
+                  count: Object.values(
+                    analytics?.pocketbook.domainRollCallCounts ?? {},
+                  ).reduce((a, b) => a + b, 0),
+                }),
+              ],
             ] as Array<[LensTab, string, CopyKey, string]>
           ).map(([id, code, key, metric]) => (
             <button
@@ -359,6 +434,18 @@ export function DashboardPage() {
             {activeTab === "finance" && <FinanceLens analytics={analytics} />}
             {activeTab === "districts" && <DistrictsLens analytics={analytics} />}
             {activeTab === "compare" && <CompareLens analytics={analytics} />}
+            {activeTab === "influence" && (
+              <InfluenceRadarLens analytics={analytics} />
+            )}
+            {activeTab === "effectiveness" && (
+              <EffectivenessFunnelLens analytics={analytics} />
+            )}
+            {activeTab === "sandbox" && (
+              <CorrelationSandboxLens analytics={analytics} />
+            )}
+            {activeTab === "pocketbook" && (
+              <PocketbookVotesLens analytics={analytics} />
+            )}
           </>
         )}
       </main>
