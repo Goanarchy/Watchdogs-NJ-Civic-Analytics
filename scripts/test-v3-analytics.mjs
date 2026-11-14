@@ -38,6 +38,21 @@ import {
   computeChamberNormalizedEffectiveness,
 } from "../src/lib/effectiveness.ts";
 
+// Task 4 imports from src/lib/sandbox.ts & src/lib/pocketbook.ts
+import {
+  SANDBOX_DIMENSIONS,
+  extractSandboxMetric,
+  computeMedian,
+  computePearsonCorrelation,
+  buildSandboxScatter,
+} from "../src/lib/sandbox.ts";
+
+import {
+  classifyPocketbookDomains,
+  primaryPocketbookDomain,
+  computePocketbookSummaries,
+} from "../src/lib/pocketbook.ts";
+
 console.log("==> Running Watchdogs v3 Analytics & Bulk Parser Tests...\n");
 
 let passed = 0;
@@ -982,6 +997,494 @@ test("classifyDonorSector matches labor union local prefixes with punctuation/nu
   assert.strictEqual(classifyDonorSector({ name: "Local 100" }), "labor_unions");
   assert.strictEqual(classifyDonorSector({ name: "IBEW Local 102" }), "labor_unions");
 });
+
+// ---------------------------------------------------------------------------
+// 15. Correlation Sandbox: Pearson R & Median Split Engine
+// ---------------------------------------------------------------------------
+console.log("\n--- 15. Correlation Sandbox: Pearson R & Median Split Engine ---");
+
+test("computePearsonCorrelation handles boundary, perfect, and inverse correlations", () => {
+  // Empty or insufficient points (< 2) returns 0 without NaN
+  assert.strictEqual(computePearsonCorrelation([]), 0);
+  assert.strictEqual(computePearsonCorrelation([{ x: 10, y: 20 }]), 0);
+
+  // Perfect positive (+1.0)
+  assert.strictEqual(
+    computePearsonCorrelation([
+      { x: 1, y: 2 },
+      { x: 2, y: 4 },
+      { x: 3, y: 6 },
+    ]),
+    1
+  );
+
+  // Perfect negative (-1.0)
+  assert.strictEqual(
+    computePearsonCorrelation([
+      { x: 1, y: 6 },
+      { x: 2, y: 4 },
+      { x: 3, y: 2 },
+    ]),
+    -1
+  );
+
+  // Sample with known moderate correlation
+  const r = computePearsonCorrelation([
+    { x: 1, y: 2 },
+    { x: 2, y: 3 },
+    { x: 3, y: 5 },
+    { x: 4, y: 4 },
+    { x: 5, y: 6 },
+  ]);
+  assert.ok(r > 0.8 && r < 1.0, `Expected moderate positive correlation, got ${r}`);
+});
+
+test("computePearsonCorrelation enforces zero-variance and non-finite safety", () => {
+  // Vertical line (zero variance in X) -> MUST return 0, NEVER NaN
+  assert.strictEqual(
+    computePearsonCorrelation([
+      { x: 5, y: 1 },
+      { x: 5, y: 2 },
+      { x: 5, y: 3 },
+    ]),
+    0
+  );
+
+  // Horizontal line (zero variance in Y) -> MUST return 0, NEVER NaN
+  assert.strictEqual(
+    computePearsonCorrelation([
+      { x: 1, y: 7 },
+      { x: 2, y: 7 },
+      { x: 3, y: 7 },
+    ]),
+    0
+  );
+
+  // All identical points -> MUST return 0
+  assert.strictEqual(
+    computePearsonCorrelation([
+      { x: 4, y: 4 },
+      { x: 4, y: 4 },
+    ]),
+    0
+  );
+
+  // Clamped strictly to [-1, 1]
+  const pts = [
+    { x: 100, y: 100 },
+    { x: 200, y: 200 },
+  ];
+  const r = computePearsonCorrelation(pts);
+  assert.ok(r >= -1 && r <= 1);
+});
+
+test("computeMedian computes deterministic sorted median across odd/even sizes", () => {
+  assert.strictEqual(computeMedian([]), 0);
+  assert.strictEqual(computeMedian([42]), 42);
+  assert.strictEqual(computeMedian([3, 1, 2]), 2);
+  assert.strictEqual(computeMedian([1, 2, 3, 4]), 2.5);
+  assert.strictEqual(computeMedian([10, 20, 30, 40, 50]), 30);
+});
+
+// ---------------------------------------------------------------------------
+// 16. Sandbox Scatter & 12 Dimensions Extraction
+// ---------------------------------------------------------------------------
+console.log("\n--- 16. Sandbox Scatter & 12 Dimensions Extraction ---");
+
+test("SANDBOX_DIMENSIONS defines all 12 civic, demographic, finance, and voting dimensions", () => {
+  assert.strictEqual(SANDBOX_DIMENSIONS.length, 12);
+  const keys = new Set(SANDBOX_DIMENSIONS.map((d) => d.key));
+  const expectedKeys = [
+    "totalRaised",
+    "grassrootsPct",
+    "lesScore",
+    "bipartisanRate",
+    "attendancePct",
+    "partyUnityPct",
+    "primaryBills",
+    "enactedBills",
+    "medianIncome",
+    "medianRent",
+    "transitCommuteRate",
+    "homeownershipRate",
+  ];
+  for (const ek of expectedKeys) {
+    assert.ok(keys.has(ek), `Missing dimension key ${ek}`);
+  }
+});
+
+test("extractSandboxMetric safely extracts numeric metrics with fallback to 0", () => {
+  const mockRow = {
+    legislator: {
+      id: 1,
+      fullName: "Jane Doe",
+      party: "D",
+      chamber: "Senate",
+      district: 1,
+      photo: null,
+    },
+    totalBills: 10,
+    primaryBills: 4,
+    bipartisanRate: 25,
+    totalRaised: 50000,
+    medianIncome: 85000,
+    demographics: {
+      geoId: "0400000US34",
+      name: "District 1",
+      population: 230000,
+      medianAge: 40,
+      district: 1,
+      medianIncome: 85000,
+      medianHomeValue: 350000,
+      medianRent: 1600,
+      povertyRate: 8.5,
+      bachelorsPlusRate: 42,
+      unemploymentRate: 4.1,
+      homeownershipRate: 68.5,
+      transitCommuteRate: 11.2,
+    },
+    influenceSummary: {
+      legislatorId: 1,
+      totalRaised: 50000,
+      grassrootsAmount: 15000,
+      institutionalAmount: 35000,
+      grassrootsPct: 30,
+      institutionalPct: 70,
+      sectorTotals: {},
+      topSectors: [],
+      committeeAlignments: [],
+    },
+    effectivenessSummary: {
+      legislatorId: 1,
+      primarySubstantive: 4,
+      cosponsoredSubstantive: 6,
+      primaryCommitteePlus: 3,
+      primaryReportedPlus: 2,
+      primaryFloorPlus: 1,
+      primaryEnacted: 1,
+      cosponsoredEnacted: 0,
+      advancementRatePct: 50,
+      rawPoints: 18,
+      lesScore: 72,
+      archetype: "high_throughput",
+    },
+    voteStats: {
+      eligible: 100,
+      cast: 95,
+      yeas: 80,
+      nays: 12,
+      abstains: 3,
+      attendancePct: 95,
+      partyUnityPct: 88,
+    },
+  };
+
+  assert.strictEqual(extractSandboxMetric(mockRow, "totalRaised"), 50000);
+  assert.strictEqual(extractSandboxMetric(mockRow, "grassrootsPct"), 30);
+  assert.strictEqual(extractSandboxMetric(mockRow, "lesScore"), 72);
+  assert.strictEqual(extractSandboxMetric(mockRow, "bipartisanRate"), 25);
+  assert.strictEqual(extractSandboxMetric(mockRow, "attendancePct"), 95);
+  assert.strictEqual(extractSandboxMetric(mockRow, "partyUnityPct"), 88);
+  assert.strictEqual(extractSandboxMetric(mockRow, "primaryBills"), 4);
+  assert.strictEqual(extractSandboxMetric(mockRow, "enactedBills"), 1);
+  assert.strictEqual(extractSandboxMetric(mockRow, "medianIncome"), 85000);
+  assert.strictEqual(extractSandboxMetric(mockRow, "medianRent"), 1600);
+  assert.strictEqual(extractSandboxMetric(mockRow, "transitCommuteRate"), 11.2);
+  assert.strictEqual(extractSandboxMetric(mockRow, "homeownershipRate"), 68.5);
+
+  // Missing properties fallback cleanly to 0
+  const emptyRow = {
+    legislator: {
+      id: 99,
+      fullName: "Empty Member",
+      party: "R",
+      chamber: "Assembly",
+      district: 2,
+      photo: null,
+    },
+  };
+  for (const dim of SANDBOX_DIMENSIONS) {
+    const val = extractSandboxMetric(emptyRow, dim.key);
+    assert.strictEqual(typeof val, "number");
+    assert.strictEqual(Number.isNaN(val), false);
+    assert.strictEqual(val, 0);
+  }
+});
+
+test("buildSandboxScatter filters points and computes median split quadrants cleanly", () => {
+  const rows = [
+    {
+      legislator: { id: 1, fullName: "A", party: "D", chamber: "Senate", district: 1, photo: null },
+      totalRaised: 10,
+      voteStats: { attendancePct: 10 },
+    },
+    {
+      legislator: { id: 2, fullName: "B", party: "D", chamber: "Senate", district: 2, photo: null },
+      totalRaised: 20,
+      voteStats: { attendancePct: 30 },
+    },
+    {
+      legislator: { id: 3, fullName: "C", party: "R", chamber: "Assembly", district: 3, photo: null },
+      totalRaised: 30,
+      voteStats: { attendancePct: 20 },
+    },
+    {
+      legislator: { id: 4, fullName: "D", party: "R", chamber: "Assembly", district: 4, photo: null },
+      totalRaised: 40,
+      voteStats: { attendancePct: 40 },
+    },
+  ];
+
+  const resAll = buildSandboxScatter(rows, "totalRaised", "attendancePct");
+  assert.strictEqual(resAll.points.length, 4);
+  assert.strictEqual(resAll.medianX, 25);
+  assert.strictEqual(resAll.medianY, 25);
+
+  // Check quadrant assignments
+  // Leg 1: (10, 10) -> bottomLeft
+  // Leg 2: (20, 30) -> topLeft
+  // Leg 3: (30, 20) -> bottomRight
+  // Leg 4: (40, 40) -> topRight
+  const p1 = resAll.points.find((p) => p.legislatorId === 1);
+  const p2 = resAll.points.find((p) => p.legislatorId === 2);
+  const p3 = resAll.points.find((p) => p.legislatorId === 3);
+  const p4 = resAll.points.find((p) => p.legislatorId === 4);
+
+  assert.strictEqual(p1.quadrant, "bottomLeft");
+  assert.strictEqual(p2.quadrant, "topLeft");
+  assert.strictEqual(p3.quadrant, "bottomRight");
+  assert.strictEqual(p4.quadrant, "topRight");
+
+  // Filtering by chamber
+  const resSenate = buildSandboxScatter(rows, "totalRaised", "attendancePct", {
+    chamber: "Senate",
+  });
+  assert.strictEqual(resSenate.points.length, 2);
+  assert.ok(resSenate.points.every((p) => p.chamber === "Senate"));
+
+  // Filtering by party
+  const resR = buildSandboxScatter(rows, "totalRaised", "attendancePct", {
+    party: "R",
+  });
+  assert.strictEqual(resR.points.length, 2);
+  assert.ok(resR.points.every((p) => p.party === "R"));
+});
+
+// ---------------------------------------------------------------------------
+// 17. Pocketbook Domain Classification & Scoring Unit Rules
+// ---------------------------------------------------------------------------
+console.log("\n--- 17. Pocketbook Domain Classification & Scoring Unit Rules ---");
+
+test("classifyPocketbookDomains classifies NJ resident pocketbook pillars accurately", () => {
+  const taxText = "Requires annual property tax relief under stay nj and homestead assessment rebate";
+  assert.deepStrictEqual(classifyPocketbookDomains(taxText), ["property_tax"]);
+  assert.strictEqual(primaryPocketbookDomain(taxText), "property_tax");
+
+  const housingText = "Affordable housing fair share reforms and tenant eviction protection procedures";
+  assert.deepStrictEqual(classifyPocketbookDomains(housingText), ["housing"]);
+  assert.strictEqual(primaryPocketbookDomain(housingText), "housing");
+
+  const transitText = "Modernizes NJ Transit rail infrastructure, commuter bus service, and highway repairs";
+  assert.deepStrictEqual(classifyPocketbookDomains(transitText), ["transit"]);
+  assert.strictEqual(primaryPocketbookDomain(transitText), "transit");
+
+  // Multi-domain match (e.g. transit-oriented housing)
+  const multiText = "Transit-oriented affordable housing development near commuter train stations";
+  const multiDomains = classifyPocketbookDomains(multiText);
+  assert.ok(multiDomains.includes("housing"));
+  assert.ok(multiDomains.includes("transit"));
+
+  // Neutral text
+  assert.deepStrictEqual(classifyPocketbookDomains("Designates official state insect as the honeybee"), []);
+  assert.strictEqual(primaryPocketbookDomain("Designates official state insect"), null);
+});
+
+test("computePocketbookSummaries degrades safely with 0 bills and 0 votes", () => {
+  const mockLegs = [
+    {
+      id: 101,
+      fullName: "Active Senator",
+      party: "D",
+      chamber: "Senate",
+      district: 10,
+      bills: [
+        ["S100", "P"],
+        ["S200", "C"],
+      ],
+    },
+    {
+      id: 102,
+      fullName: "Zero Bill Senator",
+      party: "R",
+      chamber: "Senate",
+      district: 11,
+      bills: [],
+    },
+  ];
+
+  const mockBills = {
+    S100: { bill: "S100", synopsis: "Provides property tax relief for senior freeze homeowners", session: 2026 },
+    S200: { bill: "S200", synopsis: "Expands NJ Transit commuter bus service frequency", session: 2026 },
+  };
+
+  const mockStages = {
+    S100: { bill: "S100", stage: "enacted", isSubstantive: true },
+    S200: { bill: "S200", stage: "reported", isSubstantive: true },
+  };
+
+  const mockRollCalls = [
+    {
+      id: "rc-1",
+      bill: "S100",
+      chamber: "Senate",
+      date: "2026-06-15",
+      action: "2RS 2RAG",
+      abstract: "Provides property tax relief for senior freeze homeowners",
+      yeas: 38,
+      nays: 0,
+      abstains: 0,
+      notVoting: 2,
+      votesByLegislatorId: {
+        "101": "Y",
+        "102": "NV",
+      },
+    },
+  ];
+
+  const { summariesById, domainRollCallCounts } = computePocketbookSummaries(
+    mockLegs,
+    mockBills,
+    mockStages,
+    mockRollCalls
+  );
+
+  assert.strictEqual(summariesById.size, 2);
+  assert.strictEqual(domainRollCallCounts.property_tax, 1);
+  assert.strictEqual(domainRollCallCounts.housing, 0);
+  assert.strictEqual(domainRollCallCounts.transit, 0);
+
+  const activeSum = summariesById.get(101);
+  assert.strictEqual(activeSum.domains.property_tax.primaryBills, 1);
+  assert.strictEqual(activeSum.domains.property_tax.enactedBills, 1);
+  assert.strictEqual(activeSum.domains.property_tax.floorVotesCast, 1);
+  assert.strictEqual(activeSum.domains.property_tax.yeaVotes, 1);
+  assert.strictEqual(activeSum.domains.property_tax.score, 100); // normalized chamber leader
+
+  const zeroSum = summariesById.get(102);
+  assert.strictEqual(zeroSum.overallScore, 0);
+  for (const dom of ["property_tax", "housing", "transit"]) {
+    assert.strictEqual(zeroSum.domains[dom].score, 0);
+    assert.strictEqual(zeroSum.domains[dom].primaryBills, 0);
+    assert.strictEqual(zeroSum.domains[dom].enactedBills, 0);
+    assert.strictEqual(zeroSum.domains[dom].floorVotesCast, 0);
+    assert.strictEqual(Number.isNaN(zeroSum.domains[dom].score), false);
+  }
+});
+
+// ---------------------------------------------------------------------------
+// 18. Full Sandbox & Pocketbook Integration on Real Disk Datasets
+// ---------------------------------------------------------------------------
+console.log("\n--- 18. Full Sandbox & Pocketbook Integration on Real Disk Datasets ---");
+
+if (fs.existsSync(billStagesPath) && fs.existsSync(votesPath)) {
+  test("computes valid sandbox correlations & pocketbook indices across all 120 NJ legislators", () => {
+    const legs = JSON.parse(fs.readFileSync(path.join(root, "src/data/legislators.json"), "utf8"));
+    const bills = JSON.parse(fs.readFileSync(path.join(root, "src/data/bills.json"), "utf8"));
+    const billStages = JSON.parse(fs.readFileSync(billStagesPath, "utf8"));
+    const votes = JSON.parse(fs.readFileSync(votesPath, "utf8"));
+    const demographics = JSON.parse(fs.readFileSync(path.join(root, "src/data/demographics.json"), "utf8"));
+    const donors = JSON.parse(fs.readFileSync(path.join(root, "src/data/donors.json"), "utf8"));
+
+    // 1. Pocketbook Invariants on real data
+    const { summariesById, domainRollCallCounts } = computePocketbookSummaries(
+      legs,
+      bills,
+      billStages,
+      votes.rollCalls
+    );
+
+    assert.strictEqual(summariesById.size, 120);
+    assert.ok(domainRollCallCounts.property_tax > 0, `Expected property tax roll calls, got ${domainRollCallCounts.property_tax}`);
+    assert.ok(domainRollCallCounts.housing > 0, `Expected housing roll calls, got ${domainRollCallCounts.housing}`);
+    assert.ok(domainRollCallCounts.transit > 0, `Expected transit roll calls, got ${domainRollCallCounts.transit}`);
+
+    for (const leg of legs) {
+      const summary = summariesById.get(leg.id);
+      assert.ok(summary, `Missing pocketbook summary for legislator ${leg.id}`);
+      assert.strictEqual(summary.legislatorId, leg.id);
+      assert.strictEqual(typeof summary.overallScore, "number");
+      assert.strictEqual(Number.isNaN(summary.overallScore), false);
+      assert.ok(summary.overallScore >= 0 && summary.overallScore <= 100);
+
+      for (const dom of ["property_tax", "housing", "transit"]) {
+        const dScore = summary.domains[dom];
+        assert.ok(dScore, `Missing domain score for ${dom}`);
+        assert.strictEqual(dScore.domain, dom);
+        assert.strictEqual(typeof dScore.score, "number");
+        assert.strictEqual(Number.isNaN(dScore.score), false);
+        assert.ok(dScore.score >= 0 && dScore.score <= 100);
+        assert.strictEqual(Number.isNaN(dScore.primaryBills), false);
+        assert.strictEqual(Number.isNaN(dScore.cosponsoredBills), false);
+        assert.strictEqual(Number.isNaN(dScore.advancedBills), false);
+        assert.strictEqual(Number.isNaN(dScore.enactedBills), false);
+        assert.strictEqual(Number.isNaN(dScore.floorVotesCast), false);
+      }
+
+      // Check notableVotes
+      assert.ok(summary.notableVotes.length <= 15);
+      let seenNV = false;
+      for (const nv of summary.notableVotes) {
+        assert.ok(["Y", "N", "A", "NV"].includes(nv.choice));
+        assert.ok(nv.bill.length > 0);
+        assert.ok(nv.date.length > 0);
+        if (nv.choice === "NV") {
+          seenNV = true;
+        } else if (seenNV) {
+          // If we've already seen an NV vote, this vote must also be NV (voted comes first)
+          assert.strictEqual(nv.choice, "NV", "Expected active votes to precede NV votes");
+        }
+      }
+    }
+
+    // 2. Correlation Sandbox Invariants across real legislators
+    const demoByDistrict = new Map(demographics.districts.map((d) => [d.district, d]));
+    const donorsByLeg = new Map(donors.profiles.map((p) => [p.legislatorId, p]));
+    const effMap = computeChamberNormalizedEffectiveness(legs, billStages);
+
+    const mockRows = legs.map((leg) => {
+      const legDonor = donorsByLeg.get(leg.id);
+      const influence = computeLegislatorInfluence(leg, legDonor ? [legDonor] : []);
+      const eff = effMap.get(leg.id);
+      const vStats = votes.legislatorStats?.[String(leg.id)];
+      const pSum = summariesById.get(leg.id);
+      return {
+        legislator: leg,
+        totalBills: leg.bills?.length ?? 0,
+        primaryBills: leg.bills?.filter((b) => b[1] === "P").length ?? 0,
+        bipartisanRate: 20,
+        totalRaised: influence.totalRaised,
+        medianIncome: demoByDistrict.get(leg.district)?.medianIncome ?? 0,
+        demographics: demoByDistrict.get(leg.district) ?? null,
+        influenceSummary: influence,
+        effectivenessSummary: eff,
+        voteStats: vStats,
+        pocketbookSummary: pSum,
+      };
+    });
+
+    const scatterIncomeRaised = buildSandboxScatter(mockRows, "medianIncome", "totalRaised");
+    assert.strictEqual(scatterIncomeRaised.points.length, 120);
+    assert.ok(Number.isFinite(scatterIncomeRaised.pearsonR));
+    assert.ok(scatterIncomeRaised.pearsonR >= -1 && scatterIncomeRaised.pearsonR <= 1);
+    assert.ok(scatterIncomeRaised.medianX > 0);
+    assert.ok(scatterIncomeRaised.medianY >= 0);
+
+    const scatterAttendanceUnity = buildSandboxScatter(mockRows, "attendancePct", "partyUnityPct");
+    assert.strictEqual(scatterAttendanceUnity.points.length, 120);
+    assert.ok(Number.isFinite(scatterAttendanceUnity.pearsonR));
+    assert.ok(scatterAttendanceUnity.pearsonR >= -1 && scatterAttendanceUnity.pearsonR <= 1);
+  });
+}
 
 console.log(`\n========================================`);
 console.log(`✓ All ${passed}/${total} test assertions passed cleanly.`);

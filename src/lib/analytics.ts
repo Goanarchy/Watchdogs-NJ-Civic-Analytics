@@ -20,7 +20,10 @@ import type {
   Legislator,
   LegislatorEffectivenessSummary,
   LegislatorInfluenceSummary,
+  LegislatorPocketbookSummary,
   LegislatorVoteStats,
+  PocketbookAnalytics,
+  PocketbookDomainKey,
   SectorTotal,
   VotesData,
 } from "../types";
@@ -29,6 +32,9 @@ import {
   buildPipelineFunnel,
   computeChamberNormalizedEffectiveness,
 } from "./effectiveness";
+import {
+  computePocketbookSummaries,
+} from "./pocketbook";
 import {
   SECTOR_DEFINITIONS,
   computeLegislatorInfluence,
@@ -107,9 +113,11 @@ export interface LegislatorMatrixRow {
   contributionCount: number;
   topTopic: TopicDefinition;
   medianIncome: number;
+  demographics?: DistrictDemographics | null;
   influenceSummary: LegislatorInfluenceSummary;
   effectivenessSummary: LegislatorEffectivenessSummary;
   voteStats: LegislatorVoteStats;
+  pocketbookSummary: LegislatorPocketbookSummary;
 }
 
 export interface CrossPartyPair {
@@ -227,6 +235,7 @@ export interface Analytics {
   districtComposites: DistrictComposite[];
   influence: InfluenceAnalytics;
   effectiveness: EffectivenessAnalytics<LegislatorMatrixRow>;
+  pocketbook: PocketbookAnalytics<LegislatorMatrixRow>;
   votesData: VotesData;
 }
 
@@ -771,6 +780,14 @@ export function buildAnalytics(
     extrasById,
   );
 
+  const { summariesById: pocketbookSummaries, domainRollCallCounts } =
+    computePocketbookSummaries(
+      legislators,
+      billData,
+      billStagesData,
+      safeVotesData.rollCalls ?? [],
+    );
+
   const legislatorMatrix: LegislatorMatrixRow[] = legislators.map((leg) => {
     let primaryBills = 0;
     for (const [, type] of leg.bills) {
@@ -857,6 +874,48 @@ export function buildAnalytics(
         archetype: "developing",
       };
 
+    const pocketbookSummary: LegislatorPocketbookSummary =
+      pocketbookSummaries.get(leg.id) ?? {
+        legislatorId: leg.id,
+        overallScore: 0,
+        domains: {
+          property_tax: {
+            domain: "property_tax",
+            score: 0,
+            primaryBills: 0,
+            cosponsoredBills: 0,
+            advancedBills: 0,
+            enactedBills: 0,
+            floorVotesCast: 0,
+            yeaVotes: 0,
+            nayVotes: 0,
+          },
+          housing: {
+            domain: "housing",
+            score: 0,
+            primaryBills: 0,
+            cosponsoredBills: 0,
+            advancedBills: 0,
+            enactedBills: 0,
+            floorVotesCast: 0,
+            yeaVotes: 0,
+            nayVotes: 0,
+          },
+          transit: {
+            domain: "transit",
+            score: 0,
+            primaryBills: 0,
+            cosponsoredBills: 0,
+            advancedBills: 0,
+            enactedBills: 0,
+            floorVotesCast: 0,
+            yeaVotes: 0,
+            nayVotes: 0,
+          },
+        },
+        notableVotes: [],
+      };
+
     return {
       legislator: leg,
       totalBills,
@@ -875,9 +934,11 @@ export function buildAnalytics(
       contributionCount: money.contributionCount,
       topTopic: topicBySlug.get(bestSlug) ?? topicBySlug.get("other")!,
       medianIncome: demo?.medianIncome ?? 0,
+      demographics: demo ?? null,
       influenceSummary,
       effectivenessSummary,
       voteStats,
+      pocketbookSummary,
     };
   });
 
@@ -1225,6 +1286,91 @@ export function buildAnalytics(
     chamberAverages,
   };
 
+  /* -------------------------------- Pocketbook Impact & Roll-Call Analytics */
+  function computePocketbookChamberAverages(
+    chamber: "Senate" | "Assembly",
+  ): Record<PocketbookDomainKey | "overall", number> {
+    const members = legislatorMatrix.filter(
+      (r) => r.legislator.chamber === chamber,
+    );
+    const count = members.length;
+    if (count === 0) {
+      return {
+        property_tax: 0,
+        housing: 0,
+        transit: 0,
+        overall: 0,
+      };
+    }
+    return {
+      property_tax: Math.round(
+        members.reduce(
+          (sum, r) => sum + r.pocketbookSummary.domains.property_tax.score,
+          0,
+        ) / count,
+      ),
+      housing: Math.round(
+        members.reduce(
+          (sum, r) => sum + r.pocketbookSummary.domains.housing.score,
+          0,
+        ) / count,
+      ),
+      transit: Math.round(
+        members.reduce(
+          (sum, r) => sum + r.pocketbookSummary.domains.transit.score,
+          0,
+        ) / count,
+      ),
+      overall: Math.round(
+        members.reduce(
+          (sum, r) => sum + r.pocketbookSummary.overallScore,
+          0,
+        ) / count,
+      ),
+    };
+  }
+
+  const pocketbookChamberAverages = {
+    Senate: computePocketbookChamberAverages("Senate"),
+    Assembly: computePocketbookChamberAverages("Assembly"),
+  };
+
+  const topByDomain = {
+    property_tax: legislatorMatrix.slice().sort(
+      (a, b) =>
+        b.pocketbookSummary.domains.property_tax.score -
+          a.pocketbookSummary.domains.property_tax.score ||
+        b.pocketbookSummary.domains.property_tax.primaryBills -
+          a.pocketbookSummary.domains.property_tax.primaryBills ||
+        b.pocketbookSummary.domains.property_tax.enactedBills -
+          a.pocketbookSummary.domains.property_tax.enactedBills,
+    ),
+    housing: legislatorMatrix.slice().sort(
+      (a, b) =>
+        b.pocketbookSummary.domains.housing.score -
+          a.pocketbookSummary.domains.housing.score ||
+        b.pocketbookSummary.domains.housing.primaryBills -
+          a.pocketbookSummary.domains.housing.primaryBills ||
+        b.pocketbookSummary.domains.housing.enactedBills -
+          a.pocketbookSummary.domains.housing.enactedBills,
+    ),
+    transit: legislatorMatrix.slice().sort(
+      (a, b) =>
+        b.pocketbookSummary.domains.transit.score -
+          a.pocketbookSummary.domains.transit.score ||
+        b.pocketbookSummary.domains.transit.primaryBills -
+          a.pocketbookSummary.domains.transit.primaryBills ||
+        b.pocketbookSummary.domains.transit.enactedBills -
+          a.pocketbookSummary.domains.transit.enactedBills,
+    ),
+  };
+
+  const pocketbook: PocketbookAnalytics<LegislatorMatrixRow> = {
+    domainRollCallCounts,
+    chamberAverages: pocketbookChamberAverages,
+    topByDomain,
+  };
+
   return {
     totalBills: Object.keys(billData).length,
     totalSponsorships,
@@ -1261,6 +1407,7 @@ export function buildAnalytics(
     districtComposites,
     influence,
     effectiveness,
+    pocketbook,
     votesData: safeVotesData,
   };
 }

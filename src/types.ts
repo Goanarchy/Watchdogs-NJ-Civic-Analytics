@@ -569,5 +569,92 @@ export interface EffectivenessAnalytics<TRow = any> {
   };
 }
 
+/* ------------------------------------------------ multi-variable correlation sandbox */
+
+export type SandboxMetricKey =
+  | "totalRaised"
+  | "grassrootsPct"
+  | "lesScore"
+  | "bipartisanRate"
+  | "attendancePct"
+  | "partyUnityPct"
+  | "primaryBills"
+  | "enactedBills"
+  | "medianIncome"
+  | "medianRent"
+  | "transitCommuteRate"
+  | "homeownershipRate";
+
+export interface SandboxDimensionDef {
+  key: SandboxMetricKey;
+  format: "currency" | "percent" | "score" | "count";
+}
+
+export interface SandboxScatterPoint {
+  legislatorId: number;
+  name: string;
+  party: string;
+  chamber: "Senate" | "Assembly" | string;
+  district: number;
+  photo: string | null;
+  x: number;
+  y: number;
+  quadrant: "topRight" | "topLeft" | "bottomRight" | "bottomLeft";
+}
+
+export interface SandboxScatterResult {
+  xKey: SandboxMetricKey;
+  yKey: SandboxMetricKey;
+  points: SandboxScatterPoint[];
+  medianX: number;
+  medianY: number;
+  pearsonR: number;
+}
+
+/* ------------------------------------------------ pocketbook impact & floor roll-calls */
+
+export type PocketbookDomainKey = "property_tax" | "housing" | "transit";
+
+export interface PocketbookVoteRecord {
+  rollCallId: string;
+  bill: string;
+  date: string;
+  chamber: "Senate" | "Assembly";
+  abstract: string;
+  action: string;
+  choice: VoteChoice;
+  yeas: number;
+  nays: number;
+}
+
+export interface PocketbookDomainScore {
+  domain: PocketbookDomainKey;
+  score: number;             // 0-100 objective activity & advancement index
+  primaryBills: number;
+  cosponsoredBills: number;
+  advancedBills: number;     // reported / floor / enacted
+  enactedBills: number;
+  floorVotesCast: number;
+  yeaVotes: number;
+  nayVotes: number;
+}
+
+export interface LegislatorPocketbookSummary {
+  legislatorId: number;
+  overallScore: number;      // weighted/mean 0-100 across the 3 domains
+  domains: Record<PocketbookDomainKey, PocketbookDomainScore>;
+  notableVotes: PocketbookVoteRecord[]; // top recent real floor roll calls across the 3 domains
+}
+
+export interface PocketbookAnalytics<TRow = any> {
+  domainRollCallCounts: Record<PocketbookDomainKey, number>;
+  chamberAverages: {
+    Senate: Record<PocketbookDomainKey | "overall", number>;
+    Assembly: Record<PocketbookDomainKey | "overall", number>;
+  };
+  topByDomain: Record<PocketbookDomainKey, TRow[]>;
+}
+
+
 
 
