@@ -1,0 +1,62 @@
+name: Deploy & Integrity-Checked Refresh
+
+on:
+  push:
+    branches:
+      - main
+  schedule:
+    - cron: '0 9 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: deploy-watchdogs-civic-lab
+  cancel-in-progress: false
+
+jobs:
+  verify-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Refresh public sources with atomic rollback & build (schedule/manual)
+        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+        run: |
+          node scripts/safe-update.mjs --refresh
+          if [ -n "$(git status --porcelain src/data index.html)" ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add src/data index.html
+            git commit -m "chore(data): automated verified NJLeg & Census refresh [skip ci]"
+            git push origin HEAD:main
+          fi
+
+      - name: Verify integrity, translations & build web bundle (push)
+        if: github.event_name == 'push'
+        run: node scripts/safe-update.mjs
+
+      - name: Publish verified web bundle to gh-pages
+        run: |
+          rm -rf dist/.git
+          touch dist/.nojekyll
+          cd dist
+          git init -b gh-pages
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "chore(web): publish verified Watchdogs Media Civic Lab bundle"
+          git push --force "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" HEAD:refs/heads/gh-pages

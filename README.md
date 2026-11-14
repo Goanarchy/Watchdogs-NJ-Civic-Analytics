@@ -1,10 +1,13 @@
 # Watchdogs Media · Civic Lab — NJ Civic Intelligence & Legislative Analytics (v2.0.0)
 
+[![Live Web App](https://img.shields.io/badge/Live%20Web%20App-Open%20Platform-0F2C59?style=for-the-badge)](https://goanarchy.github.io/Watchdogs-NJ-Civic-Analytics/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
 [![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Data Coverage](https://img.shields.io/badge/NJ%20ELEC%20Coverage-120%2F120%20Legislators-10B981)](#official-public-data-sources)
 [![Census ACS](https://img.shields.io/badge/US%20Census-ACS%202024%205--Year-a9854c)](#official-public-data-sources)
+
+> **Public Live Link (Free Forever on GitHub Pages):** https://goanarchy.github.io/Watchdogs-NJ-Civic-Analytics/
 
 **Watchdogs Media · Civic Lab** (`v2.0.0`) is an independent, bilingual (**EN / ES**) civic intelligence and legislative analytics platform tracking all **120 members of the New Jersey Legislature** (40 Senators + 80 Assembly members), **40 legislative districts**, **11,475 session bills**, **100% (120/120) NJ ELEC campaign finance filings**, **184 candidate promise accountability profiles**, **12 federal congressional races**, and **U.S. Census Bureau ACS 2024 5-Year socioeconomic benchmarks**.
 
@@ -44,10 +47,13 @@ It compiles into both a standard static bundle (`dist/`) and a single self-conta
 
 ## Quick Start
 
-### Option A: Standalone Single-File HTML (No Server Needed)
+### Option A: Public Live Web App (Shareable Link)
+Open **https://goanarchy.github.io/Watchdogs-NJ-Civic-Analytics/** directly in any desktop or mobile browser. Hosted free forever on GitHub Pages with code-split bundle caching (`dist/` + `.nojekyll`).
+
+### Option B: Standalone Single-File HTML (Offline / Double-Click)
 Double-click **`index.html`** in the project root. Everything (all 120 legislator dossiers, 11,475 bills, ELEC donor indexes, Census ACS benchmarks, and SVG district map) runs offline in Chrome, Edge, Firefox, or Safari via `HashRouter`.
 
-### Option B: Developer Mode (Vite 7)
+### Option C: Developer Mode (Vite 7)
 
 ```bash
 npm install
@@ -64,9 +70,12 @@ npm run build:all    # Builds both dist/ and standalone index.html
 
 ---
 
-## Data Refresh & Validation Pipeline
+## Data Refresh, Integrity Guard & Deployment Pipeline
 
 ```bash
+npm run safe-update       # Atomic snapshot backup -> refresh NJLeg/Census/Campaign -> validate invariants & i18n -> rollback on error -> rebuild dist/ + index.html
+npm run verify-integrity  # Verify existing datasets + hard invariants + 707 EN/ES i18n parity + rebuild dist/ + index.html
+npm run publish-web       # Validate data & i18n -> build code-split dist/ -> deploy verified bundle to gh-pages branch
 npm run refresh-data      # Fetch latest NJLeg roster, bios, committees & bills
 npm run refresh-census    # Fetch latest Census Bureau ACS 5-Year 40-district data
 npm run validate-data     # Validate integrity across all JSON datasets
@@ -91,10 +100,11 @@ node scripts/build-donors-data.mjs
 
 ```text
 NJ Civic App/
+├── .github/workflows/          # Weekly automated safe refresh & GitHub Pages deployment
 ├── dev.html                    # Vite HTML entry (loads Newsreader, Plus Jakarta Sans, JetBrains Mono)
 ├── index.html                  # Generated self-contained standalone HTML deliverable
 ├── public/                     # Custom Watchdogs Media shield crest & favicon SVGs
-├── scripts/                    # Data ingestion, Census/ELEC/NJLeg scrapers & validators
+├── scripts/                    # safe-update.mjs, publish-web.mjs, Census/ELEC/NJLeg scrapers & validators
 ├── src/
 │   ├── components/             # SiteHeader, SiteFooter, LegislatorCard, DistrictMap, CampaignPromisesPanel
 │   ├── data/                   # Verified JSON datasets (legislators, bills, donors, campaign, demographics, federal)

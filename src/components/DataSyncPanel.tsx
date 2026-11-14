@@ -81,7 +81,7 @@ export function DataSyncPanel({
   }
 
   async function copyInstructions() {
-    const text = "npm run refresh-data\nnpm run build:single";
+    const text = "npm run safe-update\nnpm run publish-web";
     try {
       await navigator.clipboard.writeText(text);
       setCopied(true);
@@ -241,7 +241,7 @@ export function DataSyncPanel({
         <div className="sync-steps">
           <p>{t("sync.howTo")}</p>
           <pre>
-            <code>npm run refresh-data{"\n"}npm run build:single</code>
+            <code>npm run safe-update{"\n"}npm run publish-web</code>
           </pre>
           <button
             type="button"
