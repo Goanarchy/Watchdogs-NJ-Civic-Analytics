@@ -20,8 +20,10 @@ const allowUnused = process.argv.includes("--allow-unused");
 function parseDictionary(source, startMarker) {
   const start = source.indexOf(startMarker);
   if (start === -1) throw new Error(`No se encontró ${startMarker}`);
-  const end = source.indexOf("\n};", start);
-  if (end === -1) throw new Error(`No se encontró el cierre de ${startMarker}`);
+  const slice = source.slice(start);
+  const closeMatch = slice.match(/\r?\n\}\s*(?:as\s+const\s*)?;/);
+  if (!closeMatch || closeMatch.index === undefined) throw new Error(`No se encontró el cierre de ${startMarker}`);
+  const end = start + closeMatch.index;
   const block = source.slice(start, end);
   const keyPattern = /"([a-z][A-Za-z0-9_]*(?:\.[A-Za-z0-9_]+)+)"\s*:/g;
   const matches = [...block.matchAll(keyPattern)];
