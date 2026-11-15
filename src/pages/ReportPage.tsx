@@ -554,11 +554,11 @@ export function ReportPage() {
                   <thead>
                     <tr>
                       <th scope="col">{t("report.bill")}</th>
-                      <th scope="col">{lang === "es" ? "Fecha" : "Date"}</th>
-                      <th scope="col">{lang === "es" ? "Acción" : "Action"}</th>
-                      <th scope="col">{lang === "es" ? "Resultado" : "Outcome"}</th>
+                      <th scope="col">{t("report.rollCallDate")}</th>
+                      <th scope="col">{t("report.rollCallAction")}</th>
+                      <th scope="col">{t("report.rollCallOutcome")}</th>
                       <th scope="col" style={{ textAlign: "right" }}>
-                        {lang === "es" ? "Voto" : "Vote"}
+                        {t("report.rollCallVote")}
                       </th>
                     </tr>
                   </thead>

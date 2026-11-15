@@ -2,13 +2,24 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { meta } from "../data";
 import type { LegislatorMatrixRow } from "../lib/analytics";
 import { useI18n, type CopyKey } from "../lib/i18n";
-import { chamberLabel, padDistrict, partyLabel } from "../lib/labels";
-import type { ChamberBenchmark } from "../types";
+import { chamberLabel, padDistrict, partyLabel, roleLabel } from "../lib/labels";
+import type { ChamberBenchmark, DonorSectorKey } from "../types";
 
 export interface DossierCardGeneratorProps {
   row: LegislatorMatrixRow;
   benchmarks: ChamberBenchmark;
 }
+
+const SECTOR_LABEL_KEYS: Record<DonorSectorKey, CopyKey> = {
+  real_estate: "superTools.sector.real_estate",
+  healthcare_pharma: "superTools.sector.healthcare_pharma",
+  energy_utilities: "superTools.sector.energy_utilities",
+  finance_insurance: "superTools.sector.finance_insurance",
+  labor_unions: "superTools.sector.labor_unions",
+  law_lobbying: "superTools.sector.law_lobbying",
+  tech_telecom: "superTools.sector.tech_telecom",
+  civic_grassroots: "superTools.sector.civic_grassroots",
+};
 
 function initials(name: string): string {
   return name
@@ -114,25 +125,29 @@ export function DossierCardGenerator({ row, benchmarks }: DossierCardGeneratorPr
   const [exportReady, setExportReady] = useState(false);
   const [copied, setCopied] = useState(false);
 
+  const copiedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const exportTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (copiedTimerRef.current) clearTimeout(copiedTimerRef.current);
+      if (exportTimerRef.current) clearTimeout(exportTimerRef.current);
+    };
+  }, []);
+
   const renderCard = useCallback(
-    async (canvas: HTMLCanvasElement, forceMonogram: boolean = false) => {
+    (
+      canvas: HTMLCanvasElement,
+      forceMonogram: boolean = false,
+      preloadedImage: HTMLImageElement | null = null,
+    ) => {
       const ctx = canvas.getContext("2d");
       if (!ctx) return;
 
       const W = 1200;
       const H = 630;
 
-      // 1. Safe Image Preload
-      let loadedImage: HTMLImageElement | null = null;
-      if (!forceMonogram && row.legislator.photo) {
-        try {
-          loadedImage = await loadSafeImage(row.legislator.photo);
-        } catch {
-          loadedImage = null;
-        }
-      }
-
-      // 2. Clear & Fill Background
+      // 1. Clear & Fill Background
       ctx.clearRect(0, 0, W, H);
       const bgGrad = ctx.createLinearGradient(0, 0, W, H);
       bgGrad.addColorStop(0, "#080e1b");
@@ -145,7 +160,7 @@ export function DossierCardGenerator({ row, benchmarks }: DossierCardGeneratorPr
       ctx.lineWidth = 2;
       ctx.strokeRect(1, 1, W - 2, H - 2);
 
-      // 3. Top Branding Bar
+      // 2. Top Branding Bar
       ctx.fillStyle = "#38bdf8";
       ctx.font = "bold 13px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
       ctx.textAlign = "left";
@@ -182,7 +197,7 @@ export function DossierCardGenerator({ row, benchmarks }: DossierCardGeneratorPr
       ctx.textAlign = "left";
       ctx.fillText(nonpartisanText, pillX + 22, 36);
 
-      // 4. Legislator Identity
+      // 3. Legislator Identity
       const isDem = row.legislator.party === "D";
       const isRep = row.legislator.party === "R";
       const partyColor = isDem ? "#2563eb" : isRep ? "#dc2626" : "#64748b";
@@ -192,13 +207,13 @@ export function DossierCardGenerator({ row, benchmarks }: DossierCardGeneratorPr
       const portraitCy = 126;
       const portraitR = 44;
 
-      if (loadedImage && !forceMonogram) {
+      if (preloadedImage && !forceMonogram) {
         ctx.save();
         ctx.beginPath();
         ctx.arc(portraitCx, portraitCy, portraitR, 0, Math.PI * 2);
         ctx.clip();
         ctx.drawImage(
-          loadedImage,
+          preloadedImage,
           portraitCx - portraitR,
           portraitCy - portraitR,
           portraitR * 2,
@@ -280,13 +295,15 @@ export function DossierCardGenerator({ row, benchmarks }: DossierCardGeneratorPr
       const counties = row.legislator.districtInfo?.countiesLabel
         ? ` · ${row.legislator.districtInfo.countiesLabel}`
         : "";
+      const role = roleLabel(row.legislator.chamber, lang);
+      const districtLabel = `${t("common.district")} ${padDistrict(row.legislator.district)}`;
       ctx.fillText(
-        `${row.legislator.title || chamberLabel(row.legislator.chamber, lang)} · District ${padDistrict(row.legislator.district)}${counties}`,
+        `${role} · ${districtLabel}${counties}`,
         textLeft,
         165,
       );
 
-      // 5. Divider
+      // 4. Divider
       ctx.strokeStyle = "#1e293b";
       ctx.lineWidth = 1;
       ctx.beginPath();
@@ -294,7 +311,7 @@ export function DossierCardGenerator({ row, benchmarks }: DossierCardGeneratorPr
       ctx.lineTo(1150, 195);
       ctx.stroke();
 
-      // 6. 6 Objective KPI Stat Tiles
+      // 5. 6 Objective KPI Stat Tiles
       const tileW = 348;
       const tileH = 134;
       const colX = [50, 426, 802];
@@ -447,7 +464,7 @@ export function DossierCardGenerator({ row, benchmarks }: DossierCardGeneratorPr
           : `Chamber avg: ${formatCompactMoney(benchmarks.avgTotalRaised)} · ${row.donorCount} donors`,
       );
 
-      // 7. Footer
+      // 6. Footer
       ctx.strokeStyle = "#1e293b";
       ctx.lineWidth = 1;
       ctx.beginPath();
@@ -457,9 +474,8 @@ export function DossierCardGenerator({ row, benchmarks }: DossierCardGeneratorPr
 
       // Top Sector Pill
       const topSector = row.influenceSummary.topSectors[0];
-      const sectorName = topSector?.sector
-        ? t(`superTools.sector.${topSector.sector}` as CopyKey)
-        : "General Civic";
+      const sectorKey = topSector?.sector ? SECTOR_LABEL_KEYS[topSector.sector] : undefined;
+      const sectorName = sectorKey ? t(sectorKey) : t("superTools.sector.civic_grassroots");
       const sectorPct = topSector?.pct ?? 0;
       const sectorLabel = `${lang === "es" ? "Sector líder" : "Top Donor Sector"}: ${sectorName} (${sectorPct}%)`;
 
@@ -486,31 +502,51 @@ export function DossierCardGenerator({ row, benchmarks }: DossierCardGeneratorPr
           ? "Fuentes: NJLeg (Oficial) · NJ ELEC · Censo EE.UU. ACS · Registro Cívico Objetivo"
           : "Data: NJLeg (Official) · NJ ELEC · U.S. Census ACS · 100% Nonpartisan Record";
       ctx.fillText(srcText, 1150, 558);
-
-      // 8. Security Pre-flight Check to detect canvas tainting immediately
-      try {
-        canvas.toDataURL();
-      } catch {
-        // Tainted! Redraw cleanly with fallback monogram badge
-        if (!forceMonogram) {
-          await renderCard(canvas, true);
-        }
-      }
     },
     [benchmarks, lang, row, t],
   );
 
+  // Preview renderer with async cleanup token and scratch pre-flight CORS safety check
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (canvas) {
-      renderCard(canvas, false);
-    }
-  }, [renderCard]);
-
-  const handleDownloadPng = useCallback(() => {
+    let active = true;
     const canvas = canvasRef.current;
     if (!canvas) return;
 
+    const renderPreview = async () => {
+      let imageToDraw: HTMLImageElement | null = null;
+
+      if (row.legislator.photo) {
+        try {
+          const img = await loadSafeImage(row.legislator.photo);
+          if (!active) return;
+
+          // Test drawing onto a scratch 1x1 canvas to detect origin taint safely
+          const scratch = document.createElement("canvas");
+          scratch.width = 1;
+          scratch.height = 1;
+          const sCtx = scratch.getContext("2d");
+          if (sCtx) {
+            sCtx.drawImage(img, 0, 0, 1, 1);
+            scratch.toDataURL(); // Throws SecurityError if tainted
+            imageToDraw = img;
+          }
+        } catch {
+          imageToDraw = null; // CORS failed or image load error -> fallback to clean monogram
+        }
+      }
+
+      if (!active) return;
+      renderCard(canvas, imageToDraw === null, imageToDraw);
+    };
+
+    renderPreview();
+
+    return () => {
+      active = false;
+    };
+  }, [renderCard, row.legislator.photo]);
+
+  const handleDownloadPng = useCallback(() => {
     setDownloading(true);
 
     const safeLastName = (
@@ -528,32 +564,58 @@ export function DossierCardGenerator({ row, benchmarks }: DossierCardGeneratorPr
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+
       setDownloading(false);
       setExportReady(true);
-      setTimeout(() => setExportReady(false), 2500);
+      if (exportTimerRef.current) clearTimeout(exportTimerRef.current);
+      exportTimerRef.current = setTimeout(() => setExportReady(false), 2500);
     };
 
-    try {
-      canvas.toBlob((blob) => {
-        if (!blob) {
-          renderCard(canvas, true).then(() => {
-            canvas.toBlob((retryBlob) => {
-              if (retryBlob) triggerDownload(retryBlob);
-              else setDownloading(false);
-            });
-          });
-          return;
-        }
-        triggerDownload(blob);
-      }, "image/png");
-    } catch {
-      renderCard(canvas, true).then(() => {
-        canvas.toBlob((retryBlob) => {
-          if (retryBlob) triggerDownload(retryBlob);
-          else setDownloading(false);
+    // Fallback export function that creates a fresh untainted offscreen canvas
+    const fallbackExport = () => {
+      const fallbackCanvas = document.createElement("canvas");
+      fallbackCanvas.width = 1200;
+      fallbackCanvas.height = 630;
+      renderCard(fallbackCanvas, true, null);
+      try {
+        fallbackCanvas.toBlob((blob) => {
+          if (blob) {
+            triggerDownload(blob);
+          } else {
+            setDownloading(false);
+          }
+        }, "image/png");
+      } catch {
+        setDownloading(false);
+      }
+    };
+
+    // Primary export attempt on a dedicated fresh offscreen canvas
+    const primaryCanvas = document.createElement("canvas");
+    primaryCanvas.width = 1200;
+    primaryCanvas.height = 630;
+
+    if (row.legislator.photo) {
+      loadSafeImage(row.legislator.photo)
+        .then((img) => {
+          renderCard(primaryCanvas, false, img);
+          try {
+            // Preflight to detect taint
+            primaryCanvas.toDataURL();
+            primaryCanvas.toBlob((blob) => {
+              if (blob) triggerDownload(blob);
+              else fallbackExport();
+            }, "image/png");
+          } catch {
+            fallbackExport();
+          }
+        })
+        .catch(() => {
+          fallbackExport();
         });
-      });
+    } else {
+      fallbackExport();
     }
   }, [renderCard, row]);
 
@@ -561,7 +623,8 @@ export function DossierCardGenerator({ row, benchmarks }: DossierCardGeneratorPr
     try {
       await navigator.clipboard.writeText(window.location.href);
       setCopied(true);
-      setTimeout(() => setCopied(false), 2500);
+      if (copiedTimerRef.current) clearTimeout(copiedTimerRef.current);
+      copiedTimerRef.current = setTimeout(() => setCopied(false), 2500);
     } catch {
       const input = document.createElement("input");
       input.value = window.location.href;
@@ -570,7 +633,8 @@ export function DossierCardGenerator({ row, benchmarks }: DossierCardGeneratorPr
       document.execCommand("copy");
       document.body.removeChild(input);
       setCopied(true);
-      setTimeout(() => setCopied(false), 2500);
+      if (copiedTimerRef.current) clearTimeout(copiedTimerRef.current);
+      copiedTimerRef.current = setTimeout(() => setCopied(false), 2500);
     }
   }, []);
 
@@ -596,7 +660,7 @@ export function DossierCardGenerator({ row, benchmarks }: DossierCardGeneratorPr
             borderRadius: "var(--radius)",
             display: "block",
           }}
-          aria-label={`${row.legislator.fullName} Civic Dossier`}
+          aria-label={`${row.legislator.fullName} · ${t("profile.v3DossierTitle")}`}
         />
       </div>
 
