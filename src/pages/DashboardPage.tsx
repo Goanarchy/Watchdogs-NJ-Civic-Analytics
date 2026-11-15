@@ -9,7 +9,7 @@ import {
   InfluenceRadarLens,
   PocketbookVotesLens,
 } from "../components/lenses";
-import { campaign, demographics, federal } from "../data";
+import { campaign, demographics, demographicsByDistrict, districts, federal } from "../data";
 import type {
   Analytics,
   DonorBucketKey,
@@ -102,7 +102,7 @@ function money(value: number, lang: Lang, decimals = 0): string {
 }
 
 function compactMoney(value: number, lang: Lang): string {
-  if (Math.abs(value) >= 1_000_000) {
+  if (Math.abs(value) >= 999_500) {
     return `${lang === "es" ? "US$" : "$"}${(value / 1_000_000).toFixed(2)}M`;
   }
   if (Math.abs(value) >= 1_000) {
@@ -206,13 +206,18 @@ export function DashboardPage() {
   const [params, setParams] = useSearchParams();
   useDocumentTitle(t("superTools.docTitle"));
 
-  const rawTab = params.get("tab");
+  const rawTab = params.get("lens") ?? params.get("tab");
   const activeTab: LensTab = isValidTab(rawTab) ? rawTab : "overview";
 
   function selectTab(next: LensTab) {
     const nextParams = new URLSearchParams(params);
+    nextParams.delete("lens");
     if (next === "overview") nextParams.delete("tab");
     else nextParams.set("tab", next);
+    if (next !== "compare") {
+      nextParams.delete("mode");
+      nextParams.delete("district");
+    }
     setParams(nextParams, { replace: true });
   }
 
@@ -351,7 +356,7 @@ export function DashboardPage() {
                 "compare",
                 "06",
                 "superTools.wbTabCompare",
-                lang === "es" ? "1v1 · Votos" : "1v1 · Matrix",
+                "1v1 · 1v1v1",
               ],
               [
                 "influence",
@@ -1911,6 +1916,10 @@ function DistrictsLens({ analytics }: { analytics: Analytics }) {
 
 function CompareLens({ analytics }: { analytics: Analytics }) {
   const { t, lang, formatNumber } = useI18n();
+  const [params, setParams] = useSearchParams();
+  const mode: "1v1" | "delegation" =
+    params.get("mode") === "delegation" ? "delegation" : "1v1";
+
   const sortedByName = useMemo(
     () =>
       analytics.legislatorMatrix
@@ -1938,6 +1947,146 @@ function CompareLens({ analytics }: { analytics: Analytics }) {
     analytics.legislatorMatrix.find((r) => r.legislator.id === idB) ??
     sortedByName[1] ??
     sortedByName[0];
+
+  const rawDistrictParam = Number(params.get("district"));
+  const selectedDistrict =
+    Number.isInteger(rawDistrictParam) && rawDistrictParam >= 1 && rawDistrictParam <= 40
+      ? rawDistrictParam
+      : (rowA?.legislator.district ?? 1);
+
+  function setCompareMode(nextMode: "1v1" | "delegation") {
+    const nextParams = new URLSearchParams(params);
+    if (nextMode === "delegation") {
+      nextParams.set("mode", "delegation");
+      if (!nextParams.get("district")) {
+        nextParams.set("district", String(selectedDistrict));
+      }
+    } else {
+      nextParams.delete("mode");
+      nextParams.delete("district");
+    }
+    setParams(nextParams, { replace: true });
+  }
+
+  function setDelegationDistrict(nextDistrict: number) {
+    const nextParams = new URLSearchParams(params);
+    nextParams.set("mode", "delegation");
+    nextParams.set("district", String(nextDistrict));
+    setParams(nextParams, { replace: true });
+  }
+
+  const districtOptions = useMemo(
+    () =>
+      districts
+        .slice()
+        .sort((a, b) => a.number - b.number)
+        .map((d) => ({
+          number: d.number,
+          countiesLabel: d.countiesLabel || d.counties.join(", "),
+        })),
+    [],
+  );
+
+  const delegationRows = useMemo(() => {
+    const members = analytics.legislatorMatrix
+      .filter((r) => r.legislator.district === selectedDistrict)
+      .slice()
+      .sort((a, b) => {
+        if (a.legislator.chamber !== b.legislator.chamber) {
+          return a.legislator.chamber === "Senate" ? -1 : 1;
+        }
+        return a.legislator.sortName.localeCompare(b.legislator.sortName, lang);
+      });
+    return members;
+  }, [analytics.legislatorMatrix, selectedDistrict, lang]);
+
+  const delegationAcs = demographicsByDistrict.get(selectedDistrict) ?? null;
+  const delegationDistrictMeta =
+    districtOptions.find((d) => d.number === selectedDistrict) ?? null;
+
+  const delegationMetrics = useMemo(() => {
+    const rows = delegationRows;
+    if (rows.length === 0) return [];
+    const defs: Array<{
+      label: string;
+      getNum: (r: LegislatorMatrixRow) => number;
+      formatVal: (r: LegislatorMatrixRow) => string;
+    }> = [
+      {
+        label: t("superTools.wbColBills"),
+        getNum: (r) => r.totalBills,
+        formatVal: (r) => formatNumber(r.totalBills),
+      },
+      {
+        label: t("profile.primaryBills"),
+        getNum: (r) => r.primaryBills,
+        formatVal: (r) => `${formatNumber(r.primaryBills)} (${r.primaryRatio}%)`,
+      },
+      {
+        label: t("superTools.comparePrimaryEnacted"),
+        getNum: (r) => r.effectivenessSummary?.primaryEnacted ?? 0,
+        formatVal: (r) => formatNumber(r.effectivenessSummary?.primaryEnacted ?? 0),
+      },
+      {
+        label: t("superTools.wbColBipartisan"),
+        getNum: (r) => r.bipartisanRate,
+        formatVal: (r) => `${r.bipartisanRate}% (${formatNumber(r.bipartisanBills)})`,
+      },
+      {
+        label: t("superTools.effLesCol"),
+        getNum: (r) => r.effectivenessSummary?.lesScore ?? 0,
+        formatVal: (r) => (r.effectivenessSummary?.lesScore ?? 0).toFixed(1),
+      },
+      {
+        label: t("superTools.compareAttendance"),
+        getNum: (r) => r.voteStats?.attendancePct ?? 0,
+        formatVal: (r) => `${r.voteStats?.attendancePct ?? 0}%`,
+      },
+      {
+        label: t("superTools.comparePartyUnity"),
+        getNum: (r) => r.voteStats?.partyUnityPct ?? 0,
+        formatVal: (r) => `${r.voteStats?.partyUnityPct ?? 0}%`,
+      },
+      {
+        label: t("superTools.wbColElec"),
+        getNum: (r) => r.totalRaised,
+        formatVal: (r) => money(r.totalRaised, lang),
+      },
+      {
+        label: t("superTools.compareGrassroots"),
+        getNum: (r) => r.influenceSummary?.grassrootsPct ?? 0,
+        formatVal: (r) => `${(r.influenceSummary?.grassrootsPct ?? 0).toFixed(1)}%`,
+      },
+      {
+        label: t("superTools.pocketbookOverall"),
+        getNum: (r) => r.pocketbookSummary?.overallScore ?? 0,
+        formatVal: (r) => `${Math.round(r.pocketbookSummary?.overallScore ?? 0)}`,
+      },
+      {
+        label: t("superTools.wbColPromises"),
+        getNum: (r) => r.promisesWithEvidence,
+        formatVal: (r) =>
+          r.promisesTotal > 0 ? `${r.promisesWithEvidence}/${r.promisesTotal}` : "—",
+      },
+    ];
+    return defs.map((def) => {
+      const values = rows.map((r) => def.getNum(r));
+      const maxVal = Math.max(...values);
+      const minVal = Math.min(...values);
+      const scaleMax = Math.max(maxVal, 1);
+      return {
+        label: def.label,
+        cells: rows.map((r, idx) => ({
+          id: r.legislator.id,
+          name: r.legislator.fullName,
+          num: values[idx],
+          val: def.formatVal(r),
+          pctWidth: (values[idx] / scaleMax) * 100,
+          isLeader: maxVal > minVal && values[idx] === maxVal,
+        })),
+      };
+    });
+  }, [delegationRows, formatNumber, lang, t]);
 
   function renderProfileHead(
     row: LegislatorMatrixRow,
@@ -2070,86 +2219,277 @@ function CompareLens({ analytics }: { analytics: Analytics }) {
       <div className="panel-head super-panel-head">
         <div>
           <p className="panel-kicker">{t("superTools.wbCompareKicker")}</p>
-          <h2>{t("superTools.wbCompareTitle")}</h2>
+          <h2>
+            {mode === "delegation"
+              ? t("superTools.compareDelegationTitle")
+              : t("superTools.wbCompareTitle")}
+          </h2>
         </div>
-        <button
-          type="button"
-          className="button button-outline button-small"
-          onClick={() => {
-            setIdA(idB);
-            setIdB(idA);
-          }}
-        >
-          ⇄ {t("superTools.wbSwap")}
-        </button>
+        <div className="st-compare-head-actions">
+          <div className="st-segmented" role="tablist" aria-label={t("superTools.wbCompareKicker")}>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={mode === "1v1"}
+              className={`st-segmented-btn${mode === "1v1" ? " is-active" : ""}`}
+              onClick={() => setCompareMode("1v1")}
+            >
+              {t("superTools.compareMode1v1")}
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={mode === "delegation"}
+              className={`st-segmented-btn${mode === "delegation" ? " is-active" : ""}`}
+              onClick={() => setCompareMode("delegation")}
+            >
+              {t("superTools.compareModeDelegation")}
+            </button>
+          </div>
+          {mode === "1v1" && (
+            <button
+              type="button"
+              className="button button-outline button-small"
+              onClick={() => {
+                setIdA(idB);
+                setIdB(idA);
+              }}
+            >
+              ⇄ {t("superTools.wbSwap")}
+            </button>
+          )}
+        </div>
       </div>
-      <p className="panel-intro">{t("superTools.wbCompareIntro")}</p>
+      <p className="panel-intro">
+        {mode === "delegation"
+          ? t("superTools.compareDelegationIntro")
+          : t("superTools.wbCompareIntro")}
+      </p>
 
-      <div className="st-compare-grid">
-        {renderProfileHead(rowA, idA, setIdA, t("superTools.wbLegislatorA"))}
-        {renderProfileHead(rowB, idB, setIdB, t("superTools.wbLegislatorB"))}
-      </div>
+      {mode === "1v1" ? (
+        <>
+          <div className="st-compare-grid">
+            {renderProfileHead(rowA, idA, setIdA, t("superTools.wbLegislatorA"))}
+            {renderProfileHead(rowB, idB, setIdB, t("superTools.wbLegislatorB"))}
+          </div>
 
-      <div className="st-table-wrap" style={{ marginTop: 18 }}>
-        <table className="st-table st-compare-table">
-          <thead>
-            <tr>
-              <th>{t("superTools.wbMetric")}</th>
-              <th className="text-right">{rowA.legislator.fullName}</th>
-              <th className="text-right">{rowB.legislator.fullName}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {metrics.map((m) => {
-              const max = Math.max(m.aNum, m.bNum, 1);
-              return (
-                <tr key={m.label}>
+          <div className="st-table-wrap" style={{ marginTop: 18 }}>
+            <table className="st-table st-compare-table">
+              <thead>
+                <tr>
+                  <th>{t("superTools.wbMetric")}</th>
+                  <th className="text-right">{rowA.legislator.fullName}</th>
+                  <th className="text-right">{rowB.legislator.fullName}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {metrics.map((m) => {
+                  const max = Math.max(m.aNum, m.bNum, 1);
+                  const aLeads = m.aNum > m.bNum;
+                  const bLeads = m.bNum > m.aNum;
+                  return (
+                    <tr key={m.label}>
+                      <td>
+                        <strong>{m.label}</strong>
+                      </td>
+                      <td
+                        className={`num text-right${aLeads ? " is-leader" : ""}`}
+                        data-label={rowA.legislator.fullName}
+                      >
+                        <div className="st-compare-val-wrap">
+                          <strong>{m.aVal}</strong>
+                          <span className="st-compare-bar" aria-hidden="true">
+                            <span style={{ width: `${(m.aNum / max) * 100}%` }} />
+                          </span>
+                        </div>
+                      </td>
+                      <td
+                        className={`num text-right${bLeads ? " is-leader" : ""}`}
+                        data-label={rowB.legislator.fullName}
+                      >
+                        <div className="st-compare-val-wrap">
+                          <strong>{m.bVal}</strong>
+                          <span className="st-compare-bar is-b" aria-hidden="true">
+                            <span style={{ width: `${(m.bNum / max) * 100}%` }} />
+                          </span>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+                <tr>
                   <td>
-                    <strong>{m.label}</strong>
+                    <strong>{t("superTools.wbColFocusTopic")}</strong>
                   </td>
-                  <td className="num text-right" data-label={rowA.legislator.fullName}>
-                    <div className="st-compare-val-wrap">
-                      <strong>{m.aVal}</strong>
-                      <span className="st-compare-bar" aria-hidden="true">
-                        <span style={{ width: `${(m.aNum / max) * 100}%` }} />
-                      </span>
-                    </div>
+                  <td className="text-right" data-label={rowA.legislator.fullName}>
+                    <Link
+                      className="st-topic-chip"
+                      to={`/super-tools/topics/${rowA.topTopic.slug}`}
+                    >
+                      {rowA.topTopic.label[lang]}
+                    </Link>
                   </td>
-                  <td className="num text-right" data-label={rowB.legislator.fullName}>
-                    <div className="st-compare-val-wrap">
-                      <strong>{m.bVal}</strong>
-                      <span className="st-compare-bar is-b" aria-hidden="true">
-                        <span style={{ width: `${(m.bNum / max) * 100}%` }} />
-                      </span>
-                    </div>
+                  <td className="text-right" data-label={rowB.legislator.fullName}>
+                    <Link
+                      className="st-topic-chip"
+                      to={`/super-tools/topics/${rowB.topTopic.slug}`}
+                    >
+                      {rowB.topTopic.label[lang]}
+                    </Link>
                   </td>
                 </tr>
-              );
-            })}
-            <tr>
-              <td>
-                <strong>{t("superTools.wbColFocusTopic")}</strong>
-              </td>
-              <td className="text-right" data-label={rowA.legislator.fullName}>
-                <Link
-                  className="st-topic-chip"
-                  to={`/super-tools/topics/${rowA.topTopic.slug}`}
-                >
-                  {rowA.topTopic.label[lang]}
-                </Link>
-              </td>
-              <td className="text-right" data-label={rowB.legislator.fullName}>
-                <Link
-                  className="st-topic-chip"
-                  to={`/super-tools/topics/${rowB.topTopic.slug}`}
-                >
-                  {rowB.topTopic.label[lang]}
-                </Link>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+              </tbody>
+            </table>
+          </div>
+        </>
+      ) : (
+        <>
+          <div className="st-delegation-controls">
+            <label className="st-compare-select-label st-delegation-district-select">
+              <span>{t("superTools.compareSelectDistrict")}</span>
+              <select
+                value={selectedDistrict}
+                onChange={(e) => setDelegationDistrict(Number(e.target.value))}
+              >
+                {districtOptions.map((d) => (
+                  <option key={d.number} value={d.number}>
+                    LD {padDistrict(d.number)} · {d.countiesLabel}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <Link
+              className="button button-outline button-small"
+              to={`/district/${selectedDistrict}`}
+            >
+              {t("common.district")} {padDistrict(selectedDistrict)} →
+            </Link>
+          </div>
+
+          {delegationAcs && (
+            <div className="st-delegation-acs-ribbon" aria-label={t("district.censusTitle")}>
+              {delegationDistrictMeta?.countiesLabel && (
+                <div className="st-delegation-acs-item is-counties">
+                  <span>{t("report.counties")}</span>
+                  <strong>{delegationDistrictMeta.countiesLabel}</strong>
+                </div>
+              )}
+              <div className="st-delegation-acs-item">
+                <span>{t("census.population")}</span>
+                <strong className="num">{formatNumber(delegationAcs.population)}</strong>
+              </div>
+              <div className="st-delegation-acs-item">
+                <span>{t("census.medianIncome")}</span>
+                <strong className="num">{money(delegationAcs.medianIncome, lang)}</strong>
+              </div>
+              <div className="st-delegation-acs-item">
+                <span>{t("census.povertyRate")}</span>
+                <strong className="num">{delegationAcs.povertyRate}%</strong>
+              </div>
+              <div className="st-delegation-acs-item">
+                <span>{t("census.transitShare")}</span>
+                <strong className="num">{delegationAcs.transitCommuteRate}%</strong>
+              </div>
+            </div>
+          )}
+
+          <div className="st-delegation-cards">
+            {delegationRows.map((row) => (
+              <article key={row.legislator.id} className="st-compare-card st-delegation-card">
+                <div className="st-compare-hero">
+                  <Portrait
+                    src={row.legislator.photo}
+                    name={row.legislator.fullName}
+                    className="st-compare-avatar"
+                  />
+                  <div>
+                    <div className="chip-row">
+                      <PartyBadge party={row.legislator.party} />
+                      <span className="chip">
+                        {row.legislator.chamber === "Senate"
+                          ? t("district.senator")
+                          : t("district.assembly")}
+                      </span>
+                      <Link
+                        className="chip chip-link"
+                        to={`/district/${row.legislator.district}`}
+                      >
+                        LD {padDistrict(row.legislator.district)}
+                      </Link>
+                    </div>
+                    <h3>
+                      <Link to={`/legislador/${row.legislator.id}`}>
+                        {row.legislator.fullName}
+                      </Link>
+                    </h3>
+                    <p className="st-cell-sub">
+                      {chamberLabel(row.legislator.chamber, lang)}
+                      {row.legislator.leadership
+                        ? ` · ${translateLeadership(row.legislator.leadership, lang)}`
+                        : ""}
+                    </p>
+                    <div className="st-compare-links">
+                      <Link to={`/legislador/${row.legislator.id}`}>
+                        {t("common.viewProfile")}
+                      </Link>
+                      <span>·</span>
+                      <Link to={`/legislador/${row.legislator.id}/reporte`}>
+                        {t("report.open")}
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+
+          <div className="st-table-wrap" style={{ marginTop: 18 }}>
+            <table className="st-table st-compare-table st-delegation-table">
+              <thead>
+                <tr>
+                  <th>{t("superTools.wbMetric")}</th>
+                  {delegationRows.map((row) => (
+                    <th key={row.legislator.id} className="text-right">
+                      {row.legislator.fullName}
+                      <span className="st-th-sub">
+                        {row.legislator.chamber === "Senate"
+                          ? t("district.senator")
+                          : t("district.assembly")}
+                      </span>
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {delegationMetrics.map((m) => (
+                  <tr key={m.label}>
+                    <td>
+                      <strong>{m.label}</strong>
+                    </td>
+                    {m.cells.map((cell, cellIdx) => (
+                      <td
+                        key={cell.id}
+                        className={`num text-right${cell.isLeader ? " is-leader" : ""}`}
+                        data-label={cell.name}
+                      >
+                        <div className="st-compare-val-wrap">
+                          <strong>{cell.val}</strong>
+                          <span
+                            className={`st-compare-bar${cellIdx === 1 ? " is-b" : cellIdx === 2 ? " is-c" : ""}`}
+                            aria-hidden="true"
+                          >
+                            <span style={{ width: `${cell.pctWidth}%` }} />
+                          </span>
+                        </div>
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
     </section>
   );
 }

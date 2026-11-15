@@ -34,7 +34,7 @@ function money(value: number, lang: Lang, decimals = 0): string {
 }
 
 function compactMoney(value: number, lang: Lang): string {
-  if (Math.abs(value) >= 1_000_000) {
+  if (Math.abs(value) >= 999_950) {
     return `${lang === "es" ? "US$" : "$"}${(value / 1_000_000).toFixed(2)}M`;
   }
   if (Math.abs(value) >= 1_000) {
@@ -105,6 +105,7 @@ export function InfluenceRadarLens({ analytics }: { analytics: Analytics }) {
       const strokeDash = fraction * DONUT_CIRCUMFERENCE;
       const strokeGap = Math.max(0, DONUT_CIRCUMFERENCE - strokeDash);
       const offset = accumulatedOffset;
+      const startAngleDeg = (offset / DONUT_CIRCUMFERENCE) * 360;
       accumulatedOffset += strokeDash;
       const def = SECTOR_BY_KEY.get(sector.sector);
       const color = def?.color ?? "#94a3b8";
@@ -117,9 +118,17 @@ export function InfluenceRadarLens({ analytics }: { analytics: Analytics }) {
         strokeDash,
         strokeGap,
         offset,
+        startAngleDeg,
       };
     });
   }, [analytics.influence.statewideSectors, totalSectorDollars]);
+
+  const topSectorAmount = useMemo(() => {
+    return Math.max(
+      1,
+      ...analytics.influence.statewideSectors.map((s) => s.amount),
+    );
+  }, [analytics.influence.statewideSectors]);
 
   const grassrootsPct = analytics.influence.avgGrassrootsPct;
   const institutionalPct = Math.max(0, 100 - grassrootsPct);
@@ -341,7 +350,7 @@ export function InfluenceRadarLens({ analytics }: { analytics: Analytics }) {
                       style={{
                         cursor: "pointer",
                         transition: "stroke-width 0.18s ease, opacity 0.18s ease",
-                        opacity: activeSectorKey && !isSelected && !isHovered ? 0.45 : 1,
+                        opacity: activeSectorKey && !isSelected && !isHovered ? 0.42 : 1,
                       }}
                       onMouseEnter={() => setHoveredSector(seg.sector)}
                       onMouseLeave={() => setHoveredSector(null)}
@@ -363,17 +372,47 @@ export function InfluenceRadarLens({ analytics }: { analytics: Analytics }) {
                     </circle>
                   );
                 })}
+                {/* Crisp card-colored separators between slices */}
+                {donutSegments.map((seg) => (
+                  <line
+                    key={`sep-${seg.sector}`}
+                    x1={110 + DONUT_RADIUS - 17}
+                    y1={110}
+                    x2={110 + DONUT_RADIUS + 17}
+                    y2={110}
+                    stroke="var(--card)"
+                    strokeWidth={2.5}
+                    transform={`rotate(${seg.startAngleDeg} 110 110)`}
+                    pointerEvents="none"
+                  />
+                ))}
               </g>
+
+              {/* Inner hairline ring */}
+              <circle
+                cx="110"
+                cy="110"
+                r={DONUT_RADIUS - 16}
+                fill="none"
+                stroke="var(--line)"
+                strokeWidth={1}
+                pointerEvents="none"
+              />
 
               {/* Center total/active sector text */}
               <text
                 x="110"
-                y="100"
+                y="99"
                 textAnchor="middle"
                 dominantBaseline="central"
                 fill="var(--navy-ink)"
                 className="num"
-                style={{ fontSize: activeSectorData ? 18 : 21, fontWeight: 800, fontFamily: "inherit" }}
+                style={{
+                  fontSize: activeSectorData ? 19 : 22,
+                  fontWeight: 700,
+                  fontFamily: "var(--font-serif)",
+                  fontVariantNumeric: "tabular-nums",
+                }}
               >
                 {activeSectorData
                   ? compactMoney(activeSectorData.amount, lang)
@@ -488,16 +527,26 @@ export function InfluenceRadarLens({ analytics }: { analytics: Analytics }) {
                     })}
                   />
                   <div
-                    className="st-bar-bench-marker"
+                    className="st-bar-bench-marker is-assembly"
                     style={{
                       left: `${Math.min(100, Math.max(0, assemblyAvgGrassroots))}%`,
-                      background: "var(--blue)",
                     }}
                     title={t("superTools.influenceChamberBenchTitle", {
                       chamber: chamberLabel("Assembly", lang),
                       pct: assemblyAvgGrassroots,
                     })}
                   />
+                </div>
+                <div className="st-bench-legend">
+                  <span className="st-bench-legend-item">
+                    <span className="st-bench-swatch is-senate" aria-hidden="true" />
+                    {chamberLabel("Senate", lang)}: <strong className="num">{senateAvgGrassroots}%</strong>
+                  </span>
+                  <span className="st-bench-legend-item">
+                    <span className="st-bench-swatch is-assembly" aria-hidden="true" />
+                    {chamberLabel("Assembly", lang)}: <strong className="num">{assemblyAvgGrassroots}%</strong>
+                  </span>
+                  <span className="st-cell-sub">{t("superTools.influenceBenchLegend")}</span>
                 </div>
               </div>
             </div>
@@ -518,14 +567,23 @@ export function InfluenceRadarLens({ analytics }: { analytics: Analytics }) {
               const def = SECTOR_BY_KEY.get(s.sector);
               const color = def?.color ?? "#94a3b8";
               const isSelected = selectedSector === s.sector;
+              const isHovered = hoveredSector === s.sector;
+              const relWidth = Math.max(2, (s.amount / topSectorAmount) * 100);
 
               return (
                 <button
                   key={s.sector}
                   type="button"
-                  className={`st-bottleneck-card${isSelected ? " is-active" : ""}`}
+                  className={`st-bottleneck-card${isSelected ? " is-active" : ""}${isHovered ? " is-hovered" : ""}`}
                   onClick={() => setSelectedSector(isSelected ? "all" : s.sector)}
-                  style={{ padding: "10px 14px", cursor: "pointer", textAlign: "left" }}
+                  onMouseEnter={() => setHoveredSector(s.sector)}
+                  onMouseLeave={() => setHoveredSector(null)}
+                  style={{
+                    padding: "10px 14px",
+                    cursor: "pointer",
+                    textAlign: "left",
+                    opacity: activeSectorKey && !isSelected && !isHovered ? 0.58 : 1,
+                  }}
                   aria-pressed={isSelected}
                 >
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
@@ -541,7 +599,7 @@ export function InfluenceRadarLens({ analytics }: { analytics: Analytics }) {
                     <span>{t("superTools.influenceLegislatorsCount", { count: s.legislatorCount ?? 0 })}</span>
                   </div>
                   <div className="st-bar-track" style={{ height: 6 }}>
-                    <div className="st-bar-fill" style={{ width: `${s.pct}%`, background: color }} />
+                    <div className="st-bar-fill" style={{ width: `${relWidth}%`, background: color }} />
                   </div>
                 </button>
               );

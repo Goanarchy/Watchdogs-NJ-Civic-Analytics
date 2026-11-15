@@ -610,6 +610,9 @@ export interface SandboxScatterResult {
   medianX: number;
   medianY: number;
   pearsonR: number;
+  slope: number;
+  intercept: number;
+  rSquared: number;
 }
 
 /* ------------------------------------------------ pocketbook impact & floor roll-calls */

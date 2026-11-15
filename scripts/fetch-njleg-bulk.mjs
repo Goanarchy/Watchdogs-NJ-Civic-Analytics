@@ -228,6 +228,82 @@ export function calculateLegislatorVoteStats({
 }
 
 /**
+ * Parses roll-call CSV rows into normalized roll-call objects.
+ * Splits consecutive/duplicate (bill, date, action) blocks whenever a legislator
+ * ID already appears in the active roll-call sequence for that base key.
+ */
+export function parseRollCallsFromCsvRows(rows, chamber, matchLegislator) {
+  const rollCallsMap = new Map();
+  const activeSeqByBaseKey = new Map();
+  const prefix = chamber === "Assembly" ? "a" : "s";
+
+  for (let i = 1; i < rows.length; i++) {
+    const [bill, fullName, date, , abstract, action, voteRaw] = rows[i];
+    const billCode = (bill || "").trim();
+    const dateRaw = (date || "").trim();
+    const dateIso = toIsoDate(dateRaw) || dateRaw;
+    const actionStr = (action || "").trim();
+    if (!billCode || !actionStr) continue;
+
+    const legId = matchLegislator(fullName);
+    if (!legId) continue;
+
+    const baseKey = `${billCode}|${dateIso}|${actionStr}`;
+    let seq = activeSeqByBaseKey.get(baseKey) ?? 1;
+    let key = `${baseKey}#${seq}`;
+
+    while (
+      rollCallsMap.has(key) &&
+      Object.prototype.hasOwnProperty.call(
+        rollCallsMap.get(key).votesByLegislatorId,
+        String(legId),
+      )
+    ) {
+      seq += 1;
+      key = `${baseKey}#${seq}`;
+    }
+    activeSeqByBaseKey.set(baseKey, seq);
+
+    if (!rollCallsMap.has(key)) {
+      rollCallsMap.set(key, {
+        id: `${prefix}-${billCode.toLowerCase()}-${dateIso.replace(/-/g, "")}-${rollCallsMap.size + 1}`,
+        bill: billCode,
+        chamber,
+        date: dateIso,
+        action: actionStr,
+        abstract: (abstract || "").trim(),
+        yeas: 0,
+        nays: 0,
+        abstains: 0,
+        notVoting: 0,
+        votesByLegislatorId: {},
+      });
+    }
+
+    const rc = rollCallsMap.get(key);
+    let choice = "NV";
+    const v = (voteRaw || "").trim().toUpperCase();
+    if (v === "Y" || v === "YES") {
+      choice = "Y";
+      rc.yeas++;
+    } else if (v === "N" || v === "NO") {
+      choice = "N";
+      rc.nays++;
+    } else if (v === "A" || v === "ABSTAIN") {
+      choice = "A";
+      rc.abstains++;
+    } else {
+      choice = "NV";
+      rc.notVoting++;
+    }
+
+    rc.votesByLegislatorId[String(legId)] = choice;
+  }
+
+  return Array.from(rollCallsMap.values());
+}
+
+/**
  * Validates integrity invariants before overwriting src/data files.
  */
 export function assertBulkOutputsValid(billStages, votesData) {
@@ -244,6 +320,15 @@ export function assertBulkOutputsValid(billStages, votesData) {
   }
   if (!Array.isArray(votesData.rollCalls) || votesData.rollCalls.length === 0) {
     throw new Error("Validation error: votesData.rollCalls must be a non-empty array");
+  }
+  for (const rc of votesData.rollCalls) {
+    const capacity = rc.chamber === "Senate" ? 40 : 80;
+    const totalVotes = (rc.yeas || 0) + (rc.nays || 0) + (rc.abstains || 0) + (rc.notVoting || 0);
+    if (totalVotes > capacity) {
+      throw new Error(
+        `Validation error: roll call ${rc.id} (${rc.chamber}) has ${totalVotes} votes, exceeding chamber capacity (${capacity})`
+      );
+    }
   }
   if (!votesData.legislatorStats || typeof votesData.legislatorStats !== "object") {
     throw new Error("Validation error: votesData.legislatorStats must be an object");
@@ -491,58 +576,7 @@ export async function runIngestion(options = {}) {
 
   function processVotesFile(filePath, chamber) {
     const rows = parseCsv(fs.readFileSync(filePath, "utf8"));
-    const rollCallsMap = new Map();
-
-    for (let i = 1; i < rows.length; i++) {
-      const [bill, fullName, date, , abstract, action, voteRaw] = rows[i];
-      const billCode = (bill || "").trim();
-      const dateRaw = (date || "").trim();
-      const dateIso = toIsoDate(dateRaw) || dateRaw;
-      const actionStr = (action || "").trim();
-      if (!billCode || !actionStr) continue;
-
-      const key = `${billCode}|${dateIso}|${actionStr}`;
-      if (!rollCallsMap.has(key)) {
-        const prefix = chamber === "Assembly" ? "a" : "s";
-        rollCallsMap.set(key, {
-          id: `${prefix}-${billCode.toLowerCase()}-${dateIso.replace(/-/g, "")}-${rollCallsMap.size + 1}`,
-          bill: billCode,
-          chamber,
-          date: dateIso,
-          action: actionStr,
-          abstract: (abstract || "").trim(),
-          yeas: 0,
-          nays: 0,
-          abstains: 0,
-          notVoting: 0,
-          votesByLegislatorId: {},
-        });
-      }
-
-      const rc = rollCallsMap.get(key);
-      const legId = matchLegislator(fullName);
-      if (!legId) continue;
-
-      let choice = "NV";
-      const v = (voteRaw || "").trim().toUpperCase();
-      if (v === "Y" || v === "YES") {
-        choice = "Y";
-        rc.yeas++;
-      } else if (v === "N" || v === "NO") {
-        choice = "N";
-        rc.nays++;
-      } else if (v === "A" || v === "ABSTAIN") {
-        choice = "A";
-        rc.abstains++;
-      } else {
-        choice = "NV";
-        rc.notVoting++;
-      }
-
-      rc.votesByLegislatorId[String(legId)] = choice;
-    }
-
-    return Array.from(rollCallsMap.values());
+    return parseRollCallsFromCsvRows(rows, chamber, matchLegislator);
   }
 
   const assemblyRollCalls = processVotesFile(path.join(aDir, "A2026.txt"), "Assembly");

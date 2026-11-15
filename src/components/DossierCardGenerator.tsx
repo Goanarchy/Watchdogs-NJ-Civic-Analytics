@@ -30,7 +30,7 @@ const SECTOR_LABEL_KEYS: Record<DonorSectorKey, CopyKey> = {
 function formatCompactMoney(value: number, lang: Lang): string {
   const prefix = lang === "es" ? "US$" : "$";
   if (!Number.isFinite(value) || value <= 0) return `${prefix}0`;
-  if (value >= 1_000_000) {
+  if (value >= 999_500) {
     return `${prefix}${(value / 1_000_000).toFixed(1)}M`;
   }
   if (value >= 1_000) {

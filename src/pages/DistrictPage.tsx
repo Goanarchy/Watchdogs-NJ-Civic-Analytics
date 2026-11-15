@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { Link, useParams } from "react-router-dom";
 import { DistrictMap } from "../components/DistrictMap";
+import { PartyBadge } from "../components/PartyBadge";
 import { demographics, demographicsByDistrict, legislators } from "../data";
 import { useAnalytics } from "../lib/useAnalytics";
 import { useI18n } from "../lib/i18n";
@@ -54,6 +55,78 @@ export function DistrictPage() {
     );
     return { senator, assembly };
   }, [districtNumber]);
+
+  const delegationRows = useMemo(() => {
+    if (!analytics || !districtNumber) return [];
+    return analytics.legislatorMatrix
+      .filter((r) => r.legislator.district === districtNumber)
+      .slice()
+      .sort((a, b) => {
+        if (a.legislator.chamber !== b.legislator.chamber) {
+          return a.legislator.chamber === "Senate" ? -1 : 1;
+        }
+        return a.legislator.sortName.localeCompare(b.legislator.sortName, lang);
+      });
+  }, [analytics, districtNumber, lang]);
+
+  const delegationScorecard = useMemo(() => {
+    if (delegationRows.length === 0) return [];
+    const currencyFmt = new Intl.NumberFormat(lang === "es" ? "es-US" : "en-US", {
+      style: "currency",
+      currency: "USD",
+      maximumFractionDigits: 0,
+    });
+    const defs = [
+      {
+        label: t("superTools.effLesCol"),
+        getNum: (r: (typeof delegationRows)[number]) => r.effectivenessSummary?.lesScore ?? 0,
+        formatVal: (r: (typeof delegationRows)[number]) =>
+          (r.effectivenessSummary?.lesScore ?? 0).toFixed(1),
+      },
+      {
+        label: t("superTools.compareAttendance"),
+        getNum: (r: (typeof delegationRows)[number]) => r.voteStats?.attendancePct ?? 0,
+        formatVal: (r: (typeof delegationRows)[number]) =>
+          `${r.voteStats?.attendancePct ?? 0}%`,
+      },
+      {
+        label: t("superTools.wbColBipartisan"),
+        getNum: (r: (typeof delegationRows)[number]) => r.bipartisanRate,
+        formatVal: (r: (typeof delegationRows)[number]) => `${r.bipartisanRate}%`,
+      },
+      {
+        label: t("superTools.wbColElec"),
+        getNum: (r: (typeof delegationRows)[number]) => r.totalRaised,
+        formatVal: (r: (typeof delegationRows)[number]) => currencyFmt.format(r.totalRaised),
+      },
+      {
+        label: t("superTools.compareGrassroots"),
+        getNum: (r: (typeof delegationRows)[number]) => r.influenceSummary?.grassrootsPct ?? 0,
+        formatVal: (r: (typeof delegationRows)[number]) =>
+          `${(r.influenceSummary?.grassrootsPct ?? 0).toFixed(1)}%`,
+      },
+      {
+        label: t("superTools.pocketbookOverall"),
+        getNum: (r: (typeof delegationRows)[number]) => r.pocketbookSummary?.overallScore ?? 0,
+        formatVal: (r: (typeof delegationRows)[number]) =>
+          `${Math.round(r.pocketbookSummary?.overallScore ?? 0)}`,
+      },
+    ];
+    return defs.map((def) => {
+      const nums = delegationRows.map((r) => def.getNum(r));
+      const maxVal = Math.max(...nums);
+      const minVal = Math.min(...nums);
+      return {
+        label: def.label,
+        cells: delegationRows.map((r, idx) => ({
+          id: r.legislator.id,
+          name: r.legislator.fullName,
+          val: def.formatVal(r),
+          isLeader: maxVal > minVal && nums[idx] === maxVal,
+        })),
+      };
+    });
+  }, [delegationRows, lang, t]);
 
   if (!districtNumber) {
     return (
@@ -210,6 +283,64 @@ export function DistrictPage() {
             </article>
           ))}
         </div>
+
+        {delegationRows.length > 0 && delegationScorecard.length > 0 && (
+          <div className="district-delegation-scorecard">
+            <div className="district-scorecard-head">
+              <div>
+                <p className="panel-kicker">{t("superTools.wbCompareKicker")}</p>
+                <h3>{t("superTools.compareDelegationTitle")}</h3>
+              </div>
+              <Link
+                className="button button-small button-outline"
+                to={`/super-tools?lens=compare&mode=delegation&district=${districtNumber}`}
+              >
+                {t("superTools.compareOpenInWorkbench")} →
+              </Link>
+            </div>
+
+            <div className="st-table-wrap">
+              <table className="st-table st-compare-table st-delegation-table">
+                <thead>
+                  <tr>
+                    <th>{t("superTools.wbMetric")}</th>
+                    {delegationRows.map((row) => (
+                      <th key={row.legislator.id} className="text-right">
+                        <Link to={`/legislador/${row.legislator.id}`}>
+                          {row.legislator.fullName}
+                        </Link>
+                        <span className="st-th-sub">
+                          <PartyBadge party={row.legislator.party} />{" "}
+                          {row.legislator.chamber === "Senate"
+                            ? t("district.senator")
+                            : t("district.assembly")}
+                        </span>
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {delegationScorecard.map((m) => (
+                    <tr key={m.label}>
+                      <td>
+                        <strong>{m.label}</strong>
+                      </td>
+                      {m.cells.map((cell) => (
+                        <td
+                          key={cell.id}
+                          className={`num text-right${cell.isLeader ? " is-leader" : ""}`}
+                          data-label={cell.name}
+                        >
+                          <strong>{cell.val}</strong>
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
       </section>
 
       <section className="panel district-activity-panel">

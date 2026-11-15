@@ -390,13 +390,19 @@ export function PocketbookVotesLens({ analytics }: { analytics: Analytics }) {
               {t(DOMAIN_LABEL_KEYS[activeDomain])} — {t("superTools.pocketbookChamberAvg")}
             </h2>
           </div>
-          <button
-            type="button"
-            className="button button-small button-outline"
-            onClick={handleExportCsv}
-          >
-            ↓ {t("superTools.wbExportCsv")}
-          </button>
+          <div className="st-head-actions">
+            <span className="st-bench-legend-item">
+              <span className="st-bench-swatch" aria-hidden="true" />
+              {t("superTools.pocketbookBenchLegend")}
+            </span>
+            <button
+              type="button"
+              className="button button-small button-outline"
+              onClick={handleExportCsv}
+            >
+              ↓ {t("superTools.wbExportCsv")}
+            </button>
+          </div>
         </div>
 
         {/* Filter Bar */}

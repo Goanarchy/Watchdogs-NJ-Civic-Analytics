@@ -112,6 +112,8 @@ export function extractSandboxMetric(
       val = row.voteStats?.partyUnityPct ?? 0;
       break;
     case "primaryBills":
+      // Match LegislatorMatrixRow.primaryBills & avgPrimaryBills when numeric;
+      // fall back to effectivenessSummary.primarySubstantive only when absent.
       val = row.primaryBills ?? row.effectivenessSummary?.primarySubstantive ?? 0;
       break;
     case "enactedBills":
@@ -200,6 +202,91 @@ export function computePearsonCorrelation(
   return Object.is(rounded, -0) ? 0 : rounded;
 }
 
+/**
+ * Computes Ordinary Least Squares (OLS) linear regression (y = slope * x + intercept)
+ * and coefficient of determination R² (clamped to [0, 1] and rounded to 3 decimals).
+ * Degrades safely on zero-variance, n < 2, or non-finite inputs without NaN/Infinity.
+ */
+export function computeLinearRegression(
+  xs: number[],
+  ys: number[],
+): { slope: number; intercept: number; rSquared: number } {
+  if (!Array.isArray(xs) || !Array.isArray(ys)) {
+    return { slope: 0, intercept: 0, rSquared: 0 };
+  }
+
+  const len = Math.min(xs.length, ys.length);
+  const clean: Array<{ x: number; y: number }> = [];
+  for (let i = 0; i < len; i++) {
+    const x = xs[i];
+    const y = ys[i];
+    if (Number.isFinite(x) && Number.isFinite(y)) {
+      clean.push({ x, y });
+    }
+  }
+
+  const n = clean.length;
+  if (n === 0) {
+    return { slope: 0, intercept: 0, rSquared: 0 };
+  }
+
+  let sumX = 0;
+  let sumY = 0;
+  for (const pt of clean) {
+    sumX += pt.x;
+    sumY += pt.y;
+  }
+  const meanX = sumX / n;
+  const meanY = sumY / n;
+  const finiteMeanY = Number.isFinite(meanY) ? (Object.is(meanY, -0) ? 0 : meanY) : 0;
+
+  if (n < 2) {
+    return { slope: 0, intercept: finiteMeanY, rSquared: 0 };
+  }
+
+  let sumSqX = 0;
+  let sumSqY = 0;
+  let sumProd = 0;
+  for (const pt of clean) {
+    const dx = pt.x - meanX;
+    const dy = pt.y - meanY;
+    sumSqX += dx * dx;
+    sumSqY += dy * dy;
+    sumProd += dx * dy;
+  }
+
+  if (sumSqX === 0 || !Number.isFinite(sumSqX)) {
+    return { slope: 0, intercept: finiteMeanY, rSquared: 0 };
+  }
+
+  const rawSlope = sumProd / sumSqX;
+  const slope = Number.isFinite(rawSlope)
+    ? Object.is(rawSlope, -0)
+      ? 0
+      : rawSlope
+    : 0;
+  const rawIntercept = meanY - slope * meanX;
+  const intercept = Number.isFinite(rawIntercept)
+    ? Object.is(rawIntercept, -0)
+      ? 0
+      : rawIntercept
+    : finiteMeanY;
+
+  let rSquared = 0;
+  if (sumSqY > 0 && Number.isFinite(sumSqY)) {
+    const denom = Math.sqrt(sumSqX * sumSqY);
+    if (denom > 0 && Number.isFinite(denom)) {
+      const r = sumProd / denom;
+      if (Number.isFinite(r)) {
+        const rounded = Math.round(r * r * 1000) / 1000;
+        rSquared = Math.max(0, Math.min(1, Object.is(rounded, -0) ? 0 : rounded));
+      }
+    }
+  }
+
+  return { slope, intercept, rSquared };
+}
+
 export interface SandboxScatterFilters {
   chamber?: "All" | "Senate" | "Assembly" | string;
   party?: "All" | "D" | "R" | string;
@@ -273,6 +360,10 @@ export function buildSandboxScatter(
   });
 
   const pearsonR = computePearsonCorrelation(points);
+  const { slope, intercept, rSquared } = computeLinearRegression(
+    points.map((p) => p.x),
+    points.map((p) => p.y),
+  );
 
   return {
     xKey,
@@ -281,5 +372,8 @@ export function buildSandboxScatter(
     medianX,
     medianY,
     pearsonR,
+    slope,
+    intercept,
+    rSquared,
   };
 }

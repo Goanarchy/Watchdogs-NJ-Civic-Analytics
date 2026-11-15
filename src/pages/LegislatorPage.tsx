@@ -464,6 +464,10 @@ function ChamberBenchmarksPanel({
           <p className="panel-kicker">{t("profile.v3BenchKicker")}</p>
           <h2>{t("profile.v3BenchTitle", { chamber })}</h2>
         </div>
+        <span className="st-bench-legend-item">
+          <span className="st-bench-swatch" aria-hidden="true" />
+          {t("superTools.effBenchLegend")}
+        </span>
       </div>
 
       <div className="st-gauge-grid" style={{ marginTop: "16px" }}>

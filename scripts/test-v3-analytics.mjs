@@ -14,6 +14,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 // Task 1 imports from fetch-njleg-bulk.mjs
 import {
   parseCsvLine,
+  parseRollCallsFromCsvRows,
   isSubstantiveBill,
   normalizeBillStage,
   assertBulkOutputsValid,
@@ -44,6 +45,7 @@ import {
   extractSandboxMetric,
   computeMedian,
   computePearsonCorrelation,
+  computeLinearRegression,
   buildSandboxScatter,
 } from "../src/lib/sandbox.ts";
 
@@ -308,6 +310,48 @@ test("accepts valid bulk outputs", () => {
   };
 
   assert.doesNotThrow(() => assertBulkOutputsValid(mockStages, mockVotes));
+
+  const overCapacityAssembly = {
+    ...mockVotes,
+    rollCalls: [{ ...mockVotes.rollCalls[0], yeas: 81 }],
+  };
+  assert.throws(
+    () => assertBulkOutputsValid(mockStages, overCapacityAssembly),
+    /exceeding chamber capacity/i
+  );
+
+  const overCapacitySenate = {
+    ...mockVotes,
+    rollCalls: [{ ...mockVotes.rollCalls[0], id: "s-s420-1", chamber: "Senate", yeas: 41 }],
+  };
+  assert.throws(
+    () => assertBulkOutputsValid(mockStages, overCapacitySenate),
+    /exceeding chamber capacity/i
+  );
+});
+
+test("parseRollCallsFromCsvRows splits two consecutive (bill, date, action) blocks into 2 roll calls", () => {
+  const rows = [
+    ["Bill", "FullName", "Date", "Seq", "Abstract", "Action", "Vote"],
+    ["A4071", "Doe, Jane", "06/29/2026", "1", "First vote", "3RDG FINAL PASSAGE", "Y"],
+    ["A4071", "Smith, John", "06/29/2026", "2", "First vote", "3RDG FINAL PASSAGE", "N"],
+    ["A4071", "Doe, Jane", "06/29/2026", "1", "Second vote", "3RDG FINAL PASSAGE", "N"],
+    ["A4071", "Smith, John", "06/29/2026", "2", "Second vote", "3RDG FINAL PASSAGE", "Y"],
+  ];
+  const matcher = (name) => (name === "Doe, Jane" ? 1 : name === "Smith, John" ? 2 : null);
+  const parsed = parseRollCallsFromCsvRows(rows, "Assembly", matcher);
+
+  assert.strictEqual(parsed.length, 2);
+  assert.strictEqual(parsed[0].yeas, 1);
+  assert.strictEqual(parsed[0].nays, 1);
+  assert.strictEqual(parsed[0].votesByLegislatorId["1"], "Y");
+  assert.strictEqual(parsed[0].votesByLegislatorId["2"], "N");
+
+  assert.strictEqual(parsed[1].yeas, 1);
+  assert.strictEqual(parsed[1].nays, 1);
+  assert.strictEqual(parsed[1].votesByLegislatorId["1"], "N");
+  assert.strictEqual(parsed[1].votesByLegislatorId["2"], "Y");
+  assert.notStrictEqual(parsed[0].id, parsed[1].id);
 });
 
 // ---------------------------------------------------------------------------
@@ -375,7 +419,15 @@ if (fs.existsSync(billStagesPath) && fs.existsSync(votesPath)) {
   test("votes.json contains valid rollCalls and 120 legislatorStats", () => {
     const votes = JSON.parse(fs.readFileSync(votesPath, "utf8"));
     assert.ok(Array.isArray(votes.rollCalls));
-    assert.ok(votes.rollCalls.length > 0);
+    assert.strictEqual(votes.rollCalls.length, 543);
+    for (const rc of votes.rollCalls) {
+      const cap = rc.chamber === "Senate" ? 40 : 80;
+      const totalVotes = (rc.yeas || 0) + (rc.nays || 0) + (rc.abstains || 0) + (rc.notVoting || 0);
+      assert.ok(
+        totalVotes <= cap,
+        `Roll call ${rc.id} (${rc.chamber}) has ${totalVotes} votes > capacity ${cap}`
+      );
+    }
     assert.ok(votes.legislatorStats && typeof votes.legislatorStats === "object");
 
     const statKeys = Object.keys(votes.legislatorStats);
@@ -1086,6 +1138,37 @@ test("computeMedian computes deterministic sorted median across odd/even sizes",
   assert.strictEqual(computeMedian([10, 20, 30, 40, 50]), 30);
 });
 
+test("computeLinearRegression calculates exact OLS slope, intercept, and R² safely", () => {
+  // Exact positive fit: y = 2x + 10
+  const pos = computeLinearRegression([1, 2, 3, 4], [12, 14, 16, 18]);
+  assert.strictEqual(pos.slope, 2);
+  assert.strictEqual(pos.intercept, 10);
+  assert.strictEqual(pos.rSquared, 1);
+
+  // Exact negative fit: y = -3x + 20
+  const neg = computeLinearRegression([0, 2, 4], [20, 14, 8]);
+  assert.strictEqual(neg.slope, -3);
+  assert.strictEqual(neg.intercept, 20);
+  assert.strictEqual(neg.rSquared, 1);
+
+  // Zero variance in X -> slope 0, intercept = meanY, rSquared 0
+  const vert = computeLinearRegression([5, 5, 5], [10, 20, 30]);
+  assert.strictEqual(vert.slope, 0);
+  assert.strictEqual(vert.intercept, 20);
+  assert.strictEqual(vert.rSquared, 0);
+
+  // Zero variance in Y -> slope 0, intercept = 7, rSquared 0
+  const horiz = computeLinearRegression([1, 2, 3], [7, 7, 7]);
+  assert.strictEqual(horiz.slope, 0);
+  assert.strictEqual(horiz.intercept, 7);
+  assert.strictEqual(horiz.rSquared, 0);
+
+  // n < 2 & non-finite safety
+  assert.deepStrictEqual(computeLinearRegression([], []), { slope: 0, intercept: 0, rSquared: 0 });
+  assert.deepStrictEqual(computeLinearRegression([3], [15]), { slope: 0, intercept: 15, rSquared: 0 });
+  assert.deepStrictEqual(computeLinearRegression([NaN, 1], [5, Infinity]), { slope: 0, intercept: 0, rSquared: 0 });
+});
+
 // ---------------------------------------------------------------------------
 // 16. Sandbox Scatter & 12 Dimensions Extraction
 // ---------------------------------------------------------------------------
@@ -1239,6 +1322,9 @@ test("buildSandboxScatter filters points and computes median split quadrants cle
   assert.strictEqual(resAll.points.length, 4);
   assert.strictEqual(resAll.medianX, 25);
   assert.strictEqual(resAll.medianY, 25);
+  assert.ok(Number.isFinite(resAll.slope));
+  assert.ok(Number.isFinite(resAll.intercept));
+  assert.ok(resAll.rSquared >= 0 && resAll.rSquared <= 1);
 
   // Check quadrant assignments
   // Leg 1: (10, 10) -> bottomLeft

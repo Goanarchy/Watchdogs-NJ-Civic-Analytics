@@ -246,7 +246,7 @@ export function EffectivenessFunnelLens({ analytics }: { analytics: Analytics })
       </section>
 
       {/* 2. Chamber Benchmark Summary Ribbon */}
-      <div className="st-summary-grid">
+      <div className="st-summary-grid st-summary-grid--three">
         <article className="panel super-panel">
           <div className="panel-head super-panel-head">
             <div>
@@ -351,28 +351,61 @@ export function EffectivenessFunnelLens({ analytics }: { analytics: Analytics })
 
           {/* Funnel Stack */}
           <div className="st-funnel-stack">
-            {activeFunnel.map((step) => {
+            {activeFunnel.map((step, idx) => {
+              const prev = idx > 0 ? activeFunnel[idx - 1] : null;
+              const retainedPct =
+                prev && prev.reachedCount > 0
+                  ? Math.round((step.reachedCount / prev.reachedCount) * 1000) / 10
+                  : null;
+              const delta = prev ? step.reachedCount - prev.reachedCount : null;
+              const deltaText =
+                delta !== null
+                  ? delta < 0
+                    ? `-${formatNumber(Math.abs(delta))}`
+                    : formatNumber(delta)
+                  : "";
+
               return (
-                <div key={step.stage} className="st-funnel-step">
-                  <div className="st-funnel-step-head">
-                    <span>{t(STAGE_LABEL_KEYS[step.stage])}</span>
-                    <span className="num">
-                      {t("superTools.effReachedLabel", {
-                        count: formatNumber(step.reachedCount),
-                        pct: step.reachedPct,
+                <div key={step.stage} className="st-funnel-step-wrap">
+                  {prev && retainedPct !== null && (
+                    <div className="st-funnel-retention-row">
+                      <span className="st-funnel-retention-badge num">
+                        ↓{" "}
+                        {t("superTools.effRetainedDelta", {
+                          pct: retainedPct.toFixed(1),
+                          delta: deltaText,
+                        })}
+                      </span>
+                    </div>
+                  )}
+                  <div className="st-funnel-step" data-stage={step.stage}>
+                    <div className="st-funnel-step-head">
+                      <span>{t(STAGE_LABEL_KEYS[step.stage])}</span>
+                      <span className="num">
+                        {t("superTools.effReachedLabel", {
+                          count: formatNumber(step.reachedCount),
+                          pct: step.reachedPct,
+                        })}
+                      </span>
+                    </div>
+                    <div className="st-funnel-bar-bg" aria-hidden="true">
+                      {prev && (
+                        <div
+                          className="st-funnel-bar-ghost"
+                          style={{ width: `${Math.max(2, prev.reachedPct)}%` }}
+                        />
+                      )}
+                      <div
+                        className="st-funnel-bar"
+                        data-stage={step.stage}
+                        style={{ width: `${Math.max(2, step.reachedPct)}%` }}
+                      />
+                    </div>
+                    <div className="st-funnel-step-meta">
+                      {t("superTools.effTerminalLabel", {
+                        count: formatNumber(step.currentCount),
                       })}
-                    </span>
-                  </div>
-                  <div className="st-funnel-bar-bg" aria-hidden="true">
-                    <div
-                      className="st-funnel-bar"
-                      style={{ width: `${Math.max(2, step.reachedPct)}%` }}
-                    />
-                  </div>
-                  <div className="st-funnel-step-meta">
-                    {t("superTools.effTerminalLabel", {
-                      count: formatNumber(step.currentCount),
-                    })}
+                    </div>
                   </div>
                 </div>
               );
@@ -495,12 +528,18 @@ export function EffectivenessFunnelLens({ analytics }: { analytics: Analytics })
           </div>
         </div>
 
-        <p className="panel-intro" style={{ marginBottom: 12 }}>
-          {t("superTools.effChamberBenchmark", {
-            senate: senateAvgLes,
-            assembly: assemblyAvgLes,
-          })}
-        </p>
+        <div className="st-bench-legend-row">
+          <p className="panel-intro" style={{ marginBottom: 0 }}>
+            {t("superTools.effChamberBenchmark", {
+              senate: senateAvgLes,
+              assembly: assemblyAvgLes,
+            })}
+          </p>
+          <span className="st-bench-legend-item">
+            <span className="st-bench-swatch" aria-hidden="true" />
+            {t("superTools.effBenchLegend")}
+          </span>
+        </div>
 
         {/* Selected Committee Filter Chip */}
         {selectedCommittee && (
@@ -701,7 +740,7 @@ export function EffectivenessFunnelLens({ analytics }: { analytics: Analytics })
                         style={{
                           color:
                             row.effectivenessSummary.primaryEnacted > 0
-                              ? "var(--green, #10b981)"
+                              ? "var(--ok)"
                               : "inherit",
                         }}
                       >
