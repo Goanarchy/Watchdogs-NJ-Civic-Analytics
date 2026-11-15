@@ -11454,10 +11454,19 @@ html[data-theme="dark"] .st-legend-line {
   background: #a5b4fc;
 }
 
-.st-legend-line.is-dashed {
+.st-legend-line.is-dashed,
+.st-legend-line.is-ols {
   background: repeating-linear-gradient(
     90deg,
-    var(--muted) 0 4px,
+    var(--navy-ink) 0 5px,
+    transparent 5px 8px
+  );
+}
+
+.st-legend-line.is-median {
+  background: repeating-linear-gradient(
+    90deg,
+    var(--gold) 0 4px,
     transparent 4px 7px
   );
 }

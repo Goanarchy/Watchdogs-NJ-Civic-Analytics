@@ -205,8 +205,8 @@ export function DistrictPage() {
         </div>
 
         <p className="panel-intro">
-          {(delegation.senator?.districtInfo?.counties ??
-            delegation.senator?.districtInfo?.countiesLabel ?? "") ||
+          {delegation.senator?.districtInfo?.countiesLabel ||
+            delegation.senator?.districtInfo?.counties?.join(", ") ||
             ""}
         </p>
 
