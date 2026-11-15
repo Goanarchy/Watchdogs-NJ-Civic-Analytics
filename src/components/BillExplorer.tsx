@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { loadBills, meta } from "../data";
+import { isSubstantiveBillCode } from "../lib/effectiveness";
 import { useI18n } from "../lib/i18n";
 import { billTypeLabel, billUrl } from "../lib/labels";
 import type { Bill, Legislator } from "../types";
@@ -12,6 +13,7 @@ export function BillExplorer({ legislator }: { legislator: Legislator }) {
   const { lang, t } = useI18n();
   const [query, setQuery] = useState("");
   const [type, setType] = useState<TypeFilter>("all");
+  const [substantiveOnly, setSubstantiveOnly] = useState(false);
   const [limit, setLimit] = useState(PAGE_SIZE);
   const [billData, setBillData] = useState<Record<string, Bill> | null>(null);
 
@@ -27,7 +29,7 @@ export function BillExplorer({ legislator }: { legislator: Legislator }) {
 
   useEffect(() => {
     setLimit(PAGE_SIZE);
-  }, [query, type]);
+  }, [query, type, substantiveOnly]);
 
   const counts = useMemo(() => {
     let primary = 0;
@@ -43,6 +45,7 @@ export function BillExplorer({ legislator }: { legislator: Legislator }) {
     const needle = query.trim().toLowerCase();
     return legislator.bills
       .filter(([bill, relationType]) => {
+        if (substantiveOnly && !isSubstantiveBillCode(bill)) return false;
         if (type !== "all" && relationType !== type) return false;
         if (!needle) return true;
         const record = billData?.[bill];
@@ -57,7 +60,7 @@ export function BillExplorer({ legislator }: { legislator: Legislator }) {
         session: billData?.[bill]?.session ?? 0,
         type: relationType,
       }));
-  }, [legislator.bills, query, type, billData]);
+  }, [legislator.bills, query, type, substantiveOnly, billData]);
 
   const visible = filtered.slice(0, limit);
 
@@ -119,6 +122,15 @@ export function BillExplorer({ legislator }: { legislator: Legislator }) {
             {t("bills.cosponsoredFilter")}
           </button>
         </div>
+
+        <button
+          type="button"
+          className={`st-chip-btn${substantiveOnly ? " is-active" : ""}`}
+          onClick={() => setSubstantiveOnly((v) => !v)}
+          aria-pressed={substantiveOnly}
+        >
+          {t("profile.v3ShowSubstantiveOnly")}
+        </button>
       </div>
 
       <p className="bill-count-note">
@@ -182,6 +194,7 @@ export function BillExplorer({ legislator }: { legislator: Legislator }) {
             onClick={() => {
               setQuery("");
               setType("all");
+              setSubstantiveOnly(false);
             }}
           >
             {t("bills.clear")}

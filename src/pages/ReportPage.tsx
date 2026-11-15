@@ -8,7 +8,7 @@ import {
   loadDonorProfilesByLegislator,
   meta,
 } from "../data";
-import { useI18n } from "../lib/i18n";
+import { useI18n, type CopyKey } from "../lib/i18n";
 import {
   chamberLabel,
   padDistrict,
@@ -21,13 +21,28 @@ import {
   translateSourceLabel,
   translateSourceName,
 } from "../lib/labels";
+import { POCKETBOOK_DOMAINS, type PocketbookDomainKey } from "../lib/pocketbook";
 import {
   getPromiseStatusMeta,
   hasEvidence,
   promiseEvidenceLabel,
 } from "../lib/promiseStatus";
+import { useAnalytics } from "../lib/useAnalytics";
 import { useDocumentTitle } from "../lib/useDocumentTitle";
-import type { Bill, CampaignProfile, DonorProfile } from "../types";
+import type { Bill, CampaignProfile, DonorProfile, VoteChoice } from "../types";
+
+const DOMAIN_LABEL_KEYS: Record<PocketbookDomainKey, CopyKey> = {
+  property_tax: "superTools.pocketbook.property_tax",
+  housing: "superTools.pocketbook.housing",
+  transit: "superTools.pocketbook.transit",
+};
+
+const VOTE_CHOICE_KEYS: Record<VoteChoice, CopyKey> = {
+  Y: "superTools.pocketbookChoice.Y",
+  N: "superTools.pocketbookChoice.N",
+  A: "superTools.pocketbookChoice.A",
+  NV: "superTools.pocketbookChoice.NV",
+};
 
 function money(value: number, lang: string): string {
   return new Intl.NumberFormat(lang === "es" ? "es-US" : "en-US", {
@@ -48,6 +63,16 @@ export function ReportPage() {
   const legislator = Number.isFinite(legislatorId)
     ? legislatorsById.get(legislatorId)
     : undefined;
+
+  const { analytics } = useAnalytics();
+  const matrixRow = legislator
+    ? analytics?.legislatorMatrix.find((r) => r.legislator.id === legislator.id)
+    : undefined;
+  const benchmarks =
+    legislator &&
+    (legislator.chamber === "Senate" || legislator.chamber === "Assembly")
+      ? analytics?.effectiveness.chamberAverages[legislator.chamber]
+      : undefined;
 
   useDocumentTitle(
     legislator
@@ -425,6 +450,145 @@ export function ReportPage() {
             </>
           )}
         </section>
+
+        {matrixRow && benchmarks && (
+          <section className="report-section">
+            <h2>
+              {t("profile.v3BenchTitle", {
+                chamber: chamberLabel(legislator.chamber, lang),
+              })}
+            </h2>
+            <p className="report-note">{t("superTools.pocketbookMethodologyNote")}</p>
+
+            <table className="report-table">
+              <thead>
+                <tr>
+                  <th scope="col">{t("superTools.wbMetric")}</th>
+                  <th scope="col" style={{ textAlign: "right" }}>
+                    {t("profile.v3You")}
+                  </th>
+                  <th scope="col" style={{ textAlign: "right" }}>
+                    {t("profile.v3ChamberAvg", {
+                      chamber: chamberLabel(legislator.chamber, lang),
+                    })}
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>{t("superTools.sandboxDim.lesScore")}</td>
+                  <td style={{ textAlign: "right", fontWeight: 700 }}>
+                    {matrixRow.effectivenessSummary.lesScore} / 100
+                  </td>
+                  <td style={{ textAlign: "right", color: "var(--muted)" }}>
+                    {benchmarks.avgLes} / 100
+                  </td>
+                </tr>
+                <tr>
+                  <td>{t("superTools.sandboxDim.attendancePct")}</td>
+                  <td style={{ textAlign: "right", fontWeight: 700 }}>
+                    {matrixRow.voteStats.attendancePct}%
+                  </td>
+                  <td style={{ textAlign: "right", color: "var(--muted)" }}>
+                    {benchmarks.avgAttendancePct}%
+                  </td>
+                </tr>
+                <tr>
+                  <td>{t("superTools.sandboxDim.partyUnityPct")}</td>
+                  <td style={{ textAlign: "right", fontWeight: 700 }}>
+                    {matrixRow.voteStats.partyUnityPct}%
+                  </td>
+                  <td style={{ textAlign: "right", color: "var(--muted)" }}>
+                    {benchmarks.avgPartyUnityPct}%
+                  </td>
+                </tr>
+                <tr>
+                  <td>{t("superTools.sandboxDim.bipartisanRate")}</td>
+                  <td style={{ textAlign: "right", fontWeight: 700 }}>
+                    {matrixRow.bipartisanRate}%
+                  </td>
+                  <td style={{ textAlign: "right", color: "var(--muted)" }}>
+                    {benchmarks.avgBipartisanRatePct}%
+                  </td>
+                </tr>
+                <tr>
+                  <td>{t("superTools.sandboxDim.grassrootsPct")}</td>
+                  <td style={{ textAlign: "right", fontWeight: 700 }}>
+                    {matrixRow.influenceSummary.grassrootsPct}%
+                  </td>
+                  <td style={{ textAlign: "right", color: "var(--muted)" }}>
+                    {benchmarks.avgGrassrootsPct}%
+                  </td>
+                </tr>
+                <tr>
+                  <td>{t("superTools.pocketbookOverall")}</td>
+                  <td style={{ textAlign: "right", fontWeight: 700 }}>
+                    {matrixRow.pocketbookSummary.overallScore} / 100
+                  </td>
+                  <td style={{ textAlign: "right", color: "var(--muted)" }}>—</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <h3 style={{ marginTop: "24px" }}>
+              {t("profile.v3PocketbookTitle")}
+            </h3>
+            <div className="report-stat-row" style={{ marginTop: "10px" }}>
+              {POCKETBOOK_DOMAINS.map((domain) => {
+                const summary = matrixRow.pocketbookSummary.domains[domain];
+                return (
+                  <div key={domain}>
+                    <strong>{summary ? `${summary.score} / 100` : "—"}</strong>
+                    <span>{t(DOMAIN_LABEL_KEYS[domain])}</span>
+                  </div>
+                );
+              })}
+            </div>
+
+            {matrixRow.pocketbookSummary.notableVotes.length > 0 && (
+              <>
+                <h4 style={{ marginTop: "18px", marginBottom: "8px" }}>
+                  {t("superTools.pocketbookRecentVotes")}
+                </h4>
+                <table className="report-table">
+                  <thead>
+                    <tr>
+                      <th scope="col">{t("report.bill")}</th>
+                      <th scope="col">{lang === "es" ? "Fecha" : "Date"}</th>
+                      <th scope="col">{lang === "es" ? "Acción" : "Action"}</th>
+                      <th scope="col">{lang === "es" ? "Resultado" : "Outcome"}</th>
+                      <th scope="col" style={{ textAlign: "right" }}>
+                        {lang === "es" ? "Voto" : "Vote"}
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {matrixRow.pocketbookSummary.notableVotes.slice(0, 8).map((vote) => {
+                      const passed = vote.yeas > vote.nays;
+                      return (
+                        <tr key={vote.rollCallId}>
+                          <td className="report-bill-id">{vote.bill}</td>
+                          <td style={{ whiteSpace: "nowrap" }}>
+                            {formatDate(vote.date)}
+                          </td>
+                          <td>{translateBillAction(vote.action, lang)}</td>
+                          <td>
+                            {passed
+                              ? t("superTools.pocketbookOutcomePassed")
+                              : t("superTools.pocketbookOutcomeRejected")}
+                          </td>
+                          <td style={{ textAlign: "right", fontWeight: 700 }}>
+                            {t(VOTE_CHOICE_KEYS[vote.choice])}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </>
+            )}
+          </section>
+        )}
 
         <section className="report-section report-sources">
           <h2>{t("report.sources")}</h2>

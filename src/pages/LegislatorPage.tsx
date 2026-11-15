@@ -2,28 +2,44 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { BillExplorer } from "../components/BillExplorer";
 import { CampaignPromisesPanel } from "../components/CampaignPromisesPanel";
+import { DossierCardGenerator } from "../components/DossierCardGenerator";
 import { PartyBadge } from "../components/PartyBadge";
 import { Portrait } from "../components/Portrait";
 import { legislatorsById, loadDonorProfilesByLegislator, meta } from "../data";
+import type { LegislatorMatrixRow } from "../lib/analytics";
 import { useI18n, type CopyKey } from "../lib/i18n";
 import {
+  billUrl,
   chamberLabel,
   padDistrict,
   roleLabel,
   translateAddressType,
+  translateBillAction,
   translateCommittee,
   translateCommitteePosition,
   translateLeadership,
 } from "../lib/labels";
 import { getLastDirectory } from "../lib/lastDirectory";
+import { POCKETBOOK_DOMAINS, type PocketbookDomainKey } from "../lib/pocketbook";
+import { useAnalytics } from "../lib/useAnalytics";
 import { useDocumentTitle } from "../lib/useDocumentTitle";
-import type { DonorProfile, Legislator } from "../types";
+import type { ChamberBenchmark, DonorProfile, Legislator, VoteChoice } from "../types";
 
 export function LegislatorPage() {
   const { id } = useParams();
   const { t, lang } = useI18n();
   const legislator = id ? legislatorsById.get(Number(id)) : undefined;
   const backTo = getLastDirectory();
+
+  const { analytics } = useAnalytics();
+  const matrixRow = legislator
+    ? analytics?.legislatorMatrix.find((r) => r.legislator.id === legislator.id)
+    : undefined;
+  const benchmarks =
+    legislator &&
+    (legislator.chamber === "Senate" || legislator.chamber === "Assembly")
+      ? analytics?.effectiveness.chamberAverages[legislator.chamber]
+      : undefined;
 
   useDocumentTitle(
     legislator
@@ -365,9 +381,329 @@ export function LegislatorPage() {
         </aside>
       </div>
 
+      {matrixRow && benchmarks && (
+        <>
+          <ChamberBenchmarksPanel row={matrixRow} benchmarks={benchmarks} />
+          <PocketbookRollCallsPanel row={matrixRow} />
+          <DossierCardGenerator row={matrixRow} benchmarks={benchmarks} />
+        </>
+      )}
+
       <CampaignPromisesPanel legislatorId={legislator.id} />
       <CampaignDonorsPanel key={legislator.id} legislator={legislator} />
     </main>
+  );
+}
+
+const DOMAIN_LABEL_KEYS: Record<PocketbookDomainKey, CopyKey> = {
+  property_tax: "superTools.pocketbook.property_tax",
+  housing: "superTools.pocketbook.housing",
+  transit: "superTools.pocketbook.transit",
+};
+
+const VOTE_CHOICE_KEYS: Record<VoteChoice, CopyKey> = {
+  Y: "superTools.pocketbookChoice.Y",
+  N: "superTools.pocketbookChoice.N",
+  A: "superTools.pocketbookChoice.A",
+  NV: "superTools.pocketbookChoice.NV",
+};
+
+function ChamberBenchmarksPanel({
+  row,
+  benchmarks,
+}: {
+  row: LegislatorMatrixRow;
+  benchmarks: ChamberBenchmark;
+}) {
+  const { t, lang } = useI18n();
+  const chamber = chamberLabel(row.legislator.chamber, lang);
+
+  const metrics = [
+    {
+      label: t("superTools.sandboxDim.lesScore"),
+      value: row.effectivenessSummary.lesScore,
+      bench: benchmarks.avgLes,
+      isPct: false,
+    },
+    {
+      label: t("superTools.sandboxDim.attendancePct"),
+      value: row.voteStats.attendancePct,
+      bench: benchmarks.avgAttendancePct,
+      isPct: true,
+    },
+    {
+      label: t("superTools.sandboxDim.partyUnityPct"),
+      value: row.voteStats.partyUnityPct,
+      bench: benchmarks.avgPartyUnityPct,
+      isPct: true,
+    },
+    {
+      label: t("superTools.sandboxDim.bipartisanRate"),
+      value: row.bipartisanRate,
+      bench: benchmarks.avgBipartisanRatePct,
+      isPct: true,
+    },
+    {
+      label: t("superTools.sandboxDim.grassrootsPct"),
+      value: row.influenceSummary.grassrootsPct,
+      bench: benchmarks.avgGrassrootsPct,
+      isPct: true,
+    },
+    {
+      label: t("superTools.pocketbookOverall"),
+      value: row.pocketbookSummary.overallScore,
+      bench: undefined,
+      isPct: false,
+    },
+  ];
+
+  return (
+    <section className="panel" id="metricas-camara">
+      <div className="panel-head">
+        <div>
+          <p className="panel-kicker">{t("profile.v3BenchKicker")}</p>
+          <h2>{t("profile.v3BenchTitle", { chamber })}</h2>
+        </div>
+      </div>
+
+      <div className="st-gauge-grid" style={{ marginTop: "16px" }}>
+        {metrics.map((m) => {
+          const valClamped = Math.min(100, Math.max(0, m.value));
+          const benchClamped =
+            typeof m.bench === "number" ? Math.min(100, Math.max(0, m.bench)) : undefined;
+
+          return (
+            <div key={m.label} className="st-gauge-card">
+              <div className="st-gauge-header">
+                <span
+                  style={{
+                    fontSize: "12px",
+                    fontWeight: 700,
+                    color: "var(--muted)",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.04em",
+                  }}
+                >
+                  {m.label}
+                </span>
+              </div>
+
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "baseline",
+                  margin: "4px 0",
+                }}
+              >
+                <div>
+                  <span
+                    style={{
+                      fontSize: "12px",
+                      color: "var(--muted)",
+                      marginRight: "6px",
+                    }}
+                  >
+                    {t("profile.v3You")}:
+                  </span>
+                  <strong style={{ fontSize: "18px", fontWeight: 800 }}>
+                    {m.value}
+                    {m.isPct ? "%" : " / 100"}
+                  </strong>
+                </div>
+                {typeof m.bench === "number" && (
+                  <div style={{ textAlign: "right" }}>
+                    <span
+                      style={{
+                        fontSize: "12px",
+                        color: "var(--muted)",
+                        marginRight: "4px",
+                      }}
+                    >
+                      {t("profile.v3ChamberAvg", { chamber })}:
+                    </span>
+                    <span
+                      style={{
+                        fontSize: "13px",
+                        fontWeight: 600,
+                        color: "var(--muted)",
+                      }}
+                    >
+                      {m.bench}
+                      {m.isPct ? "%" : " / 100"}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              <div className="st-gauge-track">
+                <div
+                  className="st-gauge-fill"
+                  style={{ width: `${valClamped}%` }}
+                />
+                {typeof benchClamped === "number" && (
+                  <div
+                    className="st-bar-bench-marker"
+                    style={{ left: `${benchClamped}%` }}
+                    title={`${t("profile.v3ChamberAvg", { chamber })}: ${m.bench}${m.isPct ? "%" : ""}`}
+                  />
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+function PocketbookRollCallsPanel({ row }: { row: LegislatorMatrixRow }) {
+  const { t, lang, formatDate } = useI18n();
+
+  return (
+    <section className="panel" id="bolsillo-votos">
+      <div className="panel-head">
+        <div>
+          <p className="panel-kicker">{t("superTools.pocketbookKicker")}</p>
+          <h2>{t("profile.v3PocketbookTitle")}</h2>
+        </div>
+      </div>
+      <p className="panel-intro">{t("superTools.pocketbookMethodologyNote")}</p>
+
+      {/* 3 Pillar Mini Cards */}
+      <div className="st-pocket-grid" style={{ marginTop: "16px" }}>
+        {POCKETBOOK_DOMAINS.map((domain) => {
+          const summary = row.pocketbookSummary.domains[domain];
+          if (!summary) return null;
+          return (
+            <div key={domain} className="st-pocket-card">
+              <div className="st-pocket-card-head">
+                <h3 style={{ fontSize: "15px", fontWeight: 700, margin: 0 }}>
+                  {t(DOMAIN_LABEL_KEYS[domain])}
+                </h3>
+              </div>
+              <div className="st-pocket-score">{summary.score} / 100</div>
+              <p style={{ fontSize: "12px", color: "var(--muted)", margin: 0 }}>
+                {t("superTools.pocketbookBillsVotesMeta", {
+                  bills: summary.primaryBills,
+                  votes: summary.floorVotesCast,
+                })}
+              </p>
+              <div className="st-bar-track" style={{ marginTop: "6px" }}>
+                <div
+                  className="st-bar-fill"
+                  style={{
+                    width: `${Math.min(100, Math.max(0, summary.score))}%`,
+                  }}
+                />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Official Floor Roll-Call Record */}
+      <div style={{ marginTop: "24px" }}>
+        <h3 style={{ fontSize: "15px", fontWeight: 700, marginBottom: "12px" }}>
+          {t("superTools.pocketbookRecentVotes")}
+        </h3>
+
+        {row.pocketbookSummary.notableVotes.length === 0 ? (
+          <p className="empty-note">{t("profile.v3NoRollCalls")}</p>
+        ) : (
+          <div className="st-vote-list">
+            {row.pocketbookSummary.notableVotes.map((vote) => {
+              const passed = vote.yeas > vote.nays;
+              const choiceClass =
+                vote.choice === "Y"
+                  ? "is-yes"
+                  : vote.choice === "N"
+                    ? "is-no"
+                    : vote.choice === "A"
+                      ? "is-abstain"
+                      : "is-nv";
+
+              return (
+                <div key={vote.rollCallId} className="st-vote-row">
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "4px",
+                      minWidth: 0,
+                      flex: 1,
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        flexWrap: "wrap",
+                        alignItems: "center",
+                        gap: "8px",
+                      }}
+                    >
+                      <a
+                        href={billUrl(vote.bill, meta.session)}
+                        target="_blank"
+                        rel="noreferrer"
+                        style={{
+                          fontFamily: "monospace",
+                          fontWeight: 700,
+                          fontSize: "13.5px",
+                        }}
+                      >
+                        {vote.bill}
+                      </a>
+                      <span style={{ fontSize: "12px", color: "var(--muted)" }}>
+                        {formatDate(vote.date)} ·{" "}
+                        {chamberLabel(vote.chamber, lang)}
+                      </span>
+                      <span
+                        className={`st-outcome-badge ${passed ? "is-passed" : "is-failed"}`}
+                        data-outcome={passed ? "passed" : "rejected"}
+                      >
+                        {passed
+                          ? t("superTools.pocketbookOutcomePassed")
+                          : t("superTools.pocketbookOutcomeRejected")}
+                      </span>
+                    </div>
+
+                    <div style={{ fontSize: "12px", fontWeight: 500 }}>
+                      {translateBillAction(vote.action, lang)}
+                    </div>
+
+                    {vote.abstract && (
+                      <p
+                        style={{
+                          fontSize: "12px",
+                          color: "var(--muted)",
+                          margin: "2px 0 0",
+                          lineHeight: 1.4,
+                        }}
+                      >
+                        {vote.abstract}
+                      </p>
+                    )}
+                  </div>
+
+                  <div
+                    style={{
+                      flexShrink: 0,
+                      display: "flex",
+                      alignItems: "center",
+                    }}
+                  >
+                    <span className={`st-vote-badge ${choiceClass}`}>
+                      {t(VOTE_CHOICE_KEYS[vote.choice])}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </section>
   );
 }
 
