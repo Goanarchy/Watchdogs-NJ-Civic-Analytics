@@ -1,21 +1,12 @@
 import { useState } from "react";
 import { useI18n } from "../lib/i18n";
+import { getLegislatorInitials } from "../lib/labels";
 
 interface PortraitProps {
   src: string | null;
   name: string;
   className?: string;
   eager?: boolean;
-}
-
-function initials(name: string): string {
-  return name
-    .replace(/["“”]/g, "")
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() ?? "")
-    .join("");
 }
 
 export function Portrait({ src, name, className = "", eager = false }: PortraitProps) {
@@ -25,7 +16,7 @@ export function Portrait({ src, name, className = "", eager = false }: PortraitP
   if (!src || failed) {
     return (
       <div className={`${className} portrait-fallback`} aria-hidden="true">
-        {initials(name)}
+        {getLegislatorInitials(name)}
       </div>
     );
   }

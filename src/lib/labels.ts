@@ -238,3 +238,48 @@ export function translateBillAction(action: string, lang: Lang = "en"): string {
     .replace(/2nd Reading/i, "2.ª lectura")
     .replace(/Committee/i, "Comité");
 }
+
+const NAME_SUFFIX_RE = /^(jr\.?|sr\.?|ii|iii|iv|v|m\.?d\.?|ph\.?d\.?|esq\.?)$/i;
+
+/**
+ * Computes two-letter initials from a legislator's name, preferring explicit
+ * first/last names when available and skipping middle initials or suffixes.
+ */
+export function getLegislatorInitials(
+  fullName: string,
+  firstName?: string,
+  lastName?: string,
+): string {
+  const f = firstName?.trim();
+  const l = lastName?.trim();
+  if (f && l) {
+    return `${f[0]?.toUpperCase() ?? ""}${l[0]?.toUpperCase() ?? ""}`;
+  }
+
+  const tokens = fullName
+    .replace(/["“”,]/g, " ")
+    .split(/\s+/)
+    .filter(Boolean)
+    .filter((part) => !NAME_SUFFIX_RE.test(part));
+
+  if (tokens.length === 0) return "";
+  if (tokens.length === 1) return tokens[0][0]?.toUpperCase() ?? "";
+
+  const first = tokens[0];
+  // Prefer the last non-single-letter token, falling back to the final token.
+  let last = tokens[tokens.length - 1];
+  for (let i = tokens.length - 1; i >= 1; i--) {
+    const clean = tokens[i].replace(/\./g, "");
+    if (clean.length > 1) {
+      last = tokens[i];
+      break;
+    }
+  }
+  return `${first[0]?.toUpperCase() ?? ""}${last[0]?.toUpperCase() ?? ""}`;
+}
+
+export function translateCensusRelease(name: string, lang: Lang = "en"): string {
+  if (lang !== "es") return name;
+  if (name === "ACS 2024 5-year") return "ACS 2024 (5 años)";
+  return name.replace(/\b(\d+)-year\b/i, "($1 años)");
+}

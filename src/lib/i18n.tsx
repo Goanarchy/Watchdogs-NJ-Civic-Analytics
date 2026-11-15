@@ -890,6 +890,11 @@ const en = {
   "superTools.influenceLegislatorsCount": "{count} legislators",
   "superTools.influenceElecTotal": "ELEC Total",
   "superTools.influenceShowTop25": "Collapse to top 25",
+  "superTools.influenceSectorShare": "{pct}% of total",
+  "superTools.influenceClearFilter": "Clear filter",
+  "superTools.influenceTrackTitle": "Senate avg: {senate}%, Assembly avg: {assembly}%",
+  "superTools.influenceChamberBenchTitle": "{chamber} Benchmark: {pct}%",
+  "superTools.influenceMemberBenchTitle": "Chamber avg: {pct}%",
 
   /* Watchdogs v3.0 — Lens 08: Legislative Effectiveness & Pipeline Funnel */
   "superTools.effKicker": "NJLeg bulk progression tracker",
@@ -915,6 +920,9 @@ const en = {
   "superTools.effLeaderboardKicker": "Objective chamber-normalized benchmark",
   "superTools.effLeaderboardTitle": "Legislative Effectiveness Ranking (LES 0–100)",
   "superTools.effArchetypeFilter": "Filter by legislative profile",
+  "superTools.effProfileCol": "Legislative Profile",
+  "superTools.effLesCol": "LES (0–100)",
+  "superTools.effChamberAvgTitle": "Chamber avg: {score}",
   "superTools.effAllArchetypes": "All profiles",
   "superTools.effArchetype.high_throughput": "High Throughput",
   "superTools.effArchetype.policy_specialist": "Policy Specialist",
@@ -989,6 +997,9 @@ const en = {
   "superTools.pocketbookViewRollCall": "Inspect roll call",
   "superTools.pocketbookHideRollCall": "Hide roll call",
   "superTools.pocketbookMemberVotes": "Member votes",
+  "superTools.pbBillsVotesCol": "Bills & Votes",
+  "superTools.pbYesNoCol": "Yes / No Votes",
+  "superTools.pbRollCallSearchPlaceholder": "Filter by bill or topic (e.g. S3000, A4000)…",
   "superTools.ldShort": "LD",
 
   /* Watchdogs v3.0 — Profile, Report & Dossier Card Generator */
@@ -1006,6 +1017,17 @@ const en = {
   "profile.v3Downloading": "Rendering card…",
   "profile.v3ExportReady": "PNG downloaded!",
   "profile.v3ShowSubstantiveOnly": "Substantive bills only (A/S)",
+  "profile.v3DossierChamberAvg": "Chamber avg: {value}",
+  "profile.v3DossierTileLes": "LEGISLATIVE EFFECTIVENESS (LES)",
+  "profile.v3DossierTileAttendance": "FLOOR VOTE ATTENDANCE",
+  "profile.v3DossierTileBipartisan": "BIPARTISAN SPONSORSHIP",
+  "profile.v3DossierTileGrassroots": "INDIVIDUAL GRASSROOTS SHARE",
+  "profile.v3DossierTilePocketbook": "POCKETBOOK IMPACT INDEX",
+  "profile.v3DossierTileRaised": "ELEC CAMPAIGN FUNDS RAISED",
+  "profile.v3DossierRaisedMeta": "Chamber avg: {amount} · {count} donors",
+  "profile.v3DossierBadge": "NONPARTISAN OBJECTIVE CIVIC DOSSIER",
+  "profile.v3DossierTopSector": "Top Donor Sector: {sector} ({pct}%)",
+  "profile.v3DossierSources": "Data: NJLeg (Official) · NJ ELEC · U.S. Census ACS · 100% Nonpartisan Record",
 } as const;
 
 export type CopyKey = keyof typeof en;
@@ -1892,6 +1914,11 @@ const es: Record<CopyKey, string> = {
   "superTools.influenceLegislatorsCount": "{count} legisladores",
   "superTools.influenceElecTotal": "Total ELEC",
   "superTools.influenceShowTop25": "Contraer al Top 25",
+  "superTools.influenceSectorShare": "{pct}% del total",
+  "superTools.influenceClearFilter": "Quitar filtro",
+  "superTools.influenceTrackTitle": "Promedio Senado: {senate}%, Promedio Asamblea: {assembly}%",
+  "superTools.influenceChamberBenchTitle": "Referencia {chamber}: {pct}%",
+  "superTools.influenceMemberBenchTitle": "Promedio de cámara: {pct}%",
 
   /* Watchdogs v3.0 — Lens 08: Legislative Effectiveness & Pipeline Funnel */
   "superTools.effKicker": "Rastreador oficial NJLeg",
@@ -1917,6 +1944,9 @@ const es: Record<CopyKey, string> = {
   "superTools.effLeaderboardKicker": "Referencia objetiva por cámara",
   "superTools.effLeaderboardTitle": "Índice de eficacia legislativa (LES 0–100)",
   "superTools.effArchetypeFilter": "Filtrar por perfil legislativo",
+  "superTools.effProfileCol": "Perfil legislativo",
+  "superTools.effLesCol": "LES (0–100)",
+  "superTools.effChamberAvgTitle": "Promedio de cámara: {score}",
   "superTools.effAllArchetypes": "Todos los perfiles",
   "superTools.effArchetype.high_throughput": "Alto avance legislativo",
   "superTools.effArchetype.policy_specialist": "Especialista temático",
@@ -1991,6 +2021,9 @@ const es: Record<CopyKey, string> = {
   "superTools.pocketbookViewRollCall": "Ver votación",
   "superTools.pocketbookHideRollCall": "Ocultar votación",
   "superTools.pocketbookMemberVotes": "Voto por legislador",
+  "superTools.pbBillsVotesCol": "Proyectos y votos",
+  "superTools.pbYesNoCol": "Votos Sí / No",
+  "superTools.pbRollCallSearchPlaceholder": "Filtrar por proyecto o tema (ej. S3000, A4000)…",
   "superTools.ldShort": "LD",
 
   /* Watchdogs v3.0 — Profile, Report & Dossier Card Generator */
@@ -2008,6 +2041,17 @@ const es: Record<CopyKey, string> = {
   "profile.v3Downloading": "Generando imagen…",
   "profile.v3ExportReady": "¡PNG descargado!",
   "profile.v3ShowSubstantiveOnly": "Solo proyectos sustantivos (A/S)",
+  "profile.v3DossierChamberAvg": "Promedio cámara: {value}",
+  "profile.v3DossierTileLes": "EFECTIVIDAD LEGISLATIVA (LES)",
+  "profile.v3DossierTileAttendance": "ASISTENCIA A VOTACIONES",
+  "profile.v3DossierTileBipartisan": "PATROCINIO BIPARTIDISTA",
+  "profile.v3DossierTileGrassroots": "DONACIONES DE BASE (GRASSROOTS)",
+  "profile.v3DossierTilePocketbook": "ÍNDICE DE COSTO DE VIDA",
+  "profile.v3DossierTileRaised": "FONDOS DE CAMPAÑA (ELEC)",
+  "profile.v3DossierRaisedMeta": "Promedio cámara: {amount} · {count} donantes",
+  "profile.v3DossierBadge": "EXPEDIENTE CÍVICO OBJETIVO Y NO PARTIDISTA",
+  "profile.v3DossierTopSector": "Sector líder: {sector} ({pct}%)",
+  "profile.v3DossierSources": "Fuentes: NJLeg (Oficial) · NJ ELEC · Censo EE.UU. ACS · Registro Cívico Objetivo",
 
 };
 

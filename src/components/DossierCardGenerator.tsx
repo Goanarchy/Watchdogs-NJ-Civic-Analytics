@@ -1,8 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { meta } from "../data";
 import type { LegislatorMatrixRow } from "../lib/analytics";
-import { useI18n, type CopyKey } from "../lib/i18n";
-import { chamberLabel, padDistrict, partyLabel, roleLabel } from "../lib/labels";
+import { useI18n, type CopyKey, type Lang } from "../lib/i18n";
+import {
+  chamberLabel,
+  getLegislatorInitials,
+  padDistrict,
+  partyLabel,
+  roleLabel,
+} from "../lib/labels";
 import type { ChamberBenchmark, DonorSectorKey } from "../types";
 
 export interface DossierCardGeneratorProps {
@@ -21,25 +27,16 @@ const SECTOR_LABEL_KEYS: Record<DonorSectorKey, CopyKey> = {
   civic_grassroots: "superTools.sector.civic_grassroots",
 };
 
-function initials(name: string): string {
-  return name
-    .replace(/["“”]/g, "")
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() ?? "")
-    .join("");
-}
-
-function formatCompactMoney(value: number): string {
-  if (!Number.isFinite(value) || value <= 0) return "$0";
+function formatCompactMoney(value: number, lang: Lang): string {
+  const prefix = lang === "es" ? "US$" : "$";
+  if (!Number.isFinite(value) || value <= 0) return `${prefix}0`;
   if (value >= 1_000_000) {
-    return `$${(value / 1_000_000).toFixed(1)}M`;
+    return `${prefix}${(value / 1_000_000).toFixed(1)}M`;
   }
   if (value >= 1_000) {
-    return `$${(value / 1_000).toFixed(0)}K`;
+    return `${prefix}${(value / 1_000).toFixed(0)}K`;
   }
-  return `$${Math.round(value)}`;
+  return `${prefix}${Math.round(value)}`;
 }
 
 function drawRoundRect(
@@ -172,10 +169,7 @@ export function DossierCardGenerator({ row, benchmarks }: DossierCardGeneratorPr
       ctx.fillText(`·  ${meta.sessionLabel}`, 280, 36);
 
       // Nonpartisan Badge Pill
-      const nonpartisanText =
-        lang === "es"
-          ? "EXPEDIENTE CÍVICO OBJETIVO Y NO PARTIDISTA"
-          : "NONPARTISAN OBJECTIVE CIVIC DOSSIER";
+      const nonpartisanText = t("profile.v3DossierBadge");
       ctx.font = "bold 11px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
       const pillWidth = ctx.measureText(nonpartisanText).width + 28;
       const pillX = 1150 - pillWidth;
@@ -229,7 +223,15 @@ export function DossierCardGenerator({ row, benchmarks }: DossierCardGeneratorPr
         ctx.font = "bold 30px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
-        ctx.fillText(initials(row.legislator.fullName), portraitCx, portraitCy);
+        ctx.fillText(
+          getLegislatorInitials(
+            row.legislator.fullName,
+            row.legislator.firstName,
+            row.legislator.lastName,
+          ),
+          portraitCx,
+          portraitCy,
+        );
       }
 
       // Portrait ring
@@ -389,12 +391,12 @@ export function DossierCardGenerator({ row, benchmarks }: DossierCardGeneratorPr
       renderTile(
         0,
         0,
-        lang === "es" ? "EFECTIVIDAD LEGISLATIVA (LES)" : "LEGISLATIVE EFFECTIVENESS (LES)",
+        t("profile.v3DossierTileLes"),
         `${row.effectivenessSummary.lesScore} / 100`,
         "#38bdf8",
-        lang === "es"
-          ? `Promedio cámara: ${benchmarks.avgLes} / 100`
-          : `Chamber avg: ${benchmarks.avgLes} / 100`,
+        t("profile.v3DossierChamberAvg", {
+          value: `${benchmarks.avgLes} / 100`,
+        }),
         row.effectivenessSummary.lesScore,
         benchmarks.avgLes,
       );
@@ -403,12 +405,12 @@ export function DossierCardGenerator({ row, benchmarks }: DossierCardGeneratorPr
       renderTile(
         1,
         0,
-        lang === "es" ? "ASISTENCIA A VOTACIONES" : "FLOOR VOTE ATTENDANCE",
+        t("profile.v3DossierTileAttendance"),
         `${row.voteStats.attendancePct}%`,
         "#4ade80",
-        lang === "es"
-          ? `Promedio cámara: ${benchmarks.avgAttendancePct}%`
-          : `Chamber avg: ${benchmarks.avgAttendancePct}%`,
+        t("profile.v3DossierChamberAvg", {
+          value: `${benchmarks.avgAttendancePct}%`,
+        }),
         row.voteStats.attendancePct,
         benchmarks.avgAttendancePct,
       );
@@ -417,12 +419,12 @@ export function DossierCardGenerator({ row, benchmarks }: DossierCardGeneratorPr
       renderTile(
         2,
         0,
-        lang === "es" ? "PATROCINIO BIPARTIDISTA" : "BIPARTISAN SPONSORSHIP",
+        t("profile.v3DossierTileBipartisan"),
         `${row.bipartisanRate}%`,
         "#a78bfa",
-        lang === "es"
-          ? `Promedio cámara: ${benchmarks.avgBipartisanRatePct}%`
-          : `Chamber avg: ${benchmarks.avgBipartisanRatePct}%`,
+        t("profile.v3DossierChamberAvg", {
+          value: `${benchmarks.avgBipartisanRatePct}%`,
+        }),
         row.bipartisanRate,
         benchmarks.avgBipartisanRatePct,
       );
@@ -431,12 +433,12 @@ export function DossierCardGenerator({ row, benchmarks }: DossierCardGeneratorPr
       renderTile(
         0,
         1,
-        lang === "es" ? "DONACIONES DE BASE (GRASSROOTS)" : "INDIVIDUAL GRASSROOTS SHARE",
+        t("profile.v3DossierTileGrassroots"),
         `${row.influenceSummary.grassrootsPct}%`,
         "#38bdf8",
-        lang === "es"
-          ? `Promedio cámara: ${benchmarks.avgGrassrootsPct}%`
-          : `Chamber avg: ${benchmarks.avgGrassrootsPct}%`,
+        t("profile.v3DossierChamberAvg", {
+          value: `${benchmarks.avgGrassrootsPct}%`,
+        }),
         row.influenceSummary.grassrootsPct,
         benchmarks.avgGrassrootsPct,
       );
@@ -445,23 +447,27 @@ export function DossierCardGenerator({ row, benchmarks }: DossierCardGeneratorPr
       renderTile(
         1,
         1,
-        lang === "es" ? "ÍNDICE DE COSTO DE VIDA" : "POCKETBOOK IMPACT INDEX",
+        t("profile.v3DossierTilePocketbook"),
         `${row.pocketbookSummary.overallScore} / 100`,
         "#fbbf24",
-        lang === "es" ? "Impuestos · Vivienda · Tránsito" : "Property Tax · Housing · Transit",
+        t("profile.v3DossierChamberAvg", {
+          value: `${benchmarks.avgPocketbookOverall} / 100`,
+        }),
         row.pocketbookSummary.overallScore,
+        benchmarks.avgPocketbookOverall,
       );
 
       // Tile 6: Campaign Raised
       renderTile(
         2,
         1,
-        lang === "es" ? "FONDOS DE CAMPAÑA (ELEC)" : "ELEC CAMPAIGN FUNDS RAISED",
-        formatCompactMoney(row.totalRaised),
+        t("profile.v3DossierTileRaised"),
+        formatCompactMoney(row.totalRaised, lang),
         "#f8fafc",
-        lang === "es"
-          ? `Promedio: ${formatCompactMoney(benchmarks.avgTotalRaised)} · ${row.donorCount} donantes`
-          : `Chamber avg: ${formatCompactMoney(benchmarks.avgTotalRaised)} · ${row.donorCount} donors`,
+        t("profile.v3DossierRaisedMeta", {
+          amount: formatCompactMoney(benchmarks.avgTotalRaised, lang),
+          count: row.donorCount,
+        }),
       );
 
       // 6. Footer
@@ -477,7 +483,10 @@ export function DossierCardGenerator({ row, benchmarks }: DossierCardGeneratorPr
       const sectorKey = topSector?.sector ? SECTOR_LABEL_KEYS[topSector.sector] : undefined;
       const sectorName = sectorKey ? t(sectorKey) : t("superTools.sector.civic_grassroots");
       const sectorPct = topSector?.pct ?? 0;
-      const sectorLabel = `${lang === "es" ? "Sector líder" : "Top Donor Sector"}: ${sectorName} (${sectorPct}%)`;
+      const sectorLabel = t("profile.v3DossierTopSector", {
+        sector: sectorName,
+        pct: sectorPct,
+      });
 
       ctx.font = "bold 11px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
       const sPillW = ctx.measureText(sectorLabel).width + 22;
@@ -497,10 +506,7 @@ export function DossierCardGenerator({ row, benchmarks }: DossierCardGeneratorPr
       ctx.fillStyle = "#64748b";
       ctx.font = "500 12px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
       ctx.textAlign = "right";
-      const srcText =
-        lang === "es"
-          ? "Fuentes: NJLeg (Oficial) · NJ ELEC · Censo EE.UU. ACS · Registro Cívico Objetivo"
-          : "Data: NJLeg (Official) · NJ ELEC · U.S. Census ACS · 100% Nonpartisan Record";
+      const srcText = t("profile.v3DossierSources");
       ctx.fillText(srcText, 1150, 558);
     },
     [benchmarks, lang, row, t],
@@ -670,7 +676,7 @@ export function DossierCardGenerator({ row, benchmarks }: DossierCardGeneratorPr
           className="st-dossier-btn btn-primary"
           onClick={handleDownloadPng}
           disabled={downloading}
-          aria-label={t("profile.v3DownloadPng")}
+          title={t("profile.v3DownloadPng")}
         >
           <DownloadIcon />
           <span>
@@ -686,7 +692,7 @@ export function DossierCardGenerator({ row, benchmarks }: DossierCardGeneratorPr
           type="button"
           className="st-dossier-btn btn-secondary"
           onClick={handleCopyLink}
-          aria-label={t("profile.v3CopyLink")}
+          title={t("profile.v3CopyLink")}
         >
           <LinkIcon />
           <span>{copied ? t("profile.v3Copied") : t("profile.v3CopyLink")}</span>

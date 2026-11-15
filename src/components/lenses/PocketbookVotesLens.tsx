@@ -1,7 +1,8 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { PartyBadge } from "../PartyBadge";
 import { Portrait } from "../Portrait";
+import { loadBills } from "../../data";
 import type { Analytics, LegislatorMatrixRow } from "../../lib/analytics";
 import { downloadCsv } from "../../lib/csv";
 import { type CopyKey, useI18n } from "../../lib/i18n";
@@ -11,7 +12,7 @@ import {
   classifyPocketbookDomains,
   type PocketbookDomainKey,
 } from "../../lib/pocketbook";
-import type { VoteChoice } from "../../types";
+import type { Bill, VoteChoice } from "../../types";
 
 const DOMAIN_LABEL_KEYS: Record<PocketbookDomainKey, CopyKey> = {
   property_tax: "superTools.pocketbook.property_tax",
@@ -78,6 +79,23 @@ export function PocketbookVotesLens({ analytics }: { analytics: Analytics }) {
   >("all");
   const [expandedRollCallId, setExpandedRollCallId] = useState<string | null>(null);
   const [rollCallChoiceFilter, setRollCallChoiceFilter] = useState<"all" | VoteChoice>("all");
+  const [billsByCode, setBillsByCode] = useState<Record<string, Bill>>({});
+
+  useEffect(() => {
+    let cancelled = false;
+    loadBills()
+      .then((bills) => {
+        if (!cancelled) {
+          setBillsByCode(bills);
+        }
+      })
+      .catch(() => {
+        // Fallback cleanly to roll-call abstracts if bill catalog fails to resolve
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const legislatorLookup = useMemo(() => {
     const map = new Map<number, LegislatorMatrixRow["legislator"]>();
@@ -159,9 +177,9 @@ export function PocketbookVotesLens({ analytics }: { analytics: Analytics }) {
   const domainRollCalls = useMemo(() => {
     return analytics.votesData.rollCalls
       .filter((rc) => {
-        const matched = classifyPocketbookDomains(
-          (rc.abstract ?? "") + " " + (rc.action ?? ""),
-        );
+        const synopsis = billsByCode[rc.bill]?.synopsis;
+        const combined = [rc.abstract, synopsis].filter(Boolean).join(" ");
+        const matched = classifyPocketbookDomains(combined);
         if (!matched.includes(activeDomain)) return false;
 
         if (
@@ -175,7 +193,8 @@ export function PocketbookVotesLens({ analytics }: { analytics: Analytics }) {
           const q = rollCallSearch.toLowerCase().trim();
           const matchBill = rc.bill.toLowerCase().includes(q);
           const matchAbstract = rc.abstract.toLowerCase().includes(q);
-          if (!matchBill && !matchAbstract) return false;
+          const matchSynopsis = synopsis ? synopsis.toLowerCase().includes(q) : false;
+          if (!matchBill && !matchAbstract && !matchSynopsis) return false;
         }
 
         return true;
@@ -183,6 +202,7 @@ export function PocketbookVotesLens({ analytics }: { analytics: Analytics }) {
       .sort((a, b) => b.date.localeCompare(a.date));
   }, [
     analytics.votesData.rollCalls,
+    billsByCode,
     activeDomain,
     rollCallChamberFilter,
     rollCallSearch,
@@ -272,7 +292,7 @@ export function PocketbookVotesLens({ analytics }: { analytics: Analytics }) {
     analytics.pocketbook.chamberAverages.Assembly[activeDomain] ?? 0;
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="st-lens-stack">
       {/* Lens Header */}
       <section className="panel super-panel">
         <div className="panel-head super-panel-head">
@@ -287,7 +307,7 @@ export function PocketbookVotesLens({ analytics }: { analytics: Analytics }) {
         <p className="panel-intro">{t("superTools.pocketbookIntro")}</p>
 
         {/* 3 Objective Pocketbook Domain Cards */}
-        <div className="st-pocket-grid mt-4">
+        <div className="st-pb-pillars">
           {POCKETBOOK_DOMAINS.map((domain) => {
             const isSelected = activeDomain === domain;
             const rollCallsCount =
@@ -301,54 +321,58 @@ export function PocketbookVotesLens({ analytics }: { analytics: Analytics }) {
               <button
                 key={domain}
                 type="button"
-                className={`st-pocket-card text-left cursor-pointer${isSelected ? " is-active" : ""}`}
+                className={`st-pb-pillar-card${isSelected ? " is-active" : ""}`}
                 aria-pressed={isSelected}
                 onClick={() => setActiveDomain(domain)}
               >
-                <div className="st-pocket-card-head">
-                  <h3 className="font-bold text-base m-0">
+                <div className="st-pb-pillar-head">
+                  <h3 className="st-pb-pillar-title">
                     {t(DOMAIN_LABEL_KEYS[domain])}
                   </h3>
-                  <span className="chip num text-xs">
+                  <span className="chip num">
                     {t("superTools.pocketbookVotesRecorded", {
                       count: rollCallsCount,
                     })}
                   </span>
                 </div>
 
-                <div className="flex flex-col gap-2 mt-2">
-                  <div className="flex justify-between items-center text-xs">
-                    <span className="text-muted">
-                      {chamberLabel("Senate", lang)} {t("superTools.pocketbookChamberAvg")}
-                    </span>
-                    <strong className="num">{senAvg} / 100</strong>
-                  </div>
-                  <div className="st-bar-track">
-                    <div
-                      className="st-bar-fill"
-                      style={{ width: `${senAvg}%` }}
-                    />
-                    <div
-                      className="st-bar-bench-marker"
-                      style={{ left: `${senAvg}%` }}
-                    />
+                <div className="st-pb-pillar-bars">
+                  <div className="st-pb-pillar-row">
+                    <div className="st-pb-pillar-val">
+                      <span>
+                        {chamberLabel("Senate", lang)} · {t("superTools.pocketbookChamberAvg")}
+                      </span>
+                      <strong>{senAvg} / 100</strong>
+                    </div>
+                    <div className="st-bar-track">
+                      <div
+                        className="st-bar-fill"
+                        style={{ width: `${senAvg}%` }}
+                      />
+                      <div
+                        className="st-bar-bench-marker"
+                        style={{ left: `${senAvg}%` }}
+                      />
+                    </div>
                   </div>
 
-                  <div className="flex justify-between items-center text-xs mt-1">
-                    <span className="text-muted">
-                      {chamberLabel("Assembly", lang)} {t("superTools.pocketbookChamberAvg")}
-                    </span>
-                    <strong className="num">{asmAvg} / 100</strong>
-                  </div>
-                  <div className="st-bar-track">
-                    <div
-                      className="st-bar-fill"
-                      style={{ width: `${asmAvg}%` }}
-                    />
-                    <div
-                      className="st-bar-bench-marker"
-                      style={{ left: `${asmAvg}%` }}
-                    />
+                  <div className="st-pb-pillar-row">
+                    <div className="st-pb-pillar-val">
+                      <span>
+                        {chamberLabel("Assembly", lang)} · {t("superTools.pocketbookChamberAvg")}
+                      </span>
+                      <strong>{asmAvg} / 100</strong>
+                    </div>
+                    <div className="st-bar-track">
+                      <div
+                        className="st-bar-fill"
+                        style={{ width: `${asmAvg}%` }}
+                      />
+                      <div
+                        className="st-bar-bench-marker"
+                        style={{ left: `${asmAvg}%` }}
+                      />
+                    </div>
                   </div>
                 </div>
               </button>
@@ -376,7 +400,7 @@ export function PocketbookVotesLens({ analytics }: { analytics: Analytics }) {
         </div>
 
         {/* Filter Bar */}
-        <div className="st-filter-bar">
+        <div className="st-toolbar">
           <input
             type="search"
             value={query}
@@ -386,35 +410,29 @@ export function PocketbookVotesLens({ analytics }: { analytics: Analytics }) {
             className="st-search-input"
           />
 
-          <div className="st-filter-group">
-            <label className="st-filter-label">
-              <span>{t("home.chamber")}</span>
-              <select
-                value={chamberFilter}
-                onChange={(e) =>
-                  setChamberFilter(e.target.value as "all" | "Senate" | "Assembly")
-                }
-              >
-                <option value="all">{t("common.allChambers")}</option>
-                <option value="Senate">{chamberLabel("Senate", lang)}</option>
-                <option value="Assembly">{chamberLabel("Assembly", lang)}</option>
-              </select>
-            </label>
+          <select
+            aria-label={t("home.chamber")}
+            value={chamberFilter}
+            onChange={(e) =>
+              setChamberFilter(e.target.value as "all" | "Senate" | "Assembly")
+            }
+          >
+            <option value="all">{t("common.allChambers")}</option>
+            <option value="Senate">{chamberLabel("Senate", lang)}</option>
+            <option value="Assembly">{chamberLabel("Assembly", lang)}</option>
+          </select>
 
-            <label className="st-filter-label">
-              <span>{t("home.party")}</span>
-              <select
-                value={partyFilter}
-                onChange={(e) =>
-                  setPartyFilter(e.target.value as "all" | "D" | "R")
-                }
-              >
-                <option value="all">{t("common.allParties")}</option>
-                <option value="D">{partyLabel("D", lang)}</option>
-                <option value="R">{partyLabel("R", lang)}</option>
-              </select>
-            </label>
-          </div>
+          <select
+            aria-label={t("home.party")}
+            value={partyFilter}
+            onChange={(e) =>
+              setPartyFilter(e.target.value as "all" | "D" | "R")
+            }
+          >
+            <option value="all">{t("common.allParties")}</option>
+            <option value="D">{partyLabel("D", lang)}</option>
+            <option value="R">{partyLabel("R", lang)}</option>
+          </select>
         </div>
 
         {/* Table */}
@@ -448,7 +466,7 @@ export function PocketbookVotesLens({ analytics }: { analytics: Analytics }) {
                   onClick={() => handleSort("overall")}
                 />
                 <SortTh
-                  label={t("superTools.effColAdvance")}
+                  label={t("superTools.pbBillsVotesCol")}
                   active={sortBy === "primary"}
                   dir={sortDir}
                   align="right"
@@ -462,7 +480,7 @@ export function PocketbookVotesLens({ analytics }: { analytics: Analytics }) {
                   onClick={() => handleSort("enacted")}
                 />
                 <SortTh
-                  label={t("superTools.effAttendanceCol")}
+                  label={t("superTools.pbYesNoCol")}
                   active={sortBy === "votes"}
                   dir={sortDir}
                   align="right"
@@ -477,46 +495,50 @@ export function PocketbookVotesLens({ analytics }: { analytics: Analytics }) {
                   row.legislator.chamber === "Senate"
                     ? senateChamberAvg
                     : assemblyChamberAvg;
+                const scoreTier =
+                  dScore.score >= 70
+                    ? "is-high"
+                    : dScore.score >= 45
+                      ? "is-mid"
+                      : "is-low";
 
                 return (
                   <tr key={row.legislator.id}>
-                    <td>
-                      <div className="st-member-cell">
+                    <td data-label={t("superTools.wbColLegislator")}>
+                      <div className="st-person-cell">
                         <Portrait
                           src={row.legislator.photo}
                           name={row.legislator.fullName}
                           className="st-mini-avatar"
                         />
                         <div>
-                          <div className="chip-row">
+                          <Link
+                            className="st-person-link"
+                            to={`/legislador/${row.legislator.id}`}
+                          >
+                            {row.legislator.fullName}
+                          </Link>
+                          <div className="st-person-sub">
                             <PartyBadge party={row.legislator.party} />
-                            <Link
-                              className="st-member-link"
-                              to={`/legislador/${row.legislator.id}`}
-                            >
-                              {row.legislator.fullName}
-                            </Link>
+                            <span>{chamberLabel(row.legislator.chamber, lang)}</span>
                           </div>
                         </div>
                       </div>
                     </td>
-                    <td>
+                    <td className="num" data-label={t("common.district")}>
                       <Link
-                        className="chip chip-link"
+                        className="st-dist-pill"
                         to={`/district/${row.legislator.district}`}
                       >
-                        LD {padDistrict(row.legislator.district)}
-                      </Link>{" "}
-                      <span className="text-muted text-xs">
-                        · {chamberLabel(row.legislator.chamber, lang)}
-                      </span>
+                        {t("superTools.ldShort")} {padDistrict(row.legislator.district)}
+                      </Link>
                     </td>
-                    <td>
-                      <div className="flex items-center gap-3">
-                        <span className="num font-bold w-7 text-right">
+                    <td data-label={`${t(DOMAIN_LABEL_KEYS[activeDomain])} (0–100)`}>
+                      <div className="st-pb-score-cell">
+                        <span className={`st-pb-score-val ${scoreTier}`}>
                           {dScore.score}
                         </span>
-                        <div className="st-bar-track" style={{ width: 130 }}>
+                        <div className="st-bar-track st-pb-bar-track">
                           <div
                             className="st-bar-fill"
                             style={{ width: `${dScore.score}%` }}
@@ -529,10 +551,16 @@ export function PocketbookVotesLens({ analytics }: { analytics: Analytics }) {
                         </div>
                       </div>
                     </td>
-                    <td className="num text-right font-semibold">
+                    <td
+                      className="num text-right st-pb-strong"
+                      data-label={t("superTools.pocketbookOverall")}
+                    >
                       {row.pocketbookSummary.overallScore}
                     </td>
-                    <td className="text-right">
+                    <td
+                      className="text-right"
+                      data-label={t("superTools.pbBillsVotesCol")}
+                    >
                       <span className="st-cell-sub">
                         {t("superTools.pocketbookBillsVotesMeta", {
                           bills: formatNumber(dScore.primaryBills),
@@ -540,15 +568,21 @@ export function PocketbookVotesLens({ analytics }: { analytics: Analytics }) {
                         })}
                       </span>
                     </td>
-                    <td className="num text-right font-semibold">
+                    <td
+                      className="num text-right st-pb-strong"
+                      data-label={t("superTools.effEnactedCol")}
+                    >
                       {dScore.enactedBills}
                     </td>
-                    <td className="num text-right text-xs">
-                      <span className="text-emerald-600 font-bold">
+                    <td
+                      className="num text-right"
+                      data-label={t("superTools.pbYesNoCol")}
+                    >
+                      <span className="st-vote-yea">
                         {dScore.yeaVotes} {t("superTools.pocketbookChoice.Y")}
                       </span>
                       {" · "}
-                      <span className="text-rose-600 font-bold">
+                      <span className="st-vote-nay">
                         {dScore.nayVotes} {t("superTools.pocketbookChoice.N")}
                       </span>
                     </td>
@@ -561,7 +595,7 @@ export function PocketbookVotesLens({ analytics }: { analytics: Analytics }) {
 
         {/* Toggle Show All / Top 25 */}
         {sortedRows.length > 25 && (
-          <div className="flex justify-center mt-4">
+          <div className="st-table-footer">
             <button
               type="button"
               className="button button-outline button-small"
@@ -589,77 +623,84 @@ export function PocketbookVotesLens({ analytics }: { analytics: Analytics }) {
           </span>
         </div>
 
-        <div className="st-filter-bar mb-4">
+        <div className="st-toolbar">
           <input
             type="search"
             value={rollCallSearch}
             onChange={(e) => setRollCallSearch(e.target.value)}
-            placeholder={`${t("superTools.wbMatrixSearch")} (e.g. S3000, A4000)…`}
+            placeholder={t("superTools.pbRollCallSearchPlaceholder")}
+            aria-label={t("superTools.pbRollCallSearchPlaceholder")}
             className="st-search-input"
           />
 
-          <div className="st-filter-group">
-            <label className="st-filter-label">
-              <span>{t("home.chamber")}</span>
-              <select
-                value={rollCallChamberFilter}
-                onChange={(e) =>
-                  setRollCallChamberFilter(
-                    e.target.value as "all" | "Senate" | "Assembly",
-                  )
-                }
-              >
-                <option value="all">{t("common.allChambers")}</option>
-                <option value="Senate">{chamberLabel("Senate", lang)}</option>
-                <option value="Assembly">{chamberLabel("Assembly", lang)}</option>
-              </select>
-            </label>
-          </div>
+          <select
+            aria-label={t("home.chamber")}
+            value={rollCallChamberFilter}
+            onChange={(e) =>
+              setRollCallChamberFilter(
+                e.target.value as "all" | "Senate" | "Assembly",
+              )
+            }
+          >
+            <option value="all">{t("common.allChambers")}</option>
+            <option value="Senate">{chamberLabel("Senate", lang)}</option>
+            <option value="Assembly">{chamberLabel("Assembly", lang)}</option>
+          </select>
         </div>
 
         {/* Roll Calls List */}
-        <div className="st-vote-list">
+        <div className="st-pb-rc-list">
           {domainRollCalls.length === 0 ? (
-            <p className="text-muted p-4 text-center">
+            <p className="st-pb-empty">
               {t("profile.v3NoRollCalls")}
             </p>
           ) : (
             domainRollCalls.slice(0, 30).map((rc) => {
               const isPassed = rc.yeas > rc.nays;
               const isExpanded = expandedRollCallId === rc.id;
+              const summaryText = rc.abstract || billsByCode[rc.bill]?.synopsis || "";
 
               return (
-                <div key={rc.id} className="st-vote-row flex-col items-stretch gap-3">
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <strong className="text-base font-bold">{rc.bill}</strong>
-                      <span className="chip text-xs">
-                        {chamberLabel(rc.chamber, lang)}
-                      </span>
-                      <span className="text-xs text-muted">
-                        {formatDate(rc.date)}
-                      </span>
-                      <span
-                        className={`st-outcome-badge ${isPassed ? "is-passed" : "is-failed"}`}
-                        data-outcome={isPassed ? "passed" : "rejected"}
-                      >
-                        {isPassed
-                          ? t("superTools.pocketbookOutcomePassed")
-                          : t("superTools.pocketbookOutcomeRejected")}
-                      </span>
+                <div key={rc.id} className="st-pb-rc-card">
+                  <div className="st-pb-rc-top">
+                    <div className="st-pb-rc-meta">
+                      <div className="st-pb-rc-badges">
+                        <strong className="st-pb-rc-bill">{rc.bill}</strong>
+                        <span className="chip">
+                          {chamberLabel(rc.chamber, lang)}
+                        </span>
+                        <span className="st-pb-rc-date">
+                          {formatDate(rc.date)}
+                        </span>
+                        <span
+                          className={`st-outcome-badge ${isPassed ? "is-passed" : "is-failed"}`}
+                          data-outcome={isPassed ? "passed" : "rejected"}
+                        >
+                          {isPassed
+                            ? t("superTools.pocketbookOutcomePassed")
+                            : t("superTools.pocketbookOutcomeRejected")}
+                        </span>
+                      </div>
+
+                      {summaryText ? (
+                        <p className="st-pb-rc-abstract">{summaryText}</p>
+                      ) : null}
+                      <p className="st-pb-rc-action">
+                        <strong>{translateBillAction(rc.action, lang)}</strong>
+                      </p>
                     </div>
 
-                    <div className="flex items-center gap-3">
-                      <span className="text-xs font-semibold">
-                        <span className="text-emerald-600 font-bold">
+                    <div className="st-pb-rc-tally-actions">
+                      <span className="st-pb-rc-tally">
+                        <span className="st-vote-yea">
                           {rc.yeas} {t("superTools.pocketbookChoice.Y")}
                         </span>
                         {" · "}
-                        <span className="text-rose-600 font-bold">
+                        <span className="st-vote-nay">
                           {rc.nays} {t("superTools.pocketbookChoice.N")}
                         </span>
                         {" · "}
-                        <span className="text-amber-600 font-bold">
+                        <span className="st-vote-abstain">
                           {rc.abstains} {t("superTools.pocketbookChoice.A")}
                         </span>
                       </span>
@@ -682,27 +723,20 @@ export function PocketbookVotesLens({ analytics }: { analytics: Analytics }) {
                     </div>
                   </div>
 
-                  <p className="text-sm m-0 text-muted">
-                    <strong className="text-ink">
-                      {translateBillAction(rc.action, lang)}:
-                    </strong>{" "}
-                    {rc.abstract}
-                  </p>
-
                   {/* Expanded Member Roll-Call Matrix */}
                   {isExpanded && (
-                    <div className="panel p-3 mt-2 border-t border-line">
-                      <div className="flex items-center justify-between gap-2 mb-3 flex-wrap">
-                        <span className="text-xs font-semibold">
+                    <div className="st-pb-rc-expanded">
+                      <div className="st-pb-rc-filter-row">
+                        <span className="st-cell-sub">
                           {t("superTools.pocketbookMemberVotes")}:
                         </span>
-                        <div className="flex gap-1">
+                        <div className="st-pb-rc-filter-pills">
                           {(["all", "Y", "N", "A", "NV"] as const).map(
                             (choice) => (
                               <button
                                 key={choice}
                                 type="button"
-                                className={`st-preset-btn text-xs py-1 px-2 min-h-0${rollCallChoiceFilter === choice ? " is-active" : ""}`}
+                                className={`st-pb-filter-btn${rollCallChoiceFilter === choice ? " is-active" : ""}`}
                                 aria-pressed={rollCallChoiceFilter === choice}
                                 onClick={() => setRollCallChoiceFilter(choice)}
                               >
@@ -715,28 +749,25 @@ export function PocketbookVotesLens({ analytics }: { analytics: Analytics }) {
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 max-h-72 overflow-y-auto p-1">
+                      <div className="st-pb-rc-voters">
                         {rollCallMembers.map((m) => (
-                          <div
-                            key={m.id}
-                            className="flex items-center justify-between p-2 rounded border border-line bg-card gap-2"
-                          >
-                            <div className="flex items-center gap-2 min-w-0">
+                          <div key={m.id} className="st-pb-voter-card">
+                            <div className="st-pb-voter-info">
                               <Portrait
                                 src={m.photo}
                                 name={m.name}
                                 className="st-mini-avatar"
                               />
-                              <div className="min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">
+                              <div className="st-pb-voter-text">
                                 <Link
                                   to={`/legislador/${m.id}`}
-                                  className="text-xs font-semibold hover:underline block truncate"
+                                  className="st-pb-voter-name"
                                 >
                                   {m.name}
                                 </Link>
-                                <div className="flex items-center gap-1.5 mt-0.5">
+                                <div className="st-person-sub">
                                   <PartyBadge party={m.party} />
-                                  <span className="text-muted text-xs">
+                                  <span className="st-pb-voter-sub">
                                     {t("superTools.ldShort")} {padDistrict(m.district)}
                                   </span>
                                 </div>

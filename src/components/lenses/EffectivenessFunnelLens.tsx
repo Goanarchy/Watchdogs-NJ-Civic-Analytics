@@ -580,12 +580,12 @@ export function EffectivenessFunnelLens({ analytics }: { analytics: Analytics })
                   onClick={() => toggleSort("district")}
                 />
                 <SortTh
-                  label="LES (0–100)"
+                  label={t("superTools.effLesCol")}
                   active={sortBy === "les"}
                   dir={sortDir}
                   onClick={() => toggleSort("les")}
                 />
-                <th>{t("superTools.effArchetypeFilter")}</th>
+                <th>{t("superTools.effProfileCol")}</th>
                 <SortTh
                   label={t("superTools.effEnactedCol")}
                   active={sortBy === "enacted"}
@@ -651,7 +651,7 @@ export function EffectivenessFunnelLens({ analytics }: { analytics: Analytics })
                       </Link>
                     </td>
 
-                    <td data-label="LES (0–100)">
+                    <td data-label={t("superTools.effLesCol")}>
                       <div style={{ display: "flex", flexDirection: "column", gap: 4, minWidth: 100 }}>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
                           <strong className="num" style={{ fontSize: 16 }}>
@@ -664,7 +664,9 @@ export function EffectivenessFunnelLens({ analytics }: { analytics: Analytics })
                         <div
                           className="st-bar-track"
                           style={{ height: 8 }}
-                          title={`Chamber avg: ${chamberAvg}`}
+                          title={t("superTools.effChamberAvgTitle", {
+                            score: chamberAvg,
+                          })}
                         >
                           <div
                             className="st-bar-fill"
@@ -675,13 +677,15 @@ export function EffectivenessFunnelLens({ analytics }: { analytics: Analytics })
                           <div
                             className="st-bar-bench-marker"
                             style={{ left: `${chamberAvg}%` }}
-                            title={`Chamber avg (${chamberAvg})`}
+                            title={t("superTools.effChamberAvgTitle", {
+                              score: chamberAvg,
+                            })}
                           />
                         </div>
                       </div>
                     </td>
 
-                    <td data-label={t("superTools.effArchetypeFilter")}>
+                    <td data-label={t("superTools.effProfileCol")}>
                       <span
                         className="st-archetype-pill"
                         data-archetype={row.effectivenessSummary.archetype}

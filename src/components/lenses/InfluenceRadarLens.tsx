@@ -136,8 +136,9 @@ export function InfluenceRadarLens({ analytics }: { analytics: Analytics }) {
         const hasAlignment = row.influenceSummary.committeeAlignments.some(
           (a) => a.sector === selectedSector,
         );
-        const hasFundedSector = (row.influenceSummary.sectorTotals[selectedSector] ?? 0) > 0;
-        if (!hasAlignment && !hasFundedSector) {
+        const isTopSector =
+          row.influenceSummary.topSectors[0]?.sector === selectedSector;
+        if (!hasAlignment && !isTopSector) {
           return false;
         }
       }
@@ -393,10 +394,38 @@ export function InfluenceRadarLens({ analytics }: { analytics: Analytics }) {
                 }}
               >
                 {activeSectorData
-                  ? `${activeSectorData.pct}% · ${t(SECTOR_LABEL_KEYS[activeSectorData.sector])}`
+                  ? t("superTools.influenceSectorShare", {
+                      pct: activeSectorData.pct,
+                    })
                   : t("superTools.influenceElecTotal")}
               </text>
             </svg>
+
+            {activeSectorData && (
+              <div className="st-donut-active-pill">
+                <span
+                  className="st-legend-dot"
+                  style={{
+                    background:
+                      SECTOR_BY_KEY.get(activeSectorData.sector)?.color ??
+                      "#94a3b8",
+                  }}
+                />
+                <span>
+                  {t(SECTOR_LABEL_KEYS[activeSectorData.sector])} (
+                  {activeSectorData.pct}%)
+                </span>
+                {selectedSector !== "all" && (
+                  <button
+                    type="button"
+                    className="st-donut-clear-btn"
+                    onClick={() => setSelectedSector("all")}
+                  >
+                    {t("superTools.influenceClearFilter")}
+                  </button>
+                )}
+              </div>
+            )}
 
             {/* Grassroots vs Institutional Provenance Bar */}
             <div style={{ width: "100%", marginTop: 8 }}>
@@ -441,7 +470,10 @@ export function InfluenceRadarLens({ analytics }: { analytics: Analytics }) {
                 </div>
                 <div
                   className="st-bar-track"
-                  title={`Senate avg: ${senateAvgGrassroots}%, Assembly avg: ${assemblyAvgGrassroots}%`}
+                  title={t("superTools.influenceTrackTitle", {
+                    senate: senateAvgGrassroots,
+                    assembly: assemblyAvgGrassroots,
+                  })}
                 >
                   <div
                     className="st-bar-fill"
@@ -450,7 +482,10 @@ export function InfluenceRadarLens({ analytics }: { analytics: Analytics }) {
                   <div
                     className="st-bar-bench-marker"
                     style={{ left: `${Math.min(100, Math.max(0, senateAvgGrassroots))}%` }}
-                    title={`Senate Benchmark: ${senateAvgGrassroots}%`}
+                    title={t("superTools.influenceChamberBenchTitle", {
+                      chamber: chamberLabel("Senate", lang),
+                      pct: senateAvgGrassroots,
+                    })}
                   />
                   <div
                     className="st-bar-bench-marker"
@@ -458,7 +493,10 @@ export function InfluenceRadarLens({ analytics }: { analytics: Analytics }) {
                       left: `${Math.min(100, Math.max(0, assemblyAvgGrassroots))}%`,
                       background: "var(--blue)",
                     }}
-                    title={`Assembly Benchmark: ${assemblyAvgGrassroots}%`}
+                    title={t("superTools.influenceChamberBenchTitle", {
+                      chamber: chamberLabel("Assembly", lang),
+                      pct: assemblyAvgGrassroots,
+                    })}
                   />
                 </div>
               </div>
@@ -716,7 +754,15 @@ export function InfluenceRadarLens({ analytics }: { analytics: Analytics }) {
 
                     <td data-label={t("superTools.influenceTopSectorCol")}>
                       {topSector ? (
-                        <div style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                        <div
+                          className={
+                            selectedSector !== "all" &&
+                            topSector.sector === selectedSector
+                              ? "st-sector-match-pill"
+                              : undefined
+                          }
+                          style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
+                        >
                           <span
                             className="st-legend-dot"
                             style={{ background: topSectorDef?.color ?? "#94a3b8" }}
@@ -743,7 +789,9 @@ export function InfluenceRadarLens({ analytics }: { analytics: Analytics }) {
                         <div
                           className="st-bar-track"
                           style={{ width: 80, height: 8 }}
-                          title={`Chamber avg: ${chamberBench}%`}
+                          title={t("superTools.influenceMemberBenchTitle", {
+                            pct: chamberBench,
+                          })}
                         >
                           <div
                             className="st-bar-fill"
@@ -752,7 +800,9 @@ export function InfluenceRadarLens({ analytics }: { analytics: Analytics }) {
                           <div
                             className="st-bar-bench-marker"
                             style={{ left: `${Math.min(100, Math.max(0, chamberBench))}%` }}
-                            title={`Chamber avg (${chamberBench}%)`}
+                            title={t("superTools.influenceMemberBenchTitle", {
+                              pct: chamberBench,
+                            })}
                           />
                         </div>
                       </div>

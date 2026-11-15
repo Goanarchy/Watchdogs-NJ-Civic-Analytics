@@ -80,10 +80,10 @@ function formatSandboxValue(
       if (Math.abs(value) >= 1_000_000) {
         return `${lang === "es" ? "US$" : "$"}${(value / 1_000_000).toFixed(2)}M`;
       }
-      if (Math.abs(value) >= 1_000) {
+      if (Math.abs(value) >= 10_000) {
         return `${lang === "es" ? "US$" : "$"}${(value / 1_000).toFixed(0)}K`;
       }
-      return `${lang === "es" ? "US$" : "$"}${Math.round(value)}`;
+      return `${lang === "es" ? "US$" : "$"}${formatNumber(Math.round(value))}`;
     case "percent":
       return `${value.toFixed(1)}%`;
     case "score":
@@ -255,7 +255,7 @@ export function CorrelationSandboxLens({ analytics }: { analytics: Analytics }) 
 
       {/* Quick Investigation Presets */}
       <div className="st-preset-row" aria-label={t("superTools.sandboxPresets")}>
-        <span className="st-cell-sub font-semibold">{t("superTools.sandboxPresets")}:</span>
+        <span className="st-preset-label">{t("superTools.sandboxPresets")}:</span>
         {PRESETS.map((p) => {
           const active = xKey === p.xKey && yKey === p.yKey;
           return (
@@ -278,8 +278,8 @@ export function CorrelationSandboxLens({ analytics }: { analytics: Analytics }) 
       {/* Axis & Filter Controls */}
       <div className="st-scatter-controls">
         <div className="st-scatter-selects">
-          <label className="st-select-label">
-            <span>{t("superTools.sandboxXAxis")}</span>
+          <label className="st-sandbox-field">
+            <span className="st-sandbox-field-label">{t("superTools.sandboxXAxis")}</span>
             <select
               value={xKey}
               onChange={(e) => setXKey(e.target.value as SandboxMetricKey)}
@@ -292,8 +292,8 @@ export function CorrelationSandboxLens({ analytics }: { analytics: Analytics }) 
             </select>
           </label>
 
-          <label className="st-select-label">
-            <span>{t("superTools.sandboxYAxis")}</span>
+          <label className="st-sandbox-field">
+            <span className="st-sandbox-field-label">{t("superTools.sandboxYAxis")}</span>
             <select
               value={yKey}
               onChange={(e) => setYKey(e.target.value as SandboxMetricKey)}
@@ -306,8 +306,8 @@ export function CorrelationSandboxLens({ analytics }: { analytics: Analytics }) 
             </select>
           </label>
 
-          <label className="st-select-label">
-            <span>{t("home.chamber")}</span>
+          <label className="st-sandbox-field">
+            <span className="st-sandbox-field-label">{t("home.chamber")}</span>
             <select
               value={chamber}
               onChange={(e) => setChamber(e.target.value as "All" | "Senate" | "Assembly")}
@@ -318,8 +318,8 @@ export function CorrelationSandboxLens({ analytics }: { analytics: Analytics }) 
             </select>
           </label>
 
-          <label className="st-select-label">
-            <span>{t("home.party")}</span>
+          <label className="st-sandbox-field">
+            <span className="st-sandbox-field-label">{t("home.party")}</span>
             <select
               value={party}
               onChange={(e) => setParty(e.target.value as "All" | "D" | "R")}
@@ -331,7 +331,7 @@ export function CorrelationSandboxLens({ analytics }: { analytics: Analytics }) 
           </label>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="st-sandbox-actions">
           <span className="chip num">
             {t("superTools.sandboxPointsShown", { count: scatter.points.length })}
           </span>
@@ -536,34 +536,34 @@ export function CorrelationSandboxLens({ analytics }: { analytics: Analytics }) 
       </div>
 
       {/* Quadrant Strip & Inspector */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="st-sandbox-bottom-grid">
         {/* 4 Quadrants Summary */}
-        <div className="st-scatter-inspector">
+        <div className="st-sandbox-inspector">
           <span className="st-eyebrow">{t("superTools.sandboxKicker")}</span>
-          <div className="grid grid-cols-2 gap-2">
-            <div className="panel p-3">
-              <span className="text-xs text-muted block">
+          <div className="st-sandbox-quad-grid">
+            <div className="st-sandbox-quad-card">
+              <span className="st-sandbox-quad-label">
                 {t(QUADRANT_LABEL_KEYS.topRight)}
               </span>
-              <strong className="num text-lg">{quadrantCounts.topRight}</strong>
+              <strong className="st-sandbox-quad-count">{quadrantCounts.topRight}</strong>
             </div>
-            <div className="panel p-3">
-              <span className="text-xs text-muted block">
+            <div className="st-sandbox-quad-card">
+              <span className="st-sandbox-quad-label">
                 {t(QUADRANT_LABEL_KEYS.topLeft)}
               </span>
-              <strong className="num text-lg">{quadrantCounts.topLeft}</strong>
+              <strong className="st-sandbox-quad-count">{quadrantCounts.topLeft}</strong>
             </div>
-            <div className="panel p-3">
-              <span className="text-xs text-muted block">
+            <div className="st-sandbox-quad-card">
+              <span className="st-sandbox-quad-label">
                 {t(QUADRANT_LABEL_KEYS.bottomRight)}
               </span>
-              <strong className="num text-lg">{quadrantCounts.bottomRight}</strong>
+              <strong className="st-sandbox-quad-count">{quadrantCounts.bottomRight}</strong>
             </div>
-            <div className="panel p-3">
-              <span className="text-xs text-muted block">
+            <div className="st-sandbox-quad-card">
+              <span className="st-sandbox-quad-label">
                 {t(QUADRANT_LABEL_KEYS.bottomLeft)}
               </span>
-              <strong className="num text-lg">{quadrantCounts.bottomLeft}</strong>
+              <strong className="st-sandbox-quad-count">{quadrantCounts.bottomLeft}</strong>
             </div>
           </div>
           <p className="st-cell-sub">
@@ -572,11 +572,11 @@ export function CorrelationSandboxLens({ analytics }: { analytics: Analytics }) 
         </div>
 
         {/* Selected Legislator Inspector Card */}
-        <div className="st-scatter-inspector">
+        <div className="st-sandbox-inspector">
           <span className="st-eyebrow">{t("superTools.sandboxSelectedTitle")}</span>
           {activePoint ? (
-            <div className="flex flex-col gap-3">
-              <div className="flex items-center gap-3">
+            <div className="st-sandbox-profile">
+              <div className="st-sandbox-profile-head">
                 <Portrait
                   src={activePoint.photo}
                   name={activePoint.name}
@@ -589,13 +589,13 @@ export function CorrelationSandboxLens({ analytics }: { analytics: Analytics }) 
                       className="chip chip-link"
                       to={`/district/${activePoint.district}`}
                     >
-                      LD {padDistrict(activePoint.district)}
+                      {t("superTools.ldShort")} {padDistrict(activePoint.district)}
                     </Link>
                     <span className="chip">
                       {chamberLabel(activePoint.chamber, lang)}
                     </span>
                   </div>
-                  <h3 className="font-bold text-base mt-1">
+                  <h3 className="st-sandbox-profile-name">
                     <Link to={`/legislador/${activePoint.legislatorId}`}>
                       {activePoint.name}
                     </Link>
@@ -603,12 +603,12 @@ export function CorrelationSandboxLens({ analytics }: { analytics: Analytics }) 
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-2 panel p-3">
-                <div>
-                  <span className="text-xs text-muted block">
+              <div className="st-sandbox-metrics-grid">
+                <div className="st-sandbox-metric-item">
+                  <span className="st-sandbox-metric-label">
                     {t(DIMENSION_LABEL_KEYS[xKey])}
                   </span>
-                  <strong className="num text-base">
+                  <strong className="st-sandbox-metric-val">
                     {formatSandboxValue(
                       activePoint.x,
                       xDim.format,
@@ -617,11 +617,11 @@ export function CorrelationSandboxLens({ analytics }: { analytics: Analytics }) 
                     )}
                   </strong>
                 </div>
-                <div>
-                  <span className="text-xs text-muted block">
+                <div className="st-sandbox-metric-item">
+                  <span className="st-sandbox-metric-label">
                     {t(DIMENSION_LABEL_KEYS[yKey])}
                   </span>
-                  <strong className="num text-base">
+                  <strong className="st-sandbox-metric-val">
                     {formatSandboxValue(
                       activePoint.y,
                       yDim.format,
@@ -632,8 +632,8 @@ export function CorrelationSandboxLens({ analytics }: { analytics: Analytics }) 
                 </div>
               </div>
 
-              <div className="flex justify-between items-center mt-1">
-                <span className="chip text-xs">
+              <div className="st-sandbox-profile-foot">
+                <span className="chip st-sandbox-quad-chip">
                   {t("superTools.sandboxQuadrantLabel")}:{" "}
                   <strong>{t(QUADRANT_LABEL_KEYS[activePoint.quadrant])}</strong>
                 </span>
@@ -646,7 +646,7 @@ export function CorrelationSandboxLens({ analytics }: { analytics: Analytics }) 
               </div>
             </div>
           ) : (
-            <p className="text-sm text-muted">
+            <p className="st-sandbox-empty-hint">
               {t("superTools.sandboxHoverHint")}
             </p>
           )}

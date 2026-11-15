@@ -1204,6 +1204,7 @@ export function buildAnalytics(
         avgGrassrootsPct: 0,
         avgTotalRaised: 0,
         avgPrimaryBills: 0,
+        avgPocketbookOverall: 0,
       };
     }
 
@@ -1265,6 +1266,10 @@ export function buildAnalytics(
       ),
       avgPrimaryBills: Math.round(
         members.reduce((sum, r) => sum + r.primaryBills, 0) / count,
+      ),
+      avgPocketbookOverall: Math.round(
+        members.reduce((sum, r) => sum + r.pocketbookSummary.overallScore, 0) /
+          count,
       ),
     };
   }

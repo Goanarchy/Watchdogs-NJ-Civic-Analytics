@@ -525,7 +525,9 @@ export function ReportPage() {
                   <td style={{ textAlign: "right", fontWeight: 700 }}>
                     {matrixRow.pocketbookSummary.overallScore} / 100
                   </td>
-                  <td style={{ textAlign: "right", color: "var(--muted)" }}>—</td>
+                  <td style={{ textAlign: "right", color: "var(--muted)" }}>
+                    {benchmarks.avgPocketbookOverall} / 100
+                  </td>
                 </tr>
               </tbody>
             </table>

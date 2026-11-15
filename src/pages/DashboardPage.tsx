@@ -22,6 +22,7 @@ import {
   chamberLabel,
   padDistrict,
   partyLabel,
+  translateCensusRelease,
   translateCommittee,
   translateLeadership,
 } from "../lib/labels";
@@ -302,7 +303,7 @@ export function DashboardPage() {
                   {(demographics.statewide.population / 1_000_000).toFixed(2)}M
                 </strong>
                 <span className="st-telemetry-meta">
-                  {demographics.release.name} · {money(demographics.statewide.medianIncome, lang)}
+                  {translateCensusRelease(demographics.release.name, lang)} · {money(demographics.statewide.medianIncome, lang)}
                 </span>
               </div>
             </div>
@@ -1690,7 +1691,7 @@ function DistrictsLens({ analytics }: { analytics: Analytics }) {
     <div className="st-lens-stack">
       <div className="st-census-baseline">
         <span className="st-baseline-tag">
-          {t("superTools.wbCensusBaseline")} · {demographics.release.name}
+          {t("superTools.wbCensusBaseline")} · {translateCensusRelease(demographics.release.name, lang)}
         </span>
         <div className="st-baseline-metrics num">
           <span>

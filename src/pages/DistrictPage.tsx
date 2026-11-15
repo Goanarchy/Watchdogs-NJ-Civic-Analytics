@@ -8,6 +8,7 @@ import {
   padDistrict,
   chamberLabel,
   partyLabel,
+  translateCensusRelease,
   translateCommittee,
 } from "../lib/labels";
 import { useDocumentTitle } from "../lib/useDocumentTitle";
@@ -278,7 +279,7 @@ export function DistrictPage() {
           <div className="panel-head super-panel-head">
             <div>
               <p className="panel-kicker">
-                U.S. Census Bureau · {demographics.release.name}
+                U.S. Census Bureau · {translateCensusRelease(demographics.release.name, lang)}
               </p>
               <h2>{t("district.censusTitle")}</h2>
             </div>

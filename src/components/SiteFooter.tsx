@@ -1,5 +1,6 @@
 import { demographics, meta } from "../data";
 import { useI18n } from "../lib/i18n";
+import { translateCensusRelease } from "../lib/labels";
 
 export function SiteFooter() {
   const { t, lang } = useI18n();
@@ -32,7 +33,7 @@ export function SiteFooter() {
             target="_blank"
             rel="noreferrer"
           >
-            U.S. Census Bureau ({demographics.release.name})
+            U.S. Census Bureau ({translateCensusRelease(demographics.release.name, lang)})
           </a>
           <a href="https://www.fec.gov/data/" target="_blank" rel="noreferrer">
             FEC · {t("footer.sourceFec")}

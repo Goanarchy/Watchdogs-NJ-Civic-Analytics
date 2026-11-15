@@ -452,7 +452,7 @@ function ChamberBenchmarksPanel({
     {
       label: t("superTools.pocketbookOverall"),
       value: row.pocketbookSummary.overallScore,
-      bench: undefined,
+      bench: benchmarks.avgPocketbookOverall,
       isPct: false,
     },
   ];
@@ -488,18 +488,12 @@ function ChamberBenchmarksPanel({
                 </span>
               </div>
 
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "baseline",
-                  margin: "4px 0",
-                }}
-              >
-                <div>
+              <div className="st-bench-meta">
+                <div className="st-bench-you">
                   <span
                     style={{
                       fontSize: "12px",
+                      fontWeight: 400,
                       color: "var(--muted)",
                       marginRight: "6px",
                     }}
@@ -512,26 +506,14 @@ function ChamberBenchmarksPanel({
                   </strong>
                 </div>
                 {typeof m.bench === "number" && (
-                  <div style={{ textAlign: "right" }}>
-                    <span
-                      style={{
-                        fontSize: "12px",
-                        color: "var(--muted)",
-                        marginRight: "4px",
-                      }}
-                    >
+                  <div className="st-bench-avg">
+                    <span style={{ marginRight: "4px" }}>
                       {t("profile.v3ChamberAvg", { chamber })}:
                     </span>
-                    <span
-                      style={{
-                        fontSize: "13px",
-                        fontWeight: 600,
-                        color: "var(--muted)",
-                      }}
-                    >
+                    <strong style={{ fontWeight: 600 }}>
                       {m.bench}
                       {m.isPct ? "%" : " / 100"}
-                    </span>
+                    </strong>
                   </div>
                 )}
               </div>

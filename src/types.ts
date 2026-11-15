@@ -552,6 +552,7 @@ export interface ChamberBenchmark {
   avgGrassrootsPct: number;
   avgTotalRaised: number;
   avgPrimaryBills: number;
+  avgPocketbookOverall: number;
 }
 
 export interface EffectivenessAnalytics<TRow = any> {
