@@ -19,7 +19,18 @@ const cacheDir = path.join(root, "scripts", ".cache");
 
 const raw = JSON.parse(await readFile(path.join(dataDir, "campaign-raw.json"), "utf8"));
 const legislators = JSON.parse(await readFile(path.join(dataDir, "legislators.json"), "utf8"));
-const sponsored = JSON.parse(await readFile(path.join(cacheDir, "campaign-bills.json"), "utf8"));
+const sponsoredPath = path.join(cacheDir, "campaign-bills.json");
+let sponsored;
+try {
+  sponsored = JSON.parse(await readFile(sponsoredPath, "utf8"));
+} catch (err) {
+  if (err?.code === "ENOENT") {
+    throw new Error(
+      `Missing ${path.relative(root, sponsoredPath)}. Run "node scripts/fetch-campaign-bills.mjs" first.`,
+    );
+  }
+  throw err;
+}
 
 let statusCache = {};
 try {
@@ -546,6 +557,7 @@ for (const profile of profileMap.values()) {
   }
 }
 
+await mkdir(cacheDir, { recursive: true });
 await writeFile(path.join(cacheDir, "bill-status.json"), JSON.stringify(statusCache));
 
 const output = {

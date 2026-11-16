@@ -15,9 +15,9 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const dataDir = path.join(root, "src", "data");
 const doRefresh = process.argv.includes("--refresh");
 
-function runNode(scriptRelPath) {
+function runNode(scriptRelPath, args = []) {
   const fullPath = path.join(root, scriptRelPath);
-  const res = spawnSync(process.execPath, [fullPath], {
+  const res = spawnSync(process.execPath, [fullPath, ...args], {
     cwd: root,
     stdio: "inherit",
   });
@@ -86,8 +86,9 @@ try {
     console.log("==> Refreshing official NJLeg, U.S. Census ACS, and Campaign Promise datasets...");
     runNode("scripts/fetch-njleg-data.mjs");
     runNode("scripts/fetch-census-acs.mjs");
+    runNode("scripts/fetch-campaign-bills.mjs");
     runNode("scripts/build-campaign-data.mjs");
-    runNode("scripts/fetch-njleg-bulk.mjs");
+    runNode("scripts/fetch-njleg-bulk.mjs", ["--refresh"]);
   } else {
     console.log("==> Verifying current datasets (use --refresh to fetch upstream updates)...");
   }

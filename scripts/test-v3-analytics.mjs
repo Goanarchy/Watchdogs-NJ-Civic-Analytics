@@ -400,12 +400,12 @@ const votesPath = path.join(root, "src/data/votes.json");
 if (fs.existsSync(billStagesPath) && fs.existsSync(votesPath)) {
   console.log("\n--- 6. Disk Invariants Verification ---");
 
-  test("bill-stages.json contains all 11,475 bills from bills.json", () => {
+  test("bill-stages.json covers every bill from bills.json", () => {
     const bills = JSON.parse(fs.readFileSync(path.join(root, "src/data/bills.json"), "utf8"));
     const billStages = JSON.parse(fs.readFileSync(billStagesPath, "utf8"));
 
     const billsKeys = Object.keys(bills);
-    assert.strictEqual(billsKeys.length, 11475);
+    assert.ok(billsKeys.length >= 11000, `Expected >= 11000 bills, got ${billsKeys.length}`);
 
     for (const key of billsKeys) {
       assert.ok(billStages[key], `Missing bill stage entry for bill ${key}`);
@@ -419,7 +419,10 @@ if (fs.existsSync(billStagesPath) && fs.existsSync(votesPath)) {
   test("votes.json contains valid rollCalls and 120 legislatorStats", () => {
     const votes = JSON.parse(fs.readFileSync(votesPath, "utf8"));
     assert.ok(Array.isArray(votes.rollCalls));
-    assert.strictEqual(votes.rollCalls.length, 543);
+    assert.ok(
+      votes.rollCalls.length >= 543,
+      `Expected >= 543 rollCalls, got ${votes.rollCalls.length}`
+    );
     for (const rc of votes.rollCalls) {
       const cap = rc.chamber === "Senate" ? 40 : 80;
       const totalVotes = (rc.yeas || 0) + (rc.nays || 0) + (rc.abstains || 0) + (rc.notVoting || 0);

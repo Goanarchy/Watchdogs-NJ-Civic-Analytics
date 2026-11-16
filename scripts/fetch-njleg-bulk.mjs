@@ -379,7 +379,7 @@ function buildLegislatorLookup(legislators) {
 }
 
 /**
- * Downloads a URL to a local destination using fetch, or powershell curl fallback.
+ * Downloads a URL to a local destination using fetch, or platform curl fallback.
  */
 async function downloadFile(url, destPath) {
   console.log(`    Downloading: ${url}`);
@@ -392,7 +392,8 @@ async function downloadFile(url, destPath) {
     return true;
   } catch (err) {
     console.warn(`    fetch failed (${err.message}), trying curl...`);
-    const curl = spawnSync("curl.exe", ["-sSL", url, "-o", destPath], { stdio: "inherit" });
+    const curlBin = process.platform === "win32" ? "curl.exe" : "curl";
+    const curl = spawnSync(curlBin, ["-sSL", url, "-o", destPath], { stdio: "inherit" });
     if (curl.status === 0 && fs.existsSync(destPath) && fs.statSync(destPath).size > 0) {
       return true;
     }
@@ -401,16 +402,41 @@ async function downloadFile(url, destPath) {
 }
 
 /**
- * Extracts a ZIP file into target directory using PowerShell Expand-Archive.
+ * Extracts a ZIP file into target directory across Windows, Linux, and macOS.
  */
 function extractZip(zipPath, targetDir) {
   console.log(`    Extracting: ${path.basename(zipPath)} -> ${targetDir}`);
   fs.mkdirSync(targetDir, { recursive: true });
-  const psCmd = `Expand-Archive -Path '${zipPath.replace(/'/g, "''")}' -DestinationPath '${targetDir.replace(/'/g, "''")}' -Force`;
-  const res = spawnSync("powershell", ["-Command", psCmd], { stdio: "inherit" });
-  if (res.status !== 0) {
-    throw new Error(`Failed to extract ${zipPath} (exit code ${res.status})`);
+  if (process.platform === "win32") {
+    const psCmd = `Expand-Archive -Path '${zipPath.replace(/'/g, "''")}' -DestinationPath '${targetDir.replace(/'/g, "''")}' -Force`;
+    const res = spawnSync("powershell", ["-Command", psCmd], { stdio: "inherit" });
+    if (res.status !== 0) {
+      throw new Error(`Failed to extract ${zipPath} (exit code ${res.status ?? "unknown"})`);
+    }
+    return;
   }
+
+  const unzipRes = spawnSync("unzip", ["-o", "-q", zipPath, "-d", targetDir], { stdio: "inherit" });
+  if (unzipRes.status === 0) return;
+
+  const pyRes = spawnSync("python3", ["-m", "zipfile", "-e", zipPath, targetDir], { stdio: "inherit" });
+  if (pyRes.status !== 0) {
+    throw new Error(
+      `Failed to extract ${zipPath} (unzip exit ${unzipRes.status ?? "missing"}, python3 exit ${pyRes.status ?? "missing"})`,
+    );
+  }
+}
+
+/**
+ * Resolves a file inside dir case-insensitively (needed for Linux runners where ZIP entry casing varies).
+ */
+function resolveFileCaseInsensitive(dir, expectedName) {
+  const direct = path.join(dir, expectedName);
+  if (fs.existsSync(direct) || !fs.existsSync(dir)) return direct;
+  const target = expectedName.toLowerCase();
+  const match = fs.readdirSync(dir).find((name) => name.toLowerCase() === target);
+  if (match) return path.join(dir, match);
+  return direct;
 }
 
 /**
@@ -421,9 +447,9 @@ async function ensureDatasets(forceRefresh = false) {
   const aDir = path.join(cacheDir, "votes_a2026");
   const sDir = path.join(cacheDir, "votes_s2026");
 
-  const dbMain = path.join(dbDir, "MAINBILL.TXT");
-  const aVotes = path.join(aDir, "A2026.txt");
-  const sVotes = path.join(sDir, "S2026.txt");
+  const dbMain = resolveFileCaseInsensitive(dbDir, "MAINBILL.TXT");
+  const aVotes = resolveFileCaseInsensitive(aDir, "A2026.txt");
+  const sVotes = resolveFileCaseInsensitive(sDir, "S2026.txt");
 
   const hasCache = fs.existsSync(dbMain) && fs.existsSync(aVotes) && fs.existsSync(sVotes);
 
@@ -477,7 +503,7 @@ export async function runIngestion(options = {}) {
   // 1. Process BILLHIST.TXT -> Action history by bill
   // -------------------------------------------------------------------------
   console.log("==> Parsing BILLHIST.TXT...");
-  const bhFile = path.join(dbDir, "BILLHIST.TXT");
+  const bhFile = resolveFileCaseInsensitive(dbDir, "BILLHIST.TXT");
   const bhRows = parseCsv(fs.readFileSync(bhFile, "utf8"));
   const historyByBill = new Map();
   const lastActionByBill = new Map();
@@ -504,7 +530,7 @@ export async function runIngestion(options = {}) {
   // 2. Process MAINBILL.TXT -> bill-stages.json
   // -------------------------------------------------------------------------
   console.log("==> Parsing MAINBILL.TXT & computing bill stages...");
-  const mbFile = path.join(dbDir, "MAINBILL.TXT");
+  const mbFile = resolveFileCaseInsensitive(dbDir, "MAINBILL.TXT");
   const mbRows = parseCsv(fs.readFileSync(mbFile, "utf8"));
 
   const billStages = {};
@@ -579,8 +605,8 @@ export async function runIngestion(options = {}) {
     return parseRollCallsFromCsvRows(rows, chamber, matchLegislator);
   }
 
-  const assemblyRollCalls = processVotesFile(path.join(aDir, "A2026.txt"), "Assembly");
-  const senateRollCalls = processVotesFile(path.join(sDir, "S2026.txt"), "Senate");
+  const assemblyRollCalls = processVotesFile(resolveFileCaseInsensitive(aDir, "A2026.txt"), "Assembly");
+  const senateRollCalls = processVotesFile(resolveFileCaseInsensitive(sDir, "S2026.txt"), "Senate");
   const rollCalls = [...assemblyRollCalls, ...senateRollCalls];
   console.log(`    Total roll calls: ${rollCalls.length} (${assemblyRollCalls.length} Assembly, ${senateRollCalls.length} Senate)`);
 
