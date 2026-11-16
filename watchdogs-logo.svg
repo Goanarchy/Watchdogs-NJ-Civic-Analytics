@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" aria-label="Watchdogs Media Civic Intelligence">
+  <defs>
+    <linearGradient id="wd-shield" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#183c51" />
+      <stop offset="100%" stop-color="#0b1d2a" />
+    </linearGradient>
+    <linearGradient id="wd-gold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#dfc082" />
+      <stop offset="100%" stop-color="#a9854c" />
+    </linearGradient>
+  </defs>
+
+  <!-- Oversight shield -->
+  <path
+    d="M32 3L8 12v18c0 15.6 10.2 26.9 24 31.2C45.8 56.9 56 45.6 56 30V12L32 3Z"
+    fill="url(#wd-shield)"
+    stroke="url(#wd-gold)"
+    stroke-width="2.5"
+  />
+
+  <!-- Civic radar arcs (citizen participation & live scrutiny) -->
+  <path
+    d="M19 16.5C22.4 12.8 27 10.8 32 10.8s9.6 2 13 5.7"
+    fill="none"
+    stroke="#06b6d4"
+    stroke-width="2"
+    stroke-linecap="round"
+    opacity="0.7"
+  />
+  <path
+    d="M23.5 20C25.8 17.6 28.8 16.4 32 16.4s6.2 1.2 8.5 3.6"
+    fill="none"
+    stroke="#22d3ee"
+    stroke-width="2"
+    stroke-linecap="round"
+  />
+
+  <!-- Watchdog beacon -->
+  <circle cx="32" cy="14" r="2.8" fill="#22d3ee" />
+
+  <!-- Legislative dome & columns -->
+  <path d="M24 29a8 8 0 0 1 16 0Z" fill="#f5f2ea" />
+  <rect x="21" y="30.5" width="22" height="2.2" rx="1" fill="url(#wd-gold)" />
+  <rect x="23" y="34" width="3" height="9.5" rx="0.8" fill="#f5f2ea" />
+  <rect x="30.5" y="34" width="3" height="9.5" rx="0.8" fill="#f5f2ea" />
+  <rect x="38" y="34" width="3" height="9.5" rx="0.8" fill="#f5f2ea" />
+  <rect x="19" y="45" width="26" height="3.2" rx="1.2" fill="url(#wd-gold)" />
+</svg>
