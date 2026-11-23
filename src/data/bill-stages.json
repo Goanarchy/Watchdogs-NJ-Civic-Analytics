@@ -2918,10 +2918,10 @@
   "A425": {
     "bill": "A425",
     "stage": "floor",
-    "statusCode": "PA",
-    "committeeCode": "AAP",
-    "lastAction": "PA",
-    "lastActionDate": "2026-10-29",
+    "statusCode": "SHH",
+    "committeeCode": "SHH",
+    "lastAction": "R/S REF SHH",
+    "lastActionDate": "2026-11-23",
     "isSubstantive": true
   },
   "A426": {
@@ -2999,10 +2999,10 @@
   "A434": {
     "bill": "A434",
     "stage": "floor",
-    "statusCode": "PA",
-    "committeeCode": "AAP",
-    "lastAction": "PA",
-    "lastActionDate": "2026-10-29",
+    "statusCode": "SHH",
+    "committeeCode": "SHH",
+    "lastAction": "R/S REF SHH",
+    "lastActionDate": "2026-11-23",
     "isSubstantive": true
   },
   "A435": {
@@ -3251,10 +3251,10 @@
   "A462": {
     "bill": "A462",
     "stage": "floor",
-    "statusCode": "PA",
-    "committeeCode": "ACW",
-    "lastAction": "PA",
-    "lastActionDate": "2026-10-29",
+    "statusCode": "SCU",
+    "committeeCode": "SCU",
+    "lastAction": "R/S REF SCU",
+    "lastActionDate": "2026-11-23",
     "isSubstantive": true
   },
   "A463": {
@@ -10928,10 +10928,10 @@
   "A1315": {
     "bill": "A1315",
     "stage": "floor",
-    "statusCode": "PA",
-    "committeeCode": "AAP",
-    "lastAction": "PA",
-    "lastActionDate": "2026-10-29",
+    "statusCode": "SBA",
+    "committeeCode": "SBA",
+    "lastAction": "R/S REF SBA",
+    "lastActionDate": "2026-11-23",
     "isSubstantive": true
   },
   "A1316": {
@@ -11747,28 +11747,28 @@
   "A1406": {
     "bill": "A1406",
     "stage": "floor",
-    "statusCode": "PA",
-    "committeeCode": "AJU",
-    "lastAction": "PA",
-    "lastActionDate": "2026-10-29",
+    "statusCode": "SJU",
+    "committeeCode": "SJU",
+    "lastAction": "R/S REF SJU",
+    "lastActionDate": "2026-11-23",
     "isSubstantive": true
   },
   "A1407": {
     "bill": "A1407",
     "stage": "floor",
-    "statusCode": "PA",
-    "committeeCode": "AAP",
-    "lastAction": "PA",
-    "lastActionDate": "2026-10-29",
+    "statusCode": "SJU",
+    "committeeCode": "SJU",
+    "lastAction": "R/S REF SJU",
+    "lastActionDate": "2026-11-23",
     "isSubstantive": true
   },
   "A1408": {
     "bill": "A1408",
     "stage": "floor",
-    "statusCode": "PA",
-    "committeeCode": "AAP",
-    "lastAction": "PA",
-    "lastActionDate": "2026-10-29",
+    "statusCode": "SJU",
+    "committeeCode": "SJU",
+    "lastAction": "R/S REF SJU",
+    "lastActionDate": "2026-11-23",
     "isSubstantive": true
   },
   "A1409": {
@@ -12637,11 +12637,11 @@
   },
   "A1505": {
     "bill": "A1505",
-    "stage": "committee",
-    "statusCode": "AOF",
-    "committeeCode": "AOF",
-    "lastAction": "TRANS AOF",
-    "lastActionDate": "2026-03-09",
+    "stage": "reported",
+    "statusCode": "AAP",
+    "committeeCode": "AAP",
+    "lastAction": "REP/ACA REF AAP",
+    "lastActionDate": "2026-11-16",
     "isSubstantive": true
   },
   "A1506": {
@@ -13907,10 +13907,10 @@
   "A1646": {
     "bill": "A1646",
     "stage": "floor",
-    "statusCode": "PA",
-    "committeeCode": "AAP",
-    "lastAction": "PA",
-    "lastActionDate": "2026-10-29",
+    "statusCode": "SED",
+    "committeeCode": "SED",
+    "lastAction": "R/S REF SED",
+    "lastActionDate": "2026-11-23",
     "isSubstantive": true
   },
   "A1647": {
@@ -15482,10 +15482,10 @@
   "A1821": {
     "bill": "A1821",
     "stage": "floor",
-    "statusCode": "PA",
-    "committeeCode": "AAP",
-    "lastAction": "PA",
-    "lastActionDate": "2026-10-29",
+    "statusCode": "SCM",
+    "committeeCode": "SCM",
+    "lastAction": "R/S REF SCM",
+    "lastActionDate": "2026-11-23",
     "isSubstantive": true
   },
   "A1822": {
@@ -17156,10 +17156,10 @@
   "A2007": {
     "bill": "A2007",
     "stage": "floor",
-    "statusCode": "PA",
-    "committeeCode": "ACW",
-    "lastAction": "PA",
-    "lastActionDate": "2026-10-29",
+    "statusCode": "SHH",
+    "committeeCode": "SHH",
+    "lastAction": "R/S REF SHH",
+    "lastActionDate": "2026-11-23",
     "isSubstantive": true
   },
   "A2008": {
@@ -17579,10 +17579,10 @@
   "A2054": {
     "bill": "A2054",
     "stage": "floor",
-    "statusCode": "PA",
-    "committeeCode": "AAP",
-    "lastAction": "PA",
-    "lastActionDate": "2026-10-29",
+    "statusCode": "SHH",
+    "committeeCode": "SHH",
+    "lastAction": "R/S REF SHH",
+    "lastActionDate": "2026-11-23",
     "isSubstantive": true
   },
   "A2055": {
@@ -18560,10 +18560,10 @@
   "A2163": {
     "bill": "A2163",
     "stage": "floor",
-    "statusCode": "PA",
-    "committeeCode": "AAP",
-    "lastAction": "PA",
-    "lastActionDate": "2026-10-29",
+    "statusCode": "SLP",
+    "committeeCode": "SLP",
+    "lastAction": "R/S REF SLP",
+    "lastActionDate": "2026-11-23",
     "isSubstantive": true
   },
   "A2164": {
@@ -18983,10 +18983,10 @@
   "A2210": {
     "bill": "A2210",
     "stage": "floor",
-    "statusCode": "PA",
-    "committeeCode": "AHU",
-    "lastAction": "PA",
-    "lastActionDate": "2026-10-29",
+    "statusCode": "SHH",
+    "committeeCode": "SHH",
+    "lastAction": "R/S REF SHH",
+    "lastActionDate": "2026-11-23",
     "isSubstantive": true
   },
   "A2211": {
@@ -19181,10 +19181,10 @@
   "A2232": {
     "bill": "A2232",
     "stage": "floor",
-    "statusCode": "PA",
-    "committeeCode": "ACF",
-    "lastAction": "PA",
-    "lastActionDate": "2026-10-29",
+    "statusCode": "SBA",
+    "committeeCode": "SBA",
+    "lastAction": "R/S REF SBA",
+    "lastActionDate": "2026-11-23",
     "isSubstantive": true
   },
   "A2233": {
@@ -19685,10 +19685,10 @@
   "A2288": {
     "bill": "A2288",
     "stage": "floor",
-    "statusCode": "PA",
-    "committeeCode": "AAP",
-    "lastAction": "PA",
-    "lastActionDate": "2026-10-29",
+    "statusCode": "SHH",
+    "committeeCode": "SHH",
+    "lastAction": "R/S REF SHH",
+    "lastActionDate": "2026-11-23",
     "isSubstantive": true
   },
   "A2289": {
@@ -20288,10 +20288,10 @@
   "A2355": {
     "bill": "A2355",
     "stage": "floor",
-    "statusCode": "PA",
-    "committeeCode": "AAP",
-    "lastAction": "PA",
-    "lastActionDate": "2026-10-29",
+    "statusCode": "SHH",
+    "committeeCode": "SHH",
+    "lastAction": "R/S REF SHH",
+    "lastActionDate": "2026-11-23",
     "isSubstantive": true
   },
   "A2356": {
@@ -23870,10 +23870,10 @@
   "A2753": {
     "bill": "A2753",
     "stage": "floor",
-    "statusCode": "PA",
-    "committeeCode": "AAP",
-    "lastAction": "PA",
-    "lastActionDate": "2026-10-29",
+    "statusCode": "STR",
+    "committeeCode": "STR",
+    "lastAction": "R/S REF STR",
+    "lastActionDate": "2026-11-23",
     "isSubstantive": true
   },
   "A2754": {
@@ -24041,10 +24041,10 @@
   "A2772": {
     "bill": "A2772",
     "stage": "floor",
-    "statusCode": "PA",
-    "committeeCode": "AAP",
-    "lastAction": "PA",
-    "lastActionDate": "2026-10-29",
+    "statusCode": "SHH",
+    "committeeCode": "SHH",
+    "lastAction": "R/S REF SHH",
+    "lastActionDate": "2026-11-23",
     "isSubstantive": true
   },
   "A2773": {
@@ -24058,11 +24058,11 @@
   },
   "A2774": {
     "bill": "A2774",
-    "stage": "committee",
-    "statusCode": "AST",
+    "stage": "floor",
+    "statusCode": "2RA",
     "committeeCode": "AST",
-    "lastAction": "INT 1RA REF AST",
-    "lastActionDate": "2026-01-13",
+    "lastAction": "REP/ACS 2RA",
+    "lastActionDate": "2026-11-16",
     "isSubstantive": true
   },
   "A2775": {
@@ -28271,10 +28271,10 @@
   "A3242": {
     "bill": "A3242",
     "stage": "floor",
-    "statusCode": "PA",
-    "committeeCode": "AAP",
-    "lastAction": "PA",
-    "lastActionDate": "2026-10-29",
+    "statusCode": "SCM",
+    "committeeCode": "SCM",
+    "lastAction": "R/S REF SCM",
+    "lastActionDate": "2026-11-23",
     "isSubstantive": true
   },
   "A3243": {
@@ -29594,19 +29594,19 @@
   "A3389": {
     "bill": "A3389",
     "stage": "floor",
-    "statusCode": "PA",
+    "statusCode": "2RS",
     "committeeCode": "ARP",
-    "lastAction": "PA",
-    "lastActionDate": "2026-10-29",
+    "lastAction": "R/S SWR 2RS",
+    "lastActionDate": "2026-11-23",
     "isSubstantive": true
   },
   "A3390": {
     "bill": "A3390",
     "stage": "floor",
-    "statusCode": "PA",
-    "committeeCode": "ARP",
-    "lastAction": "PA",
-    "lastActionDate": "2026-10-29",
+    "statusCode": "SBA",
+    "committeeCode": "SBA",
+    "lastAction": "R/S REF SBA",
+    "lastActionDate": "2026-11-23",
     "isSubstantive": true
   },
   "A3391": {
@@ -34787,10 +34787,10 @@
   "A3966": {
     "bill": "A3966",
     "stage": "floor",
-    "statusCode": "PA",
-    "committeeCode": "AAP",
-    "lastAction": "PA",
-    "lastActionDate": "2026-10-29",
+    "statusCode": "SBA",
+    "committeeCode": "SBA",
+    "lastAction": "R/S REF SBA",
+    "lastActionDate": "2026-11-23",
     "isSubstantive": true
   },
   "A3967": {
@@ -36209,10 +36209,10 @@
   "A4124": {
     "bill": "A4124",
     "stage": "floor",
-    "statusCode": "PA",
-    "committeeCode": "AAP",
-    "lastAction": "PA",
-    "lastActionDate": "2026-10-29",
+    "statusCode": "SHH",
+    "committeeCode": "SHH",
+    "lastAction": "R/S REF SHH",
+    "lastActionDate": "2026-11-23",
     "isSubstantive": true
   },
   "A4125": {
@@ -37028,10 +37028,10 @@
   "A4215": {
     "bill": "A4215",
     "stage": "floor",
-    "statusCode": "PA",
-    "committeeCode": "AAP",
-    "lastAction": "PA",
-    "lastActionDate": "2026-10-29",
+    "statusCode": "SJU",
+    "committeeCode": "SJU",
+    "lastAction": "R/S REF SJU",
+    "lastActionDate": "2026-11-23",
     "isSubstantive": true
   },
   "A4216": {
@@ -41195,10 +41195,10 @@
   "A4679": {
     "bill": "A4679",
     "stage": "floor",
-    "statusCode": "PA",
-    "committeeCode": "AHE",
-    "lastAction": "PA",
-    "lastActionDate": "2026-10-29",
+    "statusCode": "SHH",
+    "committeeCode": "SHH",
+    "lastAction": "R/S REF SHH",
+    "lastActionDate": "2026-11-23",
     "isSubstantive": true
   },
   "A4680": {
@@ -41267,10 +41267,10 @@
   "A4688": {
     "bill": "A4688",
     "stage": "floor",
-    "statusCode": "PA",
-    "committeeCode": "ATU",
-    "lastAction": "PA",
-    "lastActionDate": "2026-10-29",
+    "statusCode": "SEN",
+    "committeeCode": "SEN",
+    "lastAction": "R/S REF SEN",
+    "lastActionDate": "2026-11-23",
     "isSubstantive": true
   },
   "A4689": {
@@ -41717,10 +41717,10 @@
   "A4740": {
     "bill": "A4740",
     "stage": "floor",
-    "statusCode": "PA",
-    "committeeCode": "AAP",
-    "lastAction": "PA",
-    "lastActionDate": "2026-10-29",
+    "statusCode": "STR",
+    "committeeCode": "STR",
+    "lastAction": "R/S REF STR",
+    "lastActionDate": "2026-11-23",
     "isSubstantive": true
   },
   "A4741": {
@@ -42571,11 +42571,11 @@
   },
   "A4835": {
     "bill": "A4835",
-    "stage": "floor",
-    "statusCode": "PBH",
+    "stage": "enacted",
+    "statusCode": "APP",
     "committeeCode": "SJU",
-    "lastAction": "PS PBH",
-    "lastActionDate": "2026-10-22",
+    "lastAction": "APP",
+    "lastActionDate": "2026-11-20",
     "isSubstantive": true
   },
   "A4836": {
@@ -44417,10 +44417,10 @@
   "A5040": {
     "bill": "A5040",
     "stage": "floor",
-    "statusCode": "PA",
-    "committeeCode": "AAP",
-    "lastAction": "PA",
-    "lastActionDate": "2026-10-29",
+    "statusCode": "SBA",
+    "committeeCode": "SBA",
+    "lastAction": "R/S REF SBA",
+    "lastActionDate": "2026-11-23",
     "isSubstantive": true
   },
   "A5041": {
@@ -45281,10 +45281,10 @@
   "A5136": {
     "bill": "A5136",
     "stage": "floor",
-    "statusCode": "PA",
-    "committeeCode": "ATU",
-    "lastAction": "PA",
-    "lastActionDate": "2026-10-29",
+    "statusCode": "SCU",
+    "committeeCode": "SCU",
+    "lastAction": "R/S REF SCU",
+    "lastActionDate": "2026-11-23",
     "isSubstantive": true
   },
   "A5137": {
@@ -45866,28 +45866,28 @@
   "A5205": {
     "bill": "A5205",
     "stage": "floor",
-    "statusCode": "PA",
-    "committeeCode": "AAP",
-    "lastAction": "PA",
-    "lastActionDate": "2026-10-29",
+    "statusCode": "SED",
+    "committeeCode": "SED",
+    "lastAction": "R/S REF SED",
+    "lastActionDate": "2026-11-23",
     "isSubstantive": true
   },
   "A5206": {
     "bill": "A5206",
     "stage": "floor",
-    "statusCode": "PA",
-    "committeeCode": "AAP",
-    "lastAction": "PA",
-    "lastActionDate": "2026-10-29",
+    "statusCode": "SED",
+    "committeeCode": "SED",
+    "lastAction": "R/S REF SED",
+    "lastActionDate": "2026-11-23",
     "isSubstantive": true
   },
   "A5207": {
     "bill": "A5207",
     "stage": "floor",
-    "statusCode": "PA",
-    "committeeCode": "AAP",
-    "lastAction": "PA",
-    "lastActionDate": "2026-10-29",
+    "statusCode": "SED",
+    "committeeCode": "SED",
+    "lastAction": "R/S REF SED",
+    "lastActionDate": "2026-11-23",
     "isSubstantive": true
   },
   "A5208": {
@@ -46037,10 +46037,10 @@
   "A5224": {
     "bill": "A5224",
     "stage": "committee",
-    "statusCode": "AST",
+    "statusCode": "COMB",
     "committeeCode": "AST",
-    "lastAction": "INT 1RA REF AST",
-    "lastActionDate": "2026-06-08",
+    "lastAction": "COMB/W",
+    "lastActionDate": "2026-11-16",
     "isSubstantive": true
   },
   "A5225": {
@@ -46307,10 +46307,10 @@
   "A5254": {
     "bill": "A5254",
     "stage": "floor",
-    "statusCode": "PA",
+    "statusCode": "2RS",
     "committeeCode": "AED",
-    "lastAction": "PA",
-    "lastActionDate": "2026-10-29",
+    "lastAction": "R/S SWR 2RS",
+    "lastActionDate": "2026-11-23",
     "isSubstantive": true
   },
   "A5255": {
@@ -46694,10 +46694,10 @@
   "A5297": {
     "bill": "A5297",
     "stage": "floor",
-    "statusCode": "PA",
+    "statusCode": "2RS",
     "committeeCode": "AFI",
-    "lastAction": "PA",
-    "lastActionDate": "2026-10-29",
+    "lastAction": "R/S SWR 2RS",
+    "lastActionDate": "2026-11-23",
     "isSubstantive": true
   },
   "A5298": {
@@ -47432,10 +47432,10 @@
   "A5381": {
     "bill": "A5381",
     "stage": "floor",
-    "statusCode": "PA",
-    "committeeCode": "ASL",
-    "lastAction": "PA",
-    "lastActionDate": "2026-10-29",
+    "statusCode": "SSG",
+    "committeeCode": "SSG",
+    "lastAction": "R/S REF SSG",
+    "lastActionDate": "2026-11-23",
     "isSubstantive": true
   },
   "A5382": {
@@ -47900,10 +47900,10 @@
   "A5433": {
     "bill": "A5433",
     "stage": "floor",
-    "statusCode": "PA",
-    "committeeCode": "AAP",
-    "lastAction": "PA",
-    "lastActionDate": "2026-10-29",
+    "statusCode": "SLA",
+    "committeeCode": "SLA",
+    "lastAction": "R/S REF SLA",
+    "lastActionDate": "2026-11-23",
     "isSubstantive": true
   },
   "A5434": {
@@ -47953,11 +47953,11 @@
   },
   "A5439": {
     "bill": "A5439",
-    "stage": "floor",
-    "statusCode": "PBH",
+    "stage": "enacted",
+    "statusCode": "APP",
     "committeeCode": "SBA",
-    "lastAction": "PS PBH",
-    "lastActionDate": "2026-10-22",
+    "lastAction": "APP",
+    "lastActionDate": "2026-11-20",
     "isSubstantive": true
   },
   "A5440": {
@@ -47972,10 +47972,10 @@
   "A5441": {
     "bill": "A5441",
     "stage": "floor",
-    "statusCode": "PA",
+    "statusCode": "2RS",
     "committeeCode": "AAP",
-    "lastAction": "PA",
-    "lastActionDate": "2026-10-29",
+    "lastAction": "R/S SWR 2RS",
+    "lastActionDate": "2026-11-23",
     "isSubstantive": true
   },
   "A5442": {
@@ -48430,29 +48430,29 @@
   },
   "A5494": {
     "bill": "A5494",
-    "stage": "committee",
-    "statusCode": "AST",
-    "committeeCode": "AST",
-    "lastAction": "INT 1RA REF AST",
-    "lastActionDate": "2026-09-14",
+    "stage": "reported",
+    "statusCode": "AFI",
+    "committeeCode": "AFI",
+    "lastAction": "REP REF AFI",
+    "lastActionDate": "2026-11-16",
     "isSubstantive": true
   },
   "A5495": {
     "bill": "A5495",
-    "stage": "committee",
-    "statusCode": "AST",
-    "committeeCode": "AST",
-    "lastAction": "INT 1RA REF AST",
-    "lastActionDate": "2026-09-14",
+    "stage": "reported",
+    "statusCode": "AHO",
+    "committeeCode": "AHO",
+    "lastAction": "REP/ACA REF AHO",
+    "lastActionDate": "2026-11-16",
     "isSubstantive": true
   },
   "A5496": {
     "bill": "A5496",
-    "stage": "committee",
-    "statusCode": "AST",
-    "committeeCode": "AST",
-    "lastAction": "INT 1RA REF AST",
-    "lastActionDate": "2026-09-14",
+    "stage": "reported",
+    "statusCode": "AHO",
+    "committeeCode": "AHO",
+    "lastAction": "REP REF AHO",
+    "lastActionDate": "2026-11-16",
     "isSubstantive": true
   },
   "A5497": {
@@ -48727,10 +48727,10 @@
   },
   "A5527": {
     "bill": "A5527",
-    "stage": "floor",
-    "statusCode": "2RA",
-    "committeeCode": "AAN",
-    "lastAction": "REP 2RA",
+    "stage": "reported",
+    "statusCode": "AAP",
+    "committeeCode": "AAP",
+    "lastAction": "REP REF AAP",
     "lastActionDate": "2026-10-22",
     "isSubstantive": true
   },
@@ -49439,10 +49439,10 @@
   "A5606": {
     "bill": "A5606",
     "stage": "floor",
-    "statusCode": "PA",
-    "committeeCode": "ATR",
-    "lastAction": "PA",
-    "lastActionDate": "2026-10-29",
+    "statusCode": "SLP",
+    "committeeCode": "SLP",
+    "lastAction": "R/S REF SLP",
+    "lastActionDate": "2026-11-23",
     "isSubstantive": true
   },
   "A5607": {
@@ -50590,11 +50590,11 @@
   },
   "A5734": {
     "bill": "A5734",
-    "stage": "committee",
-    "statusCode": "AOF",
-    "committeeCode": "AOF",
-    "lastAction": "INT 1RA REF AOF",
-    "lastActionDate": "2026-10-29",
+    "stage": "reported",
+    "statusCode": "AAP",
+    "committeeCode": "AAP",
+    "lastAction": "REP REF AAP",
+    "lastActionDate": "2026-11-16",
     "isSubstantive": true
   },
   "A5735": {
@@ -50635,11 +50635,11 @@
   },
   "A5739": {
     "bill": "A5739",
-    "stage": "committee",
-    "statusCode": "AOF",
-    "committeeCode": "AOF",
-    "lastAction": "INT 1RA REF AOF",
-    "lastActionDate": "2026-10-29",
+    "stage": "reported",
+    "statusCode": "AAP",
+    "committeeCode": "AAP",
+    "lastAction": "REP REF AAP",
+    "lastActionDate": "2026-11-16",
     "isSubstantive": true
   },
   "A5740": {
@@ -51733,6 +51733,24 @@
   },
   "A5864": {
     "bill": "A5864",
+    "stage": "introduced",
+    "statusCode": "",
+    "committeeCode": null,
+    "lastAction": "",
+    "lastActionDate": "2026-11-16",
+    "isSubstantive": true
+  },
+  "A5865": {
+    "bill": "A5865",
+    "stage": "introduced",
+    "statusCode": "",
+    "committeeCode": null,
+    "lastAction": "",
+    "lastActionDate": "2026-11-16",
+    "isSubstantive": true
+  },
+  "A5866": {
+    "bill": "A5866",
     "stage": "introduced",
     "statusCode": "",
     "committeeCode": null,
@@ -61976,10 +61994,10 @@
   "S687": {
     "bill": "S687",
     "stage": "floor",
-    "statusCode": "PA",
+    "statusCode": "2RSC",
     "committeeCode": "AEN",
-    "lastAction": "PA",
-    "lastActionDate": "2026-10-29",
+    "lastAction": "R/S 2RSC",
+    "lastActionDate": "2026-11-23",
     "isSubstantive": true
   },
   "S688": {
@@ -67222,11 +67240,11 @@
   },
   "S1270": {
     "bill": "S1270",
-    "stage": "floor",
-    "statusCode": "PBH",
+    "stage": "enacted",
+    "statusCode": "APP",
     "committeeCode": "AAP",
-    "lastAction": "PA PBH",
-    "lastActionDate": "2026-10-29",
+    "lastAction": "APP",
+    "lastActionDate": "2026-11-20",
     "isSubstantive": true
   },
   "S1271": {
@@ -68572,11 +68590,11 @@
   },
   "S1420": {
     "bill": "S1420",
-    "stage": "floor",
-    "statusCode": "PBH",
+    "stage": "enacted",
+    "statusCode": "APP",
     "committeeCode": "AHO",
-    "lastAction": "PA PBH",
-    "lastActionDate": "2026-10-29",
+    "lastAction": "APP",
+    "lastActionDate": "2026-11-20",
     "isSubstantive": true
   },
   "S1421": {
@@ -84989,10 +85007,10 @@
   "S3245": {
     "bill": "S3245",
     "stage": "floor",
-    "statusCode": "PA",
+    "statusCode": "2RSC",
     "committeeCode": "AHI",
-    "lastAction": "PA",
-    "lastActionDate": "2026-10-29",
+    "lastAction": "R/S 2RSC",
+    "lastActionDate": "2026-11-23",
     "isSubstantive": true
   },
   "S3246": {
@@ -91289,10 +91307,10 @@
   "S3946": {
     "bill": "S3946",
     "stage": "floor",
-    "statusCode": "PA",
+    "statusCode": "2RSC",
     "committeeCode": "AAP",
-    "lastAction": "PA",
-    "lastActionDate": "2026-10-29",
+    "lastAction": "R/S 2RSC",
+    "lastActionDate": "2026-11-23",
     "isSubstantive": true
   },
   "S3947": {
@@ -94511,10 +94529,10 @@
   "S4304": {
     "bill": "S4304",
     "stage": "floor",
-    "statusCode": "AST",
+    "statusCode": "2RA",
     "committeeCode": "AST",
-    "lastAction": "R/A REF AST",
-    "lastActionDate": "2026-10-29",
+    "lastAction": "REP/ACA 2RA",
+    "lastActionDate": "2026-11-16",
     "isSubstantive": true
   },
   "S4305": {
@@ -100466,6 +100484,303 @@
     "lastActionDate": "2026-10-22",
     "isSubstantive": true
   },
+  "S4966": {
+    "bill": "S4966",
+    "stage": "committee",
+    "statusCode": "STR",
+    "committeeCode": "STR",
+    "lastAction": "INT 1RS REF STR",
+    "lastActionDate": "2026-11-23",
+    "isSubstantive": true
+  },
+  "S4967": {
+    "bill": "S4967",
+    "stage": "introduced",
+    "statusCode": "",
+    "committeeCode": null,
+    "lastAction": "",
+    "lastActionDate": "2026-11-23",
+    "isSubstantive": true
+  },
+  "S4968": {
+    "bill": "S4968",
+    "stage": "introduced",
+    "statusCode": "",
+    "committeeCode": null,
+    "lastAction": "",
+    "lastActionDate": "2026-11-23",
+    "isSubstantive": true
+  },
+  "S4969": {
+    "bill": "S4969",
+    "stage": "introduced",
+    "statusCode": "",
+    "committeeCode": null,
+    "lastAction": "",
+    "lastActionDate": "2026-11-23",
+    "isSubstantive": true
+  },
+  "S4970": {
+    "bill": "S4970",
+    "stage": "introduced",
+    "statusCode": "",
+    "committeeCode": null,
+    "lastAction": "",
+    "lastActionDate": "2026-11-23",
+    "isSubstantive": true
+  },
+  "S4971": {
+    "bill": "S4971",
+    "stage": "introduced",
+    "statusCode": "",
+    "committeeCode": null,
+    "lastAction": "",
+    "lastActionDate": "2026-11-23",
+    "isSubstantive": true
+  },
+  "S4972": {
+    "bill": "S4972",
+    "stage": "introduced",
+    "statusCode": "",
+    "committeeCode": null,
+    "lastAction": "",
+    "lastActionDate": "2026-11-23",
+    "isSubstantive": true
+  },
+  "S4973": {
+    "bill": "S4973",
+    "stage": "introduced",
+    "statusCode": "",
+    "committeeCode": null,
+    "lastAction": "",
+    "lastActionDate": "2026-11-23",
+    "isSubstantive": true
+  },
+  "S4974": {
+    "bill": "S4974",
+    "stage": "introduced",
+    "statusCode": "",
+    "committeeCode": null,
+    "lastAction": "",
+    "lastActionDate": "2026-11-23",
+    "isSubstantive": true
+  },
+  "S4975": {
+    "bill": "S4975",
+    "stage": "introduced",
+    "statusCode": "",
+    "committeeCode": null,
+    "lastAction": "",
+    "lastActionDate": "2026-11-23",
+    "isSubstantive": true
+  },
+  "S4976": {
+    "bill": "S4976",
+    "stage": "introduced",
+    "statusCode": "",
+    "committeeCode": null,
+    "lastAction": "",
+    "lastActionDate": "2026-11-23",
+    "isSubstantive": true
+  },
+  "S4977": {
+    "bill": "S4977",
+    "stage": "introduced",
+    "statusCode": "",
+    "committeeCode": null,
+    "lastAction": "",
+    "lastActionDate": "2026-11-23",
+    "isSubstantive": true
+  },
+  "S4978": {
+    "bill": "S4978",
+    "stage": "introduced",
+    "statusCode": "",
+    "committeeCode": null,
+    "lastAction": "",
+    "lastActionDate": "2026-11-23",
+    "isSubstantive": true
+  },
+  "S4979": {
+    "bill": "S4979",
+    "stage": "introduced",
+    "statusCode": "",
+    "committeeCode": null,
+    "lastAction": "",
+    "lastActionDate": "2026-11-23",
+    "isSubstantive": true
+  },
+  "S4980": {
+    "bill": "S4980",
+    "stage": "introduced",
+    "statusCode": "",
+    "committeeCode": null,
+    "lastAction": "",
+    "lastActionDate": "2026-11-23",
+    "isSubstantive": true
+  },
+  "S4981": {
+    "bill": "S4981",
+    "stage": "introduced",
+    "statusCode": "",
+    "committeeCode": null,
+    "lastAction": "",
+    "lastActionDate": "2026-11-23",
+    "isSubstantive": true
+  },
+  "S4982": {
+    "bill": "S4982",
+    "stage": "introduced",
+    "statusCode": "",
+    "committeeCode": null,
+    "lastAction": "",
+    "lastActionDate": "2026-11-23",
+    "isSubstantive": true
+  },
+  "S4983": {
+    "bill": "S4983",
+    "stage": "introduced",
+    "statusCode": "",
+    "committeeCode": null,
+    "lastAction": "",
+    "lastActionDate": "2026-11-23",
+    "isSubstantive": true
+  },
+  "S4984": {
+    "bill": "S4984",
+    "stage": "introduced",
+    "statusCode": "",
+    "committeeCode": null,
+    "lastAction": "",
+    "lastActionDate": "2026-11-23",
+    "isSubstantive": true
+  },
+  "S4985": {
+    "bill": "S4985",
+    "stage": "introduced",
+    "statusCode": "",
+    "committeeCode": null,
+    "lastAction": "",
+    "lastActionDate": "2026-11-23",
+    "isSubstantive": true
+  },
+  "S4986": {
+    "bill": "S4986",
+    "stage": "introduced",
+    "statusCode": "",
+    "committeeCode": null,
+    "lastAction": "",
+    "lastActionDate": "2026-11-23",
+    "isSubstantive": true
+  },
+  "S4987": {
+    "bill": "S4987",
+    "stage": "introduced",
+    "statusCode": "",
+    "committeeCode": null,
+    "lastAction": "",
+    "lastActionDate": "2026-11-23",
+    "isSubstantive": true
+  },
+  "S4988": {
+    "bill": "S4988",
+    "stage": "introduced",
+    "statusCode": "",
+    "committeeCode": null,
+    "lastAction": "",
+    "lastActionDate": "2026-11-23",
+    "isSubstantive": true
+  },
+  "S4989": {
+    "bill": "S4989",
+    "stage": "introduced",
+    "statusCode": "",
+    "committeeCode": null,
+    "lastAction": "",
+    "lastActionDate": "2026-11-23",
+    "isSubstantive": true
+  },
+  "S4990": {
+    "bill": "S4990",
+    "stage": "introduced",
+    "statusCode": "",
+    "committeeCode": null,
+    "lastAction": "",
+    "lastActionDate": "2026-11-23",
+    "isSubstantive": true
+  },
+  "S4991": {
+    "bill": "S4991",
+    "stage": "introduced",
+    "statusCode": "",
+    "committeeCode": null,
+    "lastAction": "",
+    "lastActionDate": "2026-11-23",
+    "isSubstantive": true
+  },
+  "S4992": {
+    "bill": "S4992",
+    "stage": "introduced",
+    "statusCode": "",
+    "committeeCode": null,
+    "lastAction": "",
+    "lastActionDate": "2026-11-23",
+    "isSubstantive": true
+  },
+  "S4993": {
+    "bill": "S4993",
+    "stage": "introduced",
+    "statusCode": "",
+    "committeeCode": null,
+    "lastAction": "",
+    "lastActionDate": "2026-11-23",
+    "isSubstantive": true
+  },
+  "S4994": {
+    "bill": "S4994",
+    "stage": "introduced",
+    "statusCode": "",
+    "committeeCode": null,
+    "lastAction": "",
+    "lastActionDate": "2026-11-23",
+    "isSubstantive": true
+  },
+  "S4995": {
+    "bill": "S4995",
+    "stage": "introduced",
+    "statusCode": "",
+    "committeeCode": null,
+    "lastAction": "",
+    "lastActionDate": "2026-11-23",
+    "isSubstantive": true
+  },
+  "S4996": {
+    "bill": "S4996",
+    "stage": "introduced",
+    "statusCode": "",
+    "committeeCode": null,
+    "lastAction": "",
+    "lastActionDate": "2026-11-23",
+    "isSubstantive": true
+  },
+  "S4997": {
+    "bill": "S4997",
+    "stage": "introduced",
+    "statusCode": "",
+    "committeeCode": null,
+    "lastAction": "",
+    "lastActionDate": "2026-11-23",
+    "isSubstantive": true
+  },
+  "S4998": {
+    "bill": "S4998",
+    "stage": "introduced",
+    "statusCode": "",
+    "committeeCode": null,
+    "lastAction": "",
+    "lastActionDate": "2026-11-23",
+    "isSubstantive": true
+  },
   "SCR11": {
     "bill": "SCR11",
     "stage": "committee",
@@ -101233,9 +101548,9 @@
   },
   "SCR96": {
     "bill": "SCR96",
-    "stage": "floor",
-    "statusCode": "2RS",
-    "committeeCode": "SBA",
+    "stage": "reported",
+    "statusCode": "SCU",
+    "committeeCode": "SCU",
     "lastAction": "ASM COPY ON DESK",
     "lastActionDate": "2026-10-05",
     "isSubstantive": false
@@ -103894,5 +104209,41 @@
     "lastAction": "",
     "lastActionDate": "2026-10-22",
     "isSubstantive": false
+  },
+  "S5001": {
+    "bill": "S5001",
+    "stage": "introduced",
+    "statusCode": "",
+    "committeeCode": null,
+    "lastAction": "",
+    "lastActionDate": null,
+    "isSubstantive": true
+  },
+  "S5002": {
+    "bill": "S5002",
+    "stage": "introduced",
+    "statusCode": "",
+    "committeeCode": null,
+    "lastAction": "",
+    "lastActionDate": null,
+    "isSubstantive": true
+  },
+  "S4999": {
+    "bill": "S4999",
+    "stage": "introduced",
+    "statusCode": "",
+    "committeeCode": null,
+    "lastAction": "",
+    "lastActionDate": null,
+    "isSubstantive": true
+  },
+  "S5000": {
+    "bill": "S5000",
+    "stage": "introduced",
+    "statusCode": "",
+    "committeeCode": null,
+    "lastAction": "",
+    "lastActionDate": null,
+    "isSubstantive": true
   }
 }
